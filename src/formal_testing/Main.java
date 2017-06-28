@@ -1,7 +1,6 @@
 package formal_testing;
 
-import formal_testing.command.ClosedLoopVerify;
-import formal_testing.command.Command;
+import formal_testing.command.*;
 import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.IntegerVariable;
 import formal_testing.variable.Variable;
@@ -12,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
@@ -75,21 +75,25 @@ public class Main {
             switch (command) {
                 case "closed-loop-verify":
                     final int timeout = Integer.parseInt(args[++i]);
-                    commands.add(new ClosedLoopVerify(timeout, data));
-                    // TODO "closed-loop-verify" option - run closed-loop model checking in SPIN
+                    commands.add(new ClosedLoopVerify(data, timeout));
                     break;
-                case "random-test-generate":
-                    // TODO "random-test-generate[length,name]" option - generate a random test
+                case "generate-random-test":
+                    final int length = Integer.parseInt(args[++i]);
+                    final String filename1 = args[++i];
+                    commands.add(new GenerateRandomTest(data, length, filename1, new Random()));
                     break;
                 case "run-test":
+                    final String filename2 = args[++i];
+                    commands.add(new RunTest(data, filename2));
                     break;
-                // TODO "run-test[name]" option - run a test
-                case "random-coverage-test-generate":
-                    // TODO "random-coverage-test-generate[length,fraction,include_internal]" option
+                case "generate-random-coverage-tests":
+                    commands.add(new GenerateRandomCoverageTests(data));
+                    // TODO "generate-random-coverage-tests[length,fraction,include_internal]" option
                     // TODO     - generate random tests until coverage is reached
                     break;
-                case "synthesis-coverage-test-generate":
-                    // TODO "synthesis-coverage-test-generate[length,fraction,include_internal]" option
+                case "synthesize-coverage-tests":
+                    commands.add(new SynthesizeCoverageTests(data));
+                    // TODO "synthesize-coverage-tests[length,fraction,include_internal]" option
                     // TODO     - use model checking to generate coverage tests
                     // TODO     - nondeterministic choices can be extracted from the lines of "if" statements
                     break;

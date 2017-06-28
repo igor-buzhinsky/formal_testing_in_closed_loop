@@ -5,6 +5,7 @@ import formal_testing.Util;
 import formal_testing.variable.Variable;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -33,40 +34,49 @@ public abstract class Command {
         return sb.toString();
     }
 
-    protected String modelCode(boolean testing, boolean nondetSelection) {
+    protected String modelCode(boolean testing, boolean nondetSelection, Optional<String> testHeader,
+                               Optional<String> testBody) {
         final StringBuilder code = new StringBuilder();
-        code.append("// Inputs" + "\n");
+        if (!data.conf.inputVars.isEmpty()) {
+            code.append("// Inputs" + "\n");
+        }
         final Function<String, String> addNl = s -> s.isEmpty() ? "" : (s + "\n");
         data.conf.inputVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        code.append("// Outputs" + "\n");
+        if (!data.conf.outputVars.isEmpty()) {
+            code.append("// Outputs" + "\n");
+        }
         data.conf.outputVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        code.append("// Nondeterministic variables" + "\n");
+        if (!data.conf.nondetVars.isEmpty()) {
+            code.append("// Nondeterministic variables" + "\n");
+        }
         data.conf.nondetVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        code.append("// Plant internal variables" + "\n");
+        if (!data.conf.plantInternalVars.isEmpty()) {
+            code.append("// Plant internal variables" + "\n");
+        }
         data.conf.plantInternalVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        code.append("// Controller internal variables" + "\n");
+        if (!data.conf.controllerInternalVars.isEmpty()) {
+            code.append("// Controller internal variables" + "\n");
+        }
         data.conf.controllerInternalVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
         if (testing) {
-            code.append("\n");
-            code.append("bool _test_passed;" + "\n");
+            code.append("\n").append("bool _test_passed;" + "\n");
         }
-        code.append("\n");
-        code.append(data.header);
-        code.append("\n");
-        code.append("init { do :: atomic {" + "\n");
+        code.append("\n").append(data.header);
+        if (testHeader.isPresent()) {
+            code.append("\n").append(testHeader.get());
+        }
+        code.append("\n").append("\n").append("init { do :: atomic {" + "\n");
         if (nondetSelection) {
-            code.append(Util.indent(nondetSelection()));
-            code.append("\n");
+            code.append(Util.indent(nondetSelection())).append("\n");
         }
-        code.append(Util.indent(data.plantModel));
-        code.append("\n");
-        code.append(Util.indent(data.controllerModel));
-        code.append("\n");
-        code.append("} od }" + "\n");
-        code.append(data.spec);
+        if (testBody.isPresent()) {
+            code.append(Util.indent(testBody.get())).append("\n");
+        }
+        code.append("\n").append(Util.indent(data.plantModel)).append("\n").append("\n")
+                .append(Util.indent(data.controllerModel)).append("\n").append("} od }").append("\n").append("\n")
+                .append(data.spec);
         if (testing) {
-            code.append("\n");
-            code.append("ltl test_passed { <>_test_passed }" + "\n");
+            code.append("\n").append("ltl test_passed { <>_test_passed }" + "\n");
         }
         return code.toString();
     }
