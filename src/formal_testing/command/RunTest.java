@@ -28,7 +28,7 @@ public class RunTest extends Command {
         try (final PrintWriter pw = new PrintWriter(MODEL_FILENAME)) {
             pw.println(code);
         }
-        try (final Scanner sc = runSpin(0)) {
+        try (final Scanner sc = runSpin(0, 0)) {
             while (sc.hasNextLine()) {
                 System.out.println(sc.nextLine());
             }

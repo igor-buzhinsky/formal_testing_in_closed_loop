@@ -19,6 +19,7 @@ public abstract class Command {
     public final ProblemData data;
 
     protected static final String MODEL_FILENAME = ".model.pml";
+    protected static final String NESTED_MODEL_FILENAME = ".nested.model.pml";
 
     public Command(String name, ProblemData data) {
         this.name = name;
@@ -68,7 +69,7 @@ public abstract class Command {
             }
         }
         if (!mtypeValues.isEmpty()) {
-            code.append("mtype " + mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
+            code.append("mtype ").append(mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
         }
 
         if (!data.conf.inputVars.isEmpty()) {
@@ -117,11 +118,17 @@ public abstract class Command {
         return code.toString();
     }
 
-    protected Scanner runSpin(int timeout) throws IOException {
-        final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh", MODEL_FILENAME, String.valueOf(timeout));
+    protected Scanner runSpin(int timeout, int optimizationLevel) throws IOException {
+        final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh", MODEL_FILENAME, String.valueOf(timeout),
+                String.valueOf(optimizationLevel));
         pb.redirectError();
         final Process p = pb.start();
         return new Scanner(p.getInputStream());
+    }
+
+    protected String coverageProperties(List<CoveragePoint> coveragePoints) {
+        return String.join("\n", coveragePoints.stream().map(CoveragePoint::promelaLtlProperty)
+                .collect(Collectors.toList()));
     }
 
     public abstract void execute() throws IOException;

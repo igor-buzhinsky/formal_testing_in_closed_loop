@@ -89,16 +89,11 @@ public class Main {
                 case "generate-random-coverage-tests":
                     final boolean includeInternal1 = Boolean.parseBoolean(args[++i]);
                     commands.add(new GenerateRandomCoverageTests(data, includeInternal1));
-                    // TODO "generate-random-coverage-tests[length,fraction,include_internal]" option
-                    // TODO     - generate random tests until coverage is reached
                     break;
                 case "synthesize-coverage-tests":
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
                     final int maxLength = Integer.parseInt(args[++i]);
                     commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength));
-                    // TODO "synthesize-coverage-tests[length,fraction,include_internal]" option
-                    // TODO     - use model checking to generate coverage tests
-                    // TODO     - nondeterministic choices can be extracted from the lines of "if" statements
                     break;
                 default:
                     throw new RuntimeException("Unknown command " + command);

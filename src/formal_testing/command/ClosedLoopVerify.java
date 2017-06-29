@@ -24,7 +24,7 @@ public class ClosedLoopVerify extends Command {
         try (final PrintWriter pw = new PrintWriter(MODEL_FILENAME)) {
             pw.println(code);
         }
-        try (final Scanner sc = runSpin(timeout)) {
+        try (final Scanner sc = runSpin(timeout, 2)) {
             while (sc.hasNextLine()) {
                 System.out.println(sc.nextLine());
             }

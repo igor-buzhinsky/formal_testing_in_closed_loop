@@ -2,6 +2,7 @@
 
 name="$1"
 timeout="$2"
+opt="$3"
 line=
 dvectorsz=1024
 format="*** %U user, %S system, %e elapsed, %Mk maxresident ***\n$line"
@@ -10,7 +11,7 @@ echo "$line"
 echo "*** GENERATING PAN SOURCE ***"
 /usr/bin/time -f "$format" $time spin -a $name 2>&1
 echo "*** COMPILING PAN ***"
-/usr/bin/time -f "$format" cc -O2 -DVECTORSZ=$dvectorsz -o pan pan.c 2>&1
+/usr/bin/time -f "$format" cc -O$opt -DVECTORSZ=$dvectorsz -o pan pan.c 2>&1
 
 for prop in $(cat "$name" | grep "^ltl .*{.*}.*$" | sed 's/^ltl //; s/ .*$//'); do
     echo "*** RUNNING PAN FOR $prop ***"
