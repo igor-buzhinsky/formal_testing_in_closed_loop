@@ -3,16 +3,14 @@ package formal_testing;
 import formal_testing.command.*;
 import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.IntegerVariable;
+import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -28,7 +26,7 @@ public class Main {
                 if (line.isEmpty()) {
                     continue;
                 }
-                final String[] tokens = line.split(" +");
+                final String[] tokens = line.split(" +", 3);
                 final String varType = tokens[0];
                 final String datatype = tokens[2];
                 final List<Variable> list;
@@ -55,7 +53,9 @@ public class Main {
                     isArray = false;
                 }
                 for (int i = 0; i < size; i++) {
-                    list.add(datatype.equals("bool")
+                    list.add(datatype.startsWith("{") ? new SetVariable(realName,
+                            Arrays.asList(datatype.replace("{", "").replace("}", "").trim().split(" *, *")),
+                            isArray, size, i) : datatype.equals("bool")
                             ? new BooleanVariable(realName, isArray, size, i)
                             : new IntegerVariable(realName, datatype, isArray, size, i));
                 }
@@ -87,12 +87,15 @@ public class Main {
                     commands.add(new RunTest(data, filename2));
                     break;
                 case "generate-random-coverage-tests":
-                    commands.add(new GenerateRandomCoverageTests(data));
+                    final boolean includeInternal1 = Boolean.parseBoolean(args[++i]);
+                    commands.add(new GenerateRandomCoverageTests(data, includeInternal1));
                     // TODO "generate-random-coverage-tests[length,fraction,include_internal]" option
                     // TODO     - generate random tests until coverage is reached
                     break;
                 case "synthesize-coverage-tests":
-                    commands.add(new SynthesizeCoverageTests(data));
+                    final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
+                    final int maxLength = Integer.parseInt(args[++i]);
+                    commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength));
                     // TODO "synthesize-coverage-tests[length,fraction,include_internal]" option
                     // TODO     - use model checking to generate coverage tests
                     // TODO     - nondeterministic choices can be extracted from the lines of "if" statements

@@ -18,13 +18,8 @@ public class BooleanVariable extends Variable {
 
     @Override
     public String toPromelaString() {
-        if (isArrayPart && arrayIndex > 0) {
-            return "";
-        } else if (isArrayPart && arrayIndex == 0) {
-            return "bool " + name + "[" + arrayLength + "];";
-        } else {
-            return "bool " + name + ";";
-        }
+        return promelaString("bool");
+
     }
 
     @Override

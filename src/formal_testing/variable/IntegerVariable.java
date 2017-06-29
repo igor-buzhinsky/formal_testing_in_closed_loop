@@ -28,13 +28,8 @@ public class IntegerVariable extends Variable {
 
     @Override
     public String toPromelaString() {
-        if (isArrayPart && arrayIndex > 0) {
-            return "";
-        } else if (isArrayPart && arrayIndex == 0) {
-            return "int " + name + "[" + arrayLength + "];";
-        } else {
-            return "int " + name + ";";
-        }
+        return promelaString("int");
+
     }
 
     @Override

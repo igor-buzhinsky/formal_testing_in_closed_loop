@@ -2,9 +2,9 @@
 
 name="$1"
 timeout="$2"
-line="=========================================================================="
+line=
 dvectorsz=1024
-format="*** %U user, %S system, %e elapsed, %Mk maxresident\n$line"
+format="*** %U user, %S system, %e elapsed, %Mk maxresident ***\n$line"
 
 echo "$line"
 echo "*** GENERATING PAN SOURCE ***"
@@ -18,7 +18,7 @@ for prop in $(cat "$name" | grep "^ltl .*{.*}.*$" | sed 's/^ltl //; s/ .*$//'); 
     if [[ "$?" == 124 ]]; then
         echo "*** $prop : TIMEOUT ***"
     elif [ -f "$name.trail" ]; then
-        echo "*** $prop = FALSE, ERROR TRAIL ***";
+        echo "*** $prop = FALSE ***";
         /usr/bin/time -f "$format" spin -k $name.trail -pglrs $name 2>&1
     else
         echo "*** $prop = TRUE ***";

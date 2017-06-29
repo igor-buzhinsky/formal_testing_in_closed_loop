@@ -1,12 +1,15 @@
 package formal_testing.command;
 
+import formal_testing.CoveragePoint;
 import formal_testing.ProblemData;
 import formal_testing.Util;
+import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 
 import java.io.IOException;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/27/17.
@@ -34,9 +37,40 @@ public abstract class Command {
         return sb.toString();
     }
 
-    protected String modelCode(boolean testing, boolean nondetSelection, Optional<String> testHeader,
+    protected List<CoveragePoint> coveragePoints(boolean includeInternal) {
+        final List<Variable> variables = new ArrayList<>();
+        variables.addAll(data.conf.inputVars);
+        variables.addAll(data.conf.nondetVars);
+        variables.addAll(data.conf.outputVars);
+        if (includeInternal) {
+            variables.addAll(data.conf.plantInternalVars);
+            variables.addAll(data.conf.controllerInternalVars);
+        }
+        final List<CoveragePoint> result = new ArrayList<>();
+        for (Variable var : variables) {
+            result.addAll(var.promelaValues().stream().map(value -> new CoveragePoint(var, value))
+                    .collect(Collectors.toList()));
+        }
+        return result;
+    }
+
+    protected String modelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
                                Optional<String> testBody) {
         final StringBuilder code = new StringBuilder();
+
+        final Set<String> mtypeValues = new LinkedHashSet<>();
+        for (List<Variable> list : Arrays.asList(data.conf.inputVars, data.conf.outputVars, data.conf.nondetVars,
+                data.conf.plantInternalVars, data.conf.controllerInternalVars)) {
+            for (Variable var : list) {
+                if (var instanceof SetVariable) {
+                    mtypeValues.addAll(var.promelaValues());
+                }
+            }
+        }
+        if (!mtypeValues.isEmpty()) {
+            code.append("mtype " + mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
+        }
+
         if (!data.conf.inputVars.isEmpty()) {
             code.append("// Inputs" + "\n");
         }
@@ -73,12 +107,21 @@ public abstract class Command {
             code.append(Util.indent(testBody.get())).append("\n");
         }
         code.append("\n").append(Util.indent(data.plantModel)).append("\n").append("\n")
-                .append(Util.indent(data.controllerModel)).append("\n").append("} od }").append("\n").append("\n")
-                .append(data.spec);
+                .append(Util.indent(data.controllerModel)).append("\n").append("} od }").append("\n");
+        if (spec) {
+            code.append("\n").append(data.spec);
+        }
         if (testing) {
             code.append("\n").append("ltl test_passed { <>_test_passed }" + "\n");
         }
         return code.toString();
+    }
+
+    protected Scanner runSpin(int timeout) throws IOException {
+        final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh", MODEL_FILENAME, String.valueOf(timeout));
+        pb.redirectError();
+        final Process p = pb.start();
+        return new Scanner(p.getInputStream());
     }
 
     public abstract void execute() throws IOException;

@@ -1,6 +1,7 @@
 package formal_testing.command;
 
 import formal_testing.ProblemData;
+import formal_testing.TestCase;
 import formal_testing.variable.Variable;
 
 import java.io.IOException;
@@ -26,30 +27,20 @@ public class GenerateRandomTest extends Command {
 
     @Override
     public void execute() throws IOException {
-        // looping scenario
-
-        try (PrintWriter pw = new PrintWriter(filename + ".header")) {
-            pw.print("int _test_step;");
-        }
-
-        try (PrintWriter pw = new PrintWriter(filename + ".body")) {
-            final List<List<String>> allValues = data.conf.nondetVars.stream()
-                    .map(Variable::promelaValues).collect(Collectors.toList());
-            pw.println("d_step {");
-            pw.println("    if");
-            for (int i = 0; i < length; i++) {
-                pw.print("    :: _test_step == " + i + " -> ");
-                for (int j = 0; j < data.conf.nondetVars.size(); j++) {
-                    Variable var = data.conf.nondetVars.get(j);
-                    pw.print(var.indexedName() + " = " + allValues.get(j).get(random.nextInt(allValues.get(j).size()))
-                            + "; ");
-                }
-                pw.println();
+        final TestCase tc = new TestCase(data.conf);
+        final List<List<String>> allValues = data.conf.nondetVars.stream()
+                .map(Variable::promelaValues).collect(Collectors.toList());
+        for (int i = 0; i < length; i++) {
+            for (int j = 0; j < data.conf.nondetVars.size(); j++) {
+                Variable var = data.conf.nondetVars.get(j);
+                tc.addValue(var.indexedName(), allValues.get(j).get(random.nextInt(allValues.get(j).size())));
             }
-            pw.println("    fi");
-            pw.println("    _test_step = (_test_step + 1) % " + length + ";");
-            pw.println("    _test_passed = (_test_step == 0 -> true : _test_passed);");
-            pw.println("}");
+        }
+        try (PrintWriter pw = new PrintWriter(filename + ".header")) {
+            pw.print(tc.promelaHeader());
+        }
+        try (PrintWriter pw = new PrintWriter(filename + ".body")) {
+            pw.print(tc.promelaBody());
         }
     }
 }

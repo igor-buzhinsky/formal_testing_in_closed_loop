@@ -24,16 +24,14 @@ public class RunTest extends Command {
     public void execute() throws IOException {
         final String header = new String(Files.readAllBytes(Paths.get(filename + ".header")));
         final String body = new String(Files.readAllBytes(Paths.get(filename + ".body")));
-        final String code = modelCode(true, false, Optional.of(header), Optional.of(body));
+        final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body));
         try (final PrintWriter pw = new PrintWriter(MODEL_FILENAME)) {
             pw.println(code);
         }
-        final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh", MODEL_FILENAME, "0");
-        pb.redirectError();
-        final Process p = pb.start();
-        final Scanner sc = new Scanner(p.getInputStream());
-        while (sc.hasNextLine()) {
-            System.out.println(sc.nextLine());
+        try (final Scanner sc = runSpin(0)) {
+            while (sc.hasNextLine()) {
+                System.out.println(sc.nextLine());
+            }
         }
     }
 }

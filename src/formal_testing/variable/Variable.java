@@ -29,4 +29,14 @@ public abstract class Variable {
     public String indexedName() {
         return name + indexPart();
     }
+
+    protected String promelaString(String type) {
+        if (isArrayPart && arrayIndex > 0) {
+            return "";
+        } else if (isArrayPart && arrayIndex == 0) {
+            return type + " " + name + "[" + arrayLength + "];";
+        } else {
+            return type + " " + name + ";";
+        }
+    }
 }
