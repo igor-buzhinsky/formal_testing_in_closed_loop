@@ -73,7 +73,8 @@ public class SynthesizeCoverageTests extends Command {
     public void execute() throws IOException {
         final CodeCoverageCounter counter = new CodeCoverageCounter();
         usualModelCode(Optional.of(counter));
-        final List<CoveragePoint> coveragePoints = coveragePoints(includeInternal, counter.coverageClaims);
+        final List<CoveragePoint> coveragePoints = coveragePoints(includeInternal, valuePairCoverage,
+                counter.coverageClaims);
         final int totalPoints = coveragePoints.size();
         int coveredPoints = 0;
         System.out.println("*** Number of coverage points: " + totalPoints);

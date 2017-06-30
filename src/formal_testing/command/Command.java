@@ -45,7 +45,8 @@ public abstract class Command {
         return sb.toString();
     }
 
-    protected List<CoveragePoint> coveragePoints(boolean includeInternal, int coverageClaims) {
+    protected List<CoveragePoint> coveragePoints(boolean includeInternal, boolean valuePairCoverage,
+                                                 int coverageClaims) {
         final List<Variable> variables = new ArrayList<>();
         variables.addAll(data.conf.inputVars);
         variables.addAll(data.conf.nondetVars);
@@ -54,11 +55,28 @@ public abstract class Command {
             variables.addAll(data.conf.plantInternalVars);
             variables.addAll(data.conf.controllerInternalVars);
         }
+
         final List<CoveragePoint> result = new ArrayList<>();
-        for (Variable var : variables) {
-            result.addAll(var.promelaValues().stream().map(value -> new DataCoveragePoint(var, value))
-                    .collect(Collectors.toList()));
+
+        if (valuePairCoverage && variables.size() > 1) {
+            for (int i = 0; i < variables.size(); i++) {
+                final Variable varI = variables.get(i);
+                for (int j = i + 1; j < variables.size(); j++) {
+                    final Variable varJ = variables.get(j);
+                    for (String valueI : varI.promelaValues()) {
+                        for (String valueJ : varJ.promelaValues()) {
+                            result.add(new DataCoveragePoint(varI, valueI, varJ, valueJ));
+                        }
+                    }
+                }
+            }
+        } else {
+            for (Variable var : variables) {
+                result.addAll(var.promelaValues().stream().map(value -> new DataCoveragePoint(var, value))
+                        .collect(Collectors.toList()));
+            }
         }
+
         for (int i = 0; i < coverageClaims; i++) {
             result.add(new FlowCoveragePoint(i));
         }

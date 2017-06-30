@@ -76,7 +76,6 @@ public class SpinRunner implements AutoCloseable {
     }
 
     public List<String> pan(String propertyName) throws IOException {
-        // timeout "$timeout"s /usr/bin/time -f "$format" ./pan -a -N "$prop" -m5000000 2>&1
         final String trailPath = dirName + "/" + modelName + ".trail";
         final List<String> result = new ArrayList<>();
         File trailFile = null;
