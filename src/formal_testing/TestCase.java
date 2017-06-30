@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class TestCase {
     private final Map<String, List<String>> values = new LinkedHashMap<>();
-    int length = 0;
+    private int length = 0;
 
     public TestCase(Configuration conf) {
         for (Variable v : conf.nondetVars) {

@@ -1,5 +1,6 @@
 package formal_testing.command;
 
+import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.ProblemData;
 import formal_testing.SpinRunner;
@@ -72,9 +73,9 @@ public class SynthesizeCoverageTests extends Command {
         int coveredPoints = 0;
         System.out.println("*** Number of coverage points: " + totalPoints);
 
-        final Set<TestCase> allTestCases = new LinkedHashSet<>();
-        final String nondetName = "((" + String.join(")|(", data.conf.nondetVars.stream().map(Variable::indexedName)
-                .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + "))";
+        final TestSuite testSuite = new TestSuite();
+        final String nondetName = "(" + String.join("|", data.conf.nondetVars.stream().map(Variable::indexedName)
+                .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ")";
         final String trailRegexp = "^.*proc.*state.*\\[" + nondetName + " = [0-9]+\\].*$";
         for (int len = 1; len <= maxLength; len++) {
             System.out.println("*** Test synthesis for length " + len + "...");
@@ -111,7 +112,7 @@ public class SynthesizeCoverageTests extends Command {
                         tc.validate();
                         coveredPoints += examineTestCase(tc, coveragePoints, len);
                         System.out.println(tc);
-                        allTestCases.add(tc);
+                        testSuite.add(tc);
                     }
                 }
             }
@@ -120,8 +121,7 @@ public class SynthesizeCoverageTests extends Command {
             }
         }
 
-        allTestCases.forEach(System.out::println);
-
+        System.out.println(testSuite);
         System.out.println("Covered points: " + coveredPoints + " / " + totalPoints);
         if (coveredPoints < totalPoints) {
             System.out.println("Not covered:");

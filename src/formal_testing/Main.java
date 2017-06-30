@@ -86,10 +86,6 @@ public class Main {
                     final String filename2 = args[++i];
                     commands.add(new RunTest(data, filename2));
                     break;
-                case "generate-random-coverage-tests":
-                    final boolean includeInternal1 = Boolean.parseBoolean(args[++i]);
-                    commands.add(new GenerateRandomCoverageTests(data, includeInternal1));
-                    break;
                 case "synthesize-coverage-tests":
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
                     final int maxLength = Integer.parseInt(args[++i]);

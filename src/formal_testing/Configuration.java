@@ -17,12 +17,10 @@ public class Configuration {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder();
-        sb.append("input: " + inputVars + "\n");
-        sb.append("output: " + outputVars + "\n");
-        sb.append("nondet: " + nondetVars + "\n");
-        sb.append("plant_internal: " + plantInternalVars + "\n");
-        sb.append("controller_internal: " + controllerInternalVars);
-        return sb.toString();
+        return "input: " + inputVars + "\n" +
+                "output: " + outputVars + "\n" +
+                "nondet: " + nondetVars + "\n" +
+                "plant_internal: " + plantInternalVars + "\n" +
+                "controller_internal: " + controllerInternalVars;
     }
 }
