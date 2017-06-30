@@ -2,10 +2,7 @@ package formal_testing;
 
 import formal_testing.variable.Variable;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by buzhinsky on 6/29/17.
@@ -13,6 +10,14 @@ import java.util.Map;
 public class TestCase {
     private final Map<String, List<String>> values = new LinkedHashMap<>();
     private int length = 0;
+
+    public int length() {
+        return length;
+    }
+
+    public Map<String, List<String>> values() {
+        return Collections.unmodifiableMap(values);
+    }
 
     public TestCase(Configuration conf) {
         for (Variable v : conf.nondetVars) {
@@ -32,7 +37,7 @@ public class TestCase {
     }
 
     public String promelaHeader() {
-        return "int _test_step;";
+        return new TestSuite(this).promelaHeader();
     }
 
     public void validate() {
@@ -44,21 +49,7 @@ public class TestCase {
     }
 
     public String promelaBody(boolean addOracle) {
-        // looping scenario
-        final StringBuilder sb = new StringBuilder();
-        sb.append("d_step {\n").append("    if\n");
-        for (int i = 0; i < length; i++) {
-            sb.append("    :: _test_step == ").append(i).append(" -> ");
-            for (String varName : values.keySet()) {
-                sb.append(varName).append(" = ").append(values.get(varName).get(i)).append("; ");
-            }
-            sb.append("\n");
-        }
-        sb.append("    fi\n")
-                .append("    _test_step = (_test_step + 1) % ").append(length).append(";\n")
-                .append(addOracle ? "    _test_passed = (_test_step == 0 -> true : _test_passed);\n" : "")
-                .append("}\n");
-        return sb.toString();
+        return new TestSuite(this).promelaBody(addOracle);
     }
 
     @Override

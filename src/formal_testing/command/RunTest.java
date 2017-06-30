@@ -14,10 +14,12 @@ import java.util.Optional;
  */
 public class RunTest extends Command {
     private final String filename;
+    private final boolean verbose;
 
-    public RunTest(ProblemData data, String filename) {
+    public RunTest(ProblemData data, String filename, boolean verbose) {
         super(data);
         this.filename = filename;
+        this.verbose = verbose;
     }
 
     @Override
@@ -27,10 +29,11 @@ public class RunTest extends Command {
         final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body), false, false,
                 Optional.empty());
 
+        System.out.println("Running test suite " + filename + "...");
         try (final SpinRunner spinRunner = new SpinRunner(code, 0, false, 2)) {
             for (String prop : propsFromCode(code)) {
                 final List<String> result = spinRunner.pan(prop);
-                result.forEach(System.out::println);
+                result.stream().filter(line -> verbose || line.startsWith("***")).forEach(System.out::println);
             }
         }
     }

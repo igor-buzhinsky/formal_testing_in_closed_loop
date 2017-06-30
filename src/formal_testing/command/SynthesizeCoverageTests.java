@@ -20,15 +20,17 @@ public class SynthesizeCoverageTests extends Command {
     private final boolean checkFiniteCoverage;
     private final boolean plantCodeCoverage;
     private final boolean controllerCodeCoverage;
+    private final String outputFilename;
 
     public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength, boolean checkFiniteCoverage,
-                                   boolean plantCodeCoverage, boolean controllerCodeCoverage) {
+                                   boolean plantCodeCoverage, boolean controllerCodeCoverage, String outputFilename) {
         super(data);
         this.includeInternal = includeInternal;
         this.maxLength = maxLength;
         this.checkFiniteCoverage = checkFiniteCoverage;
         this.plantCodeCoverage = plantCodeCoverage;
         this.controllerCodeCoverage = controllerCodeCoverage;
+        this.outputFilename = outputFilename;
     }
 
     private int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps) throws IOException {
@@ -122,6 +124,7 @@ public class SynthesizeCoverageTests extends Command {
         }
 
         System.out.println(testSuite);
+        testSuite.print(outputFilename);
         System.out.println("Covered points: " + coveredPoints + " / " + totalPoints);
         if (coveredPoints < totalPoints) {
             System.out.println("Not covered:");

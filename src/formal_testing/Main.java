@@ -62,6 +62,7 @@ public class Main {
             }
         }
         System.out.println(conf);
+        System.out.println();
 
         final ProblemData data = new ProblemData(conf,
                 new String(Files.readAllBytes(Paths.get(headerFilename))),
@@ -77,14 +78,16 @@ public class Main {
                     final int timeout = Integer.parseInt(args[++i]);
                     commands.add(new ClosedLoopVerify(data, timeout));
                     break;
-                case "generate-random-test":
+                case "generate-random":
                     final int length = Integer.parseInt(args[++i]);
+                    final int number = Integer.parseInt(args[++i]);
                     final String filename1 = args[++i];
-                    commands.add(new GenerateRandomTest(data, length, filename1, new Random()));
+                    commands.add(new GenerateRandom(data, length, number, filename1, new Random()));
                     break;
                 case "run-test":
                     final String filename2 = args[++i];
-                    commands.add(new RunTest(data, filename2));
+                    final boolean verbose = Boolean.parseBoolean(args[++i]);
+                    commands.add(new RunTest(data, filename2, verbose));
                     break;
                 case "synthesize-coverage-tests":
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
@@ -92,8 +95,12 @@ public class Main {
                     final boolean checkFiniteCoverage = Boolean.parseBoolean(args[++i]);
                     final boolean plantCodeCoverage = Boolean.parseBoolean(args[++i]);
                     final boolean controllerCodeCoverage = Boolean.parseBoolean(args[++i]);
+                    final String filename3 = args[++i];
                     commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength, checkFiniteCoverage,
-                            plantCodeCoverage, controllerCodeCoverage));
+                            plantCodeCoverage, controllerCodeCoverage, filename3));
+                    break;
+                case "exit":
+                    commands.add(new ExitCommand(data));
                     break;
                 default:
                     throw new RuntimeException("Unknown command " + command);
