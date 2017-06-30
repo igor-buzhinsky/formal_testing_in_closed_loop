@@ -93,7 +93,8 @@ public class Main {
                 case "synthesize-coverage-tests":
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
                     final int maxLength = Integer.parseInt(args[++i]);
-                    commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength));
+                    final boolean checkFiniteCoverage = Boolean.parseBoolean(args[++i]);
+                    commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength, checkFiniteCoverage));
                     break;
                 default:
                     throw new RuntimeException("Unknown command " + command);

@@ -2,6 +2,7 @@ package formal_testing.command;
 
 import formal_testing.CoveragePoint;
 import formal_testing.ProblemData;
+import formal_testing.SpinRunner;
 import formal_testing.TestCase;
 import formal_testing.variable.Variable;
 
@@ -16,39 +17,41 @@ import java.util.stream.Collectors;
 public class SynthesizeCoverageTests extends Command {
     private final boolean includeInternal;
     private final int maxLength;
+    private final boolean checkFiniteCoverage;
 
-    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength) {
+    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength, boolean checkFiniteCoverage) {
         super("synthesize-coverage-tests", data);
         this.includeInternal = includeInternal;
         this.maxLength = maxLength;
+        this.checkFiniteCoverage = false;
     }
 
-    private int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints) throws IOException {
+    private int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps) throws IOException {
         final String nestedExecutionCode = modelCode(true, false, false, Optional.of(tc.promelaHeader()),
                 Optional.of(tc.promelaBody()));
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
 
-        try (final PrintWriter pw = new PrintWriter(NESTED_MODEL_FILENAME)) {
+        try (final PrintWriter pw = new PrintWriter(SpinRunner.NESTED_MODEL_FILENAME)) {
             pw.println(nestedExecutionCode);
-            pw.println(coverageProperties(uncovered));
+            pw.println(checkFiniteCoverage ? coverageProperties(uncovered, steps) : coverageProperties(uncovered));
         }
 
         int newCovered = 0;
 
         System.out.print("(" + uncovered.size() + ") ");
-        try (final Scanner sc = runSpin(0, 2)) {
+        try (final Scanner sc = SpinRunner.runSpin(0, 2, true)) {
             while (sc.hasNextLine()) {
                 final String line = sc.nextLine();
-                if (line.endsWith(" = FALSE ***")) {
+                if (line.endsWith(" = TRUE ***")) {
                     for (CoveragePoint cp : uncovered) {
-                        if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
+                        if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
                             cp.cover();
                             newCovered++;
                             System.out.print("+");
                         }
                     }
-                } else if (line.endsWith(" = TRUE ***")) {
+                } else if (line.endsWith(" = FALSE ***")) {
                     System.out.print("-");
                 }
             }
@@ -73,21 +76,21 @@ public class SynthesizeCoverageTests extends Command {
             code.append(modelCode(false, true, false, Optional.empty(), Optional.empty())).append("\n");
             for (final CoveragePoint cp : coveragePoints) {
                 if (!cp.covered()) {
-                    code.append(cp.promelaLtlProperty(len)).append("\n");
+                    code.append(cp.promelaLtlProperty(len, true)).append("\n");
                 }
             }
-            try (final PrintWriter pw = new PrintWriter(MODEL_FILENAME)) {
+            try (final PrintWriter pw = new PrintWriter(SpinRunner.MODEL_FILENAME)) {
                 pw.println(code);
             }
 
             TestCase currentTC = null;
 
-            try (final Scanner sc = runSpin(0, 2)) {
+            try (final Scanner sc = SpinRunner.runSpin(0, 2, false)) {
                 while (sc.hasNextLine()) {
                     final String line = sc.nextLine();
                     if (line.startsWith("***") && line.endsWith("***")) {
                         if (currentTC != null) {
-                            coveredPoints += examineTestCase(currentTC, coveragePoints);
+                            coveredPoints += examineTestCase(currentTC, coveragePoints, len);
                             allTestCases.add(currentTC);
                             currentTC = null;
                         }
@@ -117,12 +120,12 @@ public class SynthesizeCoverageTests extends Command {
             }
         }
 
-        for (TestCase tc : allTestCases) {
-            System.out.println(tc);
-        }
+        allTestCases.forEach(System.out::println);
 
         System.out.println("Covered points: " + coveredPoints + " / " + totalPoints);
-
-        System.exit(0);
+        if (coveredPoints < totalPoints) {
+            System.out.println("Not covered:");
+            coveragePoints.stream().filter(cp -> !cp.covered()).forEach(System.out::println);
+        }
     }
 }

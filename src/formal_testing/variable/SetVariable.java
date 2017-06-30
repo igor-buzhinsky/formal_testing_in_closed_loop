@@ -7,7 +7,7 @@ import java.util.List;
  * Created by buzhinsky on 6/29/17.
  */
 public class SetVariable extends Variable {
-    final List<String> values;
+    private final List<String> values;
 
     @Override
     public String toString() {

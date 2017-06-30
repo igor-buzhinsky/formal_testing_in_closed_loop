@@ -1,6 +1,7 @@
 package formal_testing.command;
 
 import formal_testing.ProblemData;
+import formal_testing.SpinRunner;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,10 +26,10 @@ public class RunTest extends Command {
         final String header = new String(Files.readAllBytes(Paths.get(filename + ".header")));
         final String body = new String(Files.readAllBytes(Paths.get(filename + ".body")));
         final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body));
-        try (final PrintWriter pw = new PrintWriter(MODEL_FILENAME)) {
+        try (final PrintWriter pw = new PrintWriter(SpinRunner.MODEL_FILENAME)) {
             pw.println(code);
         }
-        try (final Scanner sc = runSpin(0, 0)) {
+        try (final Scanner sc = SpinRunner.runSpin(0, 0, false)) {
             while (sc.hasNextLine()) {
                 System.out.println(sc.nextLine());
             }

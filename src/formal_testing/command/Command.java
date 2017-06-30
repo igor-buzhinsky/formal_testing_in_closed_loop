@@ -18,8 +18,6 @@ public abstract class Command {
     public final String name;
     public final ProblemData data;
 
-    protected static final String MODEL_FILENAME = ".model.pml";
-    protected static final String NESTED_MODEL_FILENAME = ".nested.model.pml";
 
     public Command(String name, ProblemData data) {
         this.name = name;
@@ -70,11 +68,8 @@ public abstract class Command {
         final Set<String> mtypeValues = new LinkedHashSet<>();
         for (List<Variable> list : Arrays.asList(data.conf.inputVars, data.conf.outputVars, data.conf.nondetVars,
                 data.conf.plantInternalVars, data.conf.controllerInternalVars)) {
-            for (Variable var : list) {
-                if (var instanceof SetVariable) {
-                    mtypeValues.addAll(var.promelaValues());
-                }
-            }
+            list.stream().filter(var -> var instanceof SetVariable)
+                    .forEach(var -> mtypeValues.addAll(var.promelaValues()));
         }
         if (!mtypeValues.isEmpty()) {
             code.append("mtype ").append(mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
@@ -111,18 +106,13 @@ public abstract class Command {
         return code.toString();
     }
 
-    private static int SPIN_DIR_INDEX = 0;
-
-    protected static Scanner runSpin(int timeout, int optimizationLevel) throws IOException {
-        final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh", MODEL_FILENAME, String.valueOf(timeout),
-                String.valueOf(optimizationLevel), "spindir" + SPIN_DIR_INDEX++);
-        pb.redirectError();
-        final Process p = pb.start();
-        return new Scanner(p.getInputStream());
-    }
-
     protected String coverageProperties(List<CoveragePoint> coveragePoints) {
         return String.join("\n", coveragePoints.stream().map(CoveragePoint::promelaLtlProperty)
+                .collect(Collectors.toList()));
+    }
+
+    protected String coverageProperties(List<CoveragePoint> coveragePoints, int steps) {
+        return String.join("\n", coveragePoints.stream().map(cp -> cp.promelaLtlProperty(steps, false))
                 .collect(Collectors.toList()));
     }
 

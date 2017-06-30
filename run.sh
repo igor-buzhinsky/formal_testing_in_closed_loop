@@ -4,15 +4,14 @@ name="$1"
 timeout="$2"
 opt="$3"
 pandir="$4"
-dvectorsz=1024
-format="*** %U user, %S system, %e elapsed, %Mk maxresident ***\n$line"
+format="*** %U user, %S system, %e elapsed, %Mk maxresident ***\n"
 
 mkdir -p "$pandir"
 cd "$pandir"
 echo "*** GENERATING PAN SOURCE ***"
 /usr/bin/time -f "$format" $time spin -a ../"$name" 2>&1
 echo "*** COMPILING PAN ***"
-/usr/bin/time -f "$format" cc -O$opt -DVECTORSZ=$dvectorsz -o pan pan.c 2>&1
+/usr/bin/time -f "$format" cc -O$opt -DVECTORSZ=1024 -o pan pan.c 2>&1
 
 for prop in $(cat ../"$name" | grep "^ltl .*{.*}.*$" | sed 's/^ltl //; s/ .*$//'); do
     echo "*** RUNNING PAN FOR $prop ***"
@@ -24,7 +23,6 @@ for prop in $(cat ../"$name" | grep "^ltl .*{.*}.*$" | sed 's/^ltl //; s/ .*$//'
         /usr/bin/time -f "$format" spin -k "$name".trail -pglrs ../"$name" 2>&1
     else
         echo "*** $prop = TRUE ***";
-        echo "$line";
     fi
     rm -f "$name".trail
 done

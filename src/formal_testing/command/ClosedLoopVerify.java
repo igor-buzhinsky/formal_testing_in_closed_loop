@@ -1,6 +1,7 @@
 package formal_testing.command;
 
 import formal_testing.ProblemData;
+import formal_testing.SpinRunner;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -21,10 +22,10 @@ public class ClosedLoopVerify extends Command {
     @Override
     public void execute() throws IOException {
         final String code = modelCode(false, true, true, Optional.empty(), Optional.empty());
-        try (final PrintWriter pw = new PrintWriter(MODEL_FILENAME)) {
+        try (final PrintWriter pw = new PrintWriter(SpinRunner.MODEL_FILENAME)) {
             pw.println(code);
         }
-        try (final Scanner sc = runSpin(timeout, 2)) {
+        try (final Scanner sc = SpinRunner.runSpin(timeout, 2, false)) {
             while (sc.hasNextLine()) {
                 System.out.println(sc.nextLine());
             }

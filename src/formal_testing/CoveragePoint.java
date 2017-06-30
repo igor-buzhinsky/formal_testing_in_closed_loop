@@ -8,7 +8,7 @@ import java.util.Collections;
  * Created by buzhinsky on 6/29/17.
  */
 public class CoveragePoint {
-    public final Variable var;
+    private final Variable var;
     private final String value;
     private boolean covered = false;
 
@@ -29,8 +29,8 @@ public class CoveragePoint {
         return promelaLtlProperty("X(<>(", "))");
     }
 
-    public String promelaLtlProperty(int steps) {
-        return promelaLtlProperty("!" + String.join("", Collections.nCopies(steps, "X(")),
+    public String promelaLtlProperty(int steps, boolean negate) {
+        return promelaLtlProperty((negate ? "!" : "") + String.join("", Collections.nCopies(steps, "X(")),
                 String.join("", Collections.nCopies(steps, ")")));
     }
 
@@ -40,5 +40,10 @@ public class CoveragePoint {
 
     public void cover() {
         covered = true;
+    }
+
+    @Override
+    public String toString() {
+        return (covered ? "[+] " : "[-] ") + var.indexedName() + " == " + value;
     }
 }
