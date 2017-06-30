@@ -7,7 +7,6 @@ import formal_testing.TestCase;
 import formal_testing.variable.Variable;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,36 +26,32 @@ public class SynthesizeCoverageTests extends Command {
     }
 
     private int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps) throws IOException {
-        final String nestedExecutionCode = modelCode(true, false, false, Optional.of(tc.promelaHeader()),
-                Optional.of(tc.promelaBody()));
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
 
-        try (final PrintWriter pw = new PrintWriter(SpinRunner.NESTED_MODEL_FILENAME)) {
-            pw.println(nestedExecutionCode);
-            pw.println(checkFiniteCoverage ? coverageProperties(uncovered, steps) : coverageProperties(uncovered));
-        }
+        final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader()),
+                Optional.of(tc.promelaBody(false))) + "\n" + (checkFiniteCoverage ? coverageProperties(uncovered, steps)
+                : coverageProperties(uncovered));
 
+        final SpinRunner spinRunner = new SpinRunner(code, 0, true, 2);
         int newCovered = 0;
 
         System.out.print("(" + uncovered.size() + ") ");
-        try (final Scanner sc = SpinRunner.runSpin(0, 2, true)) {
-            while (sc.hasNextLine()) {
-                final String line = sc.nextLine();
-                if (line.endsWith(" = TRUE ***")) {
-                    for (CoveragePoint cp : uncovered) {
-                        if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
-                            cp.cover();
-                            newCovered++;
-                            System.out.print("+");
-                        }
-                    }
-                } else if (line.endsWith(" = FALSE ***")) {
+        for (CoveragePoint cp : uncovered) {
+            final List<String> result = spinRunner.pan(cp.promelaLtlName());
+            for (String line : result) {
+                if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
+                    cp.cover();
+                    newCovered++;
+                    System.out.print("+");
+                } else if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
                     System.out.print("-");
                 }
             }
         }
         System.out.println();
+
+        spinRunner.cleanup();
         return newCovered;
     }
 
@@ -102,7 +97,9 @@ public class SynthesizeCoverageTests extends Command {
                     }
                 }
                 if (tc != null) {
+                    tc.validate();
                     coveredPoints += examineTestCase(tc, coveragePoints, len);
+                    System.out.println(tc);
                     allTestCases.add(tc);
                 }
             }

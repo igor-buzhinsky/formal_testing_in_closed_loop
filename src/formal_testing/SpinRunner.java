@@ -77,32 +77,42 @@ public class SpinRunner {
 
     public List<String> pan(String propertyName) throws IOException {
         // timeout "$timeout"s /usr/bin/time -f "$format" ./pan -a -N "$prop" -m5000000 2>&1
-        pb = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f", FORMAT, "./pan", "-a", "-N",
-                propertyName, "-m5000000").redirectErrorStream(true).directory(new File(dirName));
-        spinProcess = pb.start();
-        final int retCode = waitFor();
-        final File trailFile = new File(dirName + "/" + modelName + ".trail");
+        final String trailPath = dirName + "/" + modelName + ".trail";
         final List<String> result = new ArrayList<>();
-        if (retCode == 124) {
-            result.add("*** " + propertyName + " : TIMEOUT ***");
-        } else if (trailFile.exists()) {
-            result.add("*** " + propertyName + " = FALSE ***");
-
-            pb = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-k", modelName + ".trail", "-pglrs",
-                    "../" + modelName).redirectErrorStream(true).directory(new File(dirName));
+        File trailFile = null;
+        try {
+            pb = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f", FORMAT, "./pan", "-a", "-N",
+                    propertyName, "-m5000000").redirectErrorStream(true).directory(new File(dirName));
             spinProcess = pb.start();
-            try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
-                while (sc.hasNextLine()) {
-                    result.add(sc.nextLine());
+            final int retCode = waitFor();
+            trailFile = new File(trailPath);
+            if (retCode == 124) {
+                result.add("*** " + propertyName + " : TIMEOUT ***");
+            } else if (trailFile.exists()) {
+                result.add("*** " + propertyName + " = FALSE ***");
+
+                pb = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-k", modelName + ".trail", "-pglrs",
+                        "../" + modelName).redirectErrorStream(true).directory(new File(dirName));
+                spinProcess = pb.start();
+                try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
+                    while (sc.hasNextLine()) {
+                        result.add(sc.nextLine());
+                    }
+                }
+                waitFor();
+            } else {
+                result.add("*** " + propertyName + " = TRUE ***");
+            }
+        } finally {
+            if (trailFile != null && trailFile.exists()) {
+                try {
+                    Files.delete(Paths.get(trailPath));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
-            waitFor();
-        } else {
-            result.add("*** " + propertyName + " = TRUE ***");
         }
-        if (trailFile.exists()) {
-            trailFile.delete();
-        }
+
         return result;
     }
 

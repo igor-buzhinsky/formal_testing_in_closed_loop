@@ -35,12 +35,20 @@ public class TestCase {
         return "int _test_step;";
     }
 
-    public String promelaBody() {
+    public void validate() {
+        for (Map.Entry<String, List<String>> entry : values.entrySet()) {
+            if (entry.getValue().size() != length) {
+                throw new RuntimeException("The supposed length is " + length + ", but the test case is " + toString());
+            }
+        }
+    }
+
+    public String promelaBody(boolean addOracle) {
         // looping scenario
         final StringBuilder sb = new StringBuilder();
         sb.append("d_step {\n").append("    if\n");
         for (int i = 0; i < length; i++) {
-            sb.append("    :: _test_step == ").append(i).append(" -> \n");
+            sb.append("    :: _test_step == ").append(i).append(" -> ");
             for (String varName : values.keySet()) {
                 sb.append(varName).append(" = ").append(values.get(varName).get(i)).append("; ");
             }
@@ -48,7 +56,7 @@ public class TestCase {
         }
         sb.append("    fi\n")
                 .append("    _test_step = (_test_step + 1) % ").append(length).append(";\n")
-                .append("    _test_passed = (_test_step == 0 -> true : _test_passed);\n")
+                .append(addOracle ? "    _test_passed = (_test_step == 0 -> true : _test_passed);\n" : "")
                 .append("}\n");
         return sb.toString();
     }

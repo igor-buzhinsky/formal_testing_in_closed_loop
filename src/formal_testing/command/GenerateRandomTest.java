@@ -40,7 +40,7 @@ public class GenerateRandomTest extends Command {
             pw.print(tc.promelaHeader());
         }
         try (PrintWriter pw = new PrintWriter(filename + ".body")) {
-            pw.print(tc.promelaBody());
+            pw.print(tc.promelaBody(true));
         }
     }
 }
