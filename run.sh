@@ -3,30 +3,32 @@
 name="$1"
 timeout="$2"
 opt="$3"
-line=
+pandir="$4"
 dvectorsz=1024
 format="*** %U user, %S system, %e elapsed, %Mk maxresident ***\n$line"
 
-echo "$line"
+mkdir -p "$pandir"
+cd "$pandir"
 echo "*** GENERATING PAN SOURCE ***"
-/usr/bin/time -f "$format" $time spin -a $name 2>&1
+/usr/bin/time -f "$format" $time spin -a ../"$name" 2>&1
 echo "*** COMPILING PAN ***"
 /usr/bin/time -f "$format" cc -O$opt -DVECTORSZ=$dvectorsz -o pan pan.c 2>&1
 
-for prop in $(cat "$name" | grep "^ltl .*{.*}.*$" | sed 's/^ltl //; s/ .*$//'); do
+for prop in $(cat ../"$name" | grep "^ltl .*{.*}.*$" | sed 's/^ltl //; s/ .*$//'); do
     echo "*** RUNNING PAN FOR $prop ***"
-    timeout "$timeout"s /usr/bin/time -f "$format" ./pan -a -N $prop -m5000000 2>&1
+    timeout "$timeout"s /usr/bin/time -f "$format" ./pan -a -N "$prop" -m5000000 2>&1
     if [[ "$?" == 124 ]]; then
         echo "*** $prop : TIMEOUT ***"
     elif [ -f "$name.trail" ]; then
         echo "*** $prop = FALSE ***";
-        /usr/bin/time -f "$format" spin -k $name.trail -pglrs $name 2>&1
+        /usr/bin/time -f "$format" spin -k "$name".trail -pglrs ../"$name" 2>&1
     else
         echo "*** $prop = TRUE ***";
         echo "$line";
     fi
-    rm -f $name.trail
+    rm -f "$name".trail
 done
 
-rm -f pan.* pan _spin_nvr.tmp
+cd ..
+rm -r "$pandir"
 

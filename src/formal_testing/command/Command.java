@@ -31,7 +31,7 @@ public abstract class Command {
         for (Variable var : data.conf.nondetVars) {
             sb.append("if\n");
             for (String value : var.promelaValues()) {
-                sb.append(":: " + var.indexedName() + " = " + value + ";\n");
+                sb.append(":: ").append(var.indexedName()).append(" = ").append(value).append(";\n");
             }
             sb.append("fi\n");
         }
@@ -55,6 +55,14 @@ public abstract class Command {
         return result;
     }
 
+    private void printVars(StringBuilder sb, List<Variable> variables, String text) {
+        final Function<String, String> addNl = s -> s.isEmpty() ? "" : (s + "\n");
+        if (!variables.isEmpty()) {
+            sb.append("// ").append(text).append("\n");
+        }
+        variables.forEach(v -> sb.append(addNl.apply(v.toPromelaString())));
+    }
+
     protected String modelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
                                Optional<String> testBody) {
         final StringBuilder code = new StringBuilder();
@@ -72,27 +80,12 @@ public abstract class Command {
             code.append("mtype ").append(mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
         }
 
-        if (!data.conf.inputVars.isEmpty()) {
-            code.append("// Inputs" + "\n");
-        }
-        final Function<String, String> addNl = s -> s.isEmpty() ? "" : (s + "\n");
-        data.conf.inputVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        if (!data.conf.outputVars.isEmpty()) {
-            code.append("// Outputs" + "\n");
-        }
-        data.conf.outputVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        if (!data.conf.nondetVars.isEmpty()) {
-            code.append("// Nondeterministic variables" + "\n");
-        }
-        data.conf.nondetVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        if (!data.conf.plantInternalVars.isEmpty()) {
-            code.append("// Plant internal variables" + "\n");
-        }
-        data.conf.plantInternalVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
-        if (!data.conf.controllerInternalVars.isEmpty()) {
-            code.append("// Controller internal variables" + "\n");
-        }
-        data.conf.controllerInternalVars.forEach(v -> code.append(addNl.apply(v.toPromelaString())));
+        printVars(code, data.conf.inputVars, "Inputs");
+        printVars(code, data.conf.outputVars, "Outputs");
+        printVars(code, data.conf.nondetVars, "Nondeterministic variables");
+        printVars(code, data.conf.plantInternalVars, "Plant internal variables");
+        printVars(code, data.conf.controllerInternalVars, "Controller internal variables");
+
         if (testing) {
             code.append("\n").append("bool _test_passed;" + "\n");
         }
@@ -118,9 +111,11 @@ public abstract class Command {
         return code.toString();
     }
 
-    protected Scanner runSpin(int timeout, int optimizationLevel) throws IOException {
+    private static int SPIN_DIR_INDEX = 0;
+
+    protected static Scanner runSpin(int timeout, int optimizationLevel) throws IOException {
         final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh", MODEL_FILENAME, String.valueOf(timeout),
-                String.valueOf(optimizationLevel));
+                String.valueOf(optimizationLevel), "spindir" + SPIN_DIR_INDEX++);
         pb.redirectError();
         final Process p = pb.start();
         return new Scanner(p.getInputStream());

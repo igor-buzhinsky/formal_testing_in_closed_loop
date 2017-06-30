@@ -87,24 +87,26 @@ public class SynthesizeCoverageTests extends Command {
                     final String line = sc.nextLine();
                     if (line.startsWith("***") && line.endsWith("***")) {
                         if (currentTC != null) {
-                            final int newCovered = examineTestCase(currentTC, coveragePoints);
-                            if (newCovered > 0) {
-                                allTestCases.add(currentTC);
-                                coveredPoints += newCovered;
-                            }
+                            coveredPoints += examineTestCase(currentTC, coveragePoints);
+                            allTestCases.add(currentTC);
                             currentTC = null;
                         }
                         System.out.println(line);
                         if (line.endsWith(" = FALSE ***")) {
                             for (CoveragePoint cp : coveragePoints) {
                                 if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                                    currentTC = cp.covered() ? null : new TestCase(data.conf);
+                                    if (cp.covered()) {
+                                        currentTC = null;
+                                    } else {
+                                        cp.cover();
+                                        coveredPoints++;
+                                        currentTC = new TestCase(data.conf);
+                                    }
                                     break;
                                 }
                             }
                         }
-                    }
-                    if (currentTC != null && line.matches(trailRegexp)) {
+                    } else if (currentTC != null && line.matches(trailRegexp)) {
                         final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
                         currentTC.addValue(tokens[1], tokens[2]);
                     }
