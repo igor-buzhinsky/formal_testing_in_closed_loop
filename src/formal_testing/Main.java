@@ -1,16 +1,13 @@
 package formal_testing;
 
 import formal_testing.command.*;
-import formal_testing.variable.BooleanVariable;
-import formal_testing.variable.IntegerVariable;
-import formal_testing.variable.SetVariable;
-import formal_testing.variable.Variable;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -19,48 +16,7 @@ public class Main {
         final String plantModelFilename = args[2];
         final String controllerModelFilename = args[3];
         final String specFilename = args[4];
-        final Configuration conf = new Configuration();
-        try (Scanner sc = new Scanner(new File(configurationFilename))) {
-            while (sc.hasNextLine()) {
-                final String line = sc.nextLine().replaceAll("#.*$", "").trim();
-                if (line.isEmpty()) {
-                    continue;
-                }
-                final String[] tokens = line.split(" +", 3);
-                final String varType = tokens[0];
-                final String datatype = tokens[2];
-                final List<Variable> list;
-                switch (varType) {
-                    case "input": list = conf.inputVars; break;
-                    case "output": list = conf.outputVars; break;
-                    case "nondet": list = conf.nondetVars; break;
-                    case "plant_internal": list = conf.plantInternalVars; break;
-                    case "controller_internal": list = conf.controllerInternalVars; break;
-                    default: throw new RuntimeException("Invalid variable type " + varType);
-                }
-                final String name = tokens[1];
-                final String realName;
-                final int size;
-                final boolean isArray;
-                if (name.contains("[") && name.contains("]")) {
-                    final String[] nameTokens = name.split("[\\[\\]]");
-                    realName = nameTokens[0];
-                    size = Integer.parseInt(nameTokens[1]);
-                    isArray = true;
-                } else {
-                    realName = name;
-                    size = 1;
-                    isArray = false;
-                }
-                for (int i = 0; i < size; i++) {
-                    list.add(datatype.startsWith("{") ? new SetVariable(realName,
-                            Arrays.asList(datatype.replace("{", "").replace("}", "").trim().split(" *, *")),
-                            isArray, size, i) : datatype.equals("bool")
-                            ? new BooleanVariable(realName, isArray, size, i)
-                            : new IntegerVariable(realName, datatype, isArray, size, i));
-                }
-            }
-        }
+        final Configuration conf = Configuration.fromFile(configurationFilename);
         System.out.println(conf);
         System.out.println();
 
@@ -93,11 +49,12 @@ public class Main {
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
                     final int maxLength = Integer.parseInt(args[++i]);
                     final boolean checkFiniteCoverage = Boolean.parseBoolean(args[++i]);
+                    final boolean valuePairCoverage = Boolean.parseBoolean(args[++i]);
                     final boolean plantCodeCoverage = Boolean.parseBoolean(args[++i]);
                     final boolean controllerCodeCoverage = Boolean.parseBoolean(args[++i]);
                     final String filename3 = args[++i];
                     commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength, checkFiniteCoverage,
-                            plantCodeCoverage, controllerCodeCoverage, filename3));
+                            valuePairCoverage, plantCodeCoverage, controllerCodeCoverage, filename3));
                     break;
                 case "exit":
                     commands.add(new ExitCommand(data));

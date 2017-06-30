@@ -18,16 +18,19 @@ public class SynthesizeCoverageTests extends Command {
     private final boolean includeInternal;
     private final int maxLength;
     private final boolean checkFiniteCoverage;
+    private final boolean valuePairCoverage;
     private final boolean plantCodeCoverage;
     private final boolean controllerCodeCoverage;
     private final String outputFilename;
 
-    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength, boolean checkFiniteCoverage,
-                                   boolean plantCodeCoverage, boolean controllerCodeCoverage, String outputFilename) {
+    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength,
+                                   boolean checkFiniteCoverage, boolean valuePairCoverage, boolean plantCodeCoverage,
+                                   boolean controllerCodeCoverage, String outputFilename) {
         super(data);
         this.includeInternal = includeInternal;
         this.maxLength = maxLength;
         this.checkFiniteCoverage = checkFiniteCoverage;
+        this.valuePairCoverage = valuePairCoverage;
         this.plantCodeCoverage = plantCodeCoverage;
         this.controllerCodeCoverage = controllerCodeCoverage;
         this.outputFilename = outputFilename;
