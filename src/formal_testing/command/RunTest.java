@@ -24,7 +24,8 @@ public class RunTest extends Command {
     public void execute() throws IOException {
         final String header = new String(Files.readAllBytes(Paths.get(filename + ".header")));
         final String body = new String(Files.readAllBytes(Paths.get(filename + ".body")));
-        final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body));
+        final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body), false, false,
+                Optional.empty());
 
         try (final SpinRunner spinRunner = new SpinRunner(code, 0, false, 2)) {
             for (String prop : propsFromCode(code)) {

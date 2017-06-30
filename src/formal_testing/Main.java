@@ -94,7 +94,10 @@ public class Main {
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
                     final int maxLength = Integer.parseInt(args[++i]);
                     final boolean checkFiniteCoverage = Boolean.parseBoolean(args[++i]);
-                    commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength, checkFiniteCoverage));
+                    final boolean plantCodeCoverage = Boolean.parseBoolean(args[++i]);
+                    final boolean controllerCodeCoverage = Boolean.parseBoolean(args[++i]);
+                    commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength, checkFiniteCoverage,
+                            plantCodeCoverage, controllerCodeCoverage));
                     break;
                 default:
                     throw new RuntimeException("Unknown command " + command);

@@ -1,14 +1,19 @@
 package formal_testing.command;
 
-import formal_testing.CoveragePoint;
 import formal_testing.ProblemData;
 import formal_testing.Util;
+import formal_testing.coverage.CoveragePoint;
+import formal_testing.coverage.DataCoveragePoint;
+import formal_testing.coverage.FlowCoveragePoint;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -40,7 +45,7 @@ public abstract class Command {
         return sb.toString();
     }
 
-    protected List<CoveragePoint> coveragePoints(boolean includeInternal) {
+    protected List<CoveragePoint> coveragePoints(boolean includeInternal, int coverageClaims) {
         final List<Variable> variables = new ArrayList<>();
         variables.addAll(data.conf.inputVars);
         variables.addAll(data.conf.nondetVars);
@@ -51,8 +56,11 @@ public abstract class Command {
         }
         final List<CoveragePoint> result = new ArrayList<>();
         for (Variable var : variables) {
-            result.addAll(var.promelaValues().stream().map(value -> new CoveragePoint(var, value))
+            result.addAll(var.promelaValues().stream().map(value -> new DataCoveragePoint(var, value))
                     .collect(Collectors.toList()));
+        }
+        for (int i = 0; i < coverageClaims; i++) {
+            result.add(new FlowCoveragePoint(i));
         }
         return result;
     }
@@ -65,8 +73,41 @@ public abstract class Command {
         variables.forEach(v -> sb.append(addNl.apply(v.toPromelaString())));
     }
 
+    private Pair<String, Integer> instrument(String code, int firstClaimIndex) {
+        int nextClaimIndex = firstClaimIndex;
+        final Pattern p = Pattern.compile("::");
+        final Matcher m = p.matcher(code);
+        final StringBuilder transformed = new StringBuilder();
+        int lastPos = 0;
+        while (m.find()) {
+            transformed.append(code.substring(lastPos, m.end()));
+            int index = m.end();
+            int balance = 0;
+            while (index < code.length()) {
+                char cCur = code.charAt(index);
+                char cLast = code.charAt(index - 1);
+                balance += cCur == '(' ? 1 : cCur == ')' ? -1 : 0;
+                if (balance == 0 && cLast == '-' && cCur == '>') {
+                    transformed.append(code.substring(m.end(), index + 1)).append(" ").append("_cover[")
+                            .append(nextClaimIndex++).append("] = true; ");
+                    break;
+                }
+                index++;
+            }
+            lastPos = index + 1;
+        }
+        transformed.append(code.substring(lastPos));
+
+        return Pair.of(transformed.toString(), nextClaimIndex);
+    }
+
+    protected class CodeCoverageCounter {
+        public int coverageClaims;
+    }
+
     protected String modelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
-                               Optional<String> testBody) {
+                               Optional<String> testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
+                               Optional<CodeCoverageCounter> counter) {
         final StringBuilder code = new StringBuilder();
 
         final Set<String> mtypeValues = new LinkedHashSet<>();
@@ -85,27 +126,50 @@ public abstract class Command {
         printVars(code, data.conf.plantInternalVars, "Plant internal variables");
         printVars(code, data.conf.controllerInternalVars, "Controller internal variables");
 
+        int coverageClaims = 0;
+
+        String plantCode = data.plantModel;
+        if (plantCodeCoverage) {
+            final Pair<String, Integer> p = instrument(plantCode, coverageClaims);
+            plantCode = p.getKey();
+            coverageClaims = p.getValue();
+        }
+
+        String controllerCode = data.controllerModel;
+        if (controllerCodeCoverage) {
+            final Pair<String, Integer> p = instrument(controllerCode, coverageClaims);
+            controllerCode = p.getKey();
+            coverageClaims = p.getValue();
+        }
+
+        if (coverageClaims > 0) {
+            code.append("\n").append("bool _cover[").append(coverageClaims).append("];\n");
+        }
         if (testing) {
-            code.append("\n").append("bool _test_passed;" + "\n");
+            code.append("\n").append("bool _test_passed;\n");
         }
         code.append("\n").append(data.header);
         if (testHeader.isPresent()) {
             code.append("\n").append(testHeader.get());
         }
-        code.append("\n").append("\n").append("init { do :: atomic {" + "\n");
+        code.append("\n").append("\n").append("init { do :: atomic {\n");
         if (nondetSelection) {
             code.append(Util.indent(nondetSelection())).append("\n");
         }
         if (testBody.isPresent()) {
             code.append(Util.indent(testBody.get())).append("\n");
         }
-        code.append("\n").append(Util.indent(data.plantModel)).append("\n").append("\n")
-                .append(Util.indent(data.controllerModel)).append("\n").append("} od }").append("\n");
+        code.append("\n").append(Util.indent(plantCode)).append("\n\n")
+                .append(Util.indent(controllerCode)).append("\n").append("} od }\n");
         if (spec) {
             code.append("\n").append(data.spec);
         }
         if (testing) {
-            code.append("\n").append("ltl test_passed { <>_test_passed }" + "\n");
+            code.append("\n").append("ltl test_passed { <>_test_passed }\n");
+        }
+
+        if (counter.isPresent()) {
+            counter.get().coverageClaims = coverageClaims;
         }
         return code.toString();
     }

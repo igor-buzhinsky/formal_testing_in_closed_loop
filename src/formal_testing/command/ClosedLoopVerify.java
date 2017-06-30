@@ -20,7 +20,8 @@ public class ClosedLoopVerify extends Command {
 
     @Override
     public void execute() throws IOException {
-        final String code = modelCode(false, true, true, Optional.empty(), Optional.empty());
+        final String code = modelCode(false, true, true, Optional.empty(), Optional.empty(), false, false,
+                Optional.empty());
 
         try (final SpinRunner spinRunner = new SpinRunner(code, timeout, false, 2)) {
             for (String prop : propsFromCode(code)) {

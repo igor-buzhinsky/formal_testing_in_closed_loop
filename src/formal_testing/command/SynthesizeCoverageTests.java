@@ -1,6 +1,6 @@
 package formal_testing.command;
 
-import formal_testing.CoveragePoint;
+import formal_testing.coverage.CoveragePoint;
 import formal_testing.ProblemData;
 import formal_testing.SpinRunner;
 import formal_testing.TestCase;
@@ -17,12 +17,17 @@ public class SynthesizeCoverageTests extends Command {
     private final boolean includeInternal;
     private final int maxLength;
     private final boolean checkFiniteCoverage;
+    private final boolean plantCodeCoverage;
+    private final boolean controllerCodeCoverage;
 
-    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength, boolean checkFiniteCoverage) {
+    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength, boolean checkFiniteCoverage,
+                                   boolean plantCodeCoverage, boolean controllerCodeCoverage) {
         super(data);
         this.includeInternal = includeInternal;
         this.maxLength = maxLength;
-        this.checkFiniteCoverage = false;
+        this.checkFiniteCoverage = checkFiniteCoverage;
+        this.plantCodeCoverage = plantCodeCoverage;
+        this.controllerCodeCoverage = controllerCodeCoverage;
     }
 
     private int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps) throws IOException {
@@ -30,12 +35,12 @@ public class SynthesizeCoverageTests extends Command {
                 .collect(Collectors.toList());
 
         final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader()),
-                Optional.of(tc.promelaBody(false))) + "\n" + (checkFiniteCoverage ? coverageProperties(uncovered, steps)
-                : coverageProperties(uncovered));
+                Optional.of(tc.promelaBody(false)), plantCodeCoverage, controllerCodeCoverage, Optional.empty())
+                + "\n" + (checkFiniteCoverage ? coverageProperties(uncovered, steps) : coverageProperties(uncovered));
 
         int newCovered = 0;
-        System.out.print("(" + uncovered.size() + ") ");
         try (final SpinRunner spinRunner = new SpinRunner(code, 0, true, 2)) {
+            System.out.print("(" + uncovered.size() + ") ");
             for (CoveragePoint cp : uncovered) {
                 final List<String> result = spinRunner.pan(cp.promelaLtlName());
                 for (String line : result) {
@@ -48,17 +53,25 @@ public class SynthesizeCoverageTests extends Command {
                     }
                 }
             }
+            System.out.println();
         }
-        System.out.println();
         return newCovered;
+    }
+
+    private String usualModelCode(Optional<CodeCoverageCounter> counter) {
+        return modelCode(false, true, false, Optional.empty(), Optional.empty(), plantCodeCoverage,
+                controllerCodeCoverage, counter);
     }
 
     @Override
     public void execute() throws IOException {
-        final List<CoveragePoint> coveragePoints = coveragePoints(includeInternal);
+        final CodeCoverageCounter counter = new CodeCoverageCounter();
+        usualModelCode(Optional.of(counter));
+        final List<CoveragePoint> coveragePoints = coveragePoints(includeInternal, counter.coverageClaims);
         final int totalPoints = coveragePoints.size();
         int coveredPoints = 0;
         System.out.println("*** Number of coverage points: " + totalPoints);
+
         final Set<TestCase> allTestCases = new LinkedHashSet<>();
         final String nondetName = "((" + String.join(")|(", data.conf.nondetVars.stream().map(Variable::indexedName)
                 .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + "))";
@@ -66,7 +79,8 @@ public class SynthesizeCoverageTests extends Command {
         for (int len = 1; len <= maxLength; len++) {
             System.out.println("*** Test synthesis for length " + len + "...");
             final StringBuilder code = new StringBuilder();
-            code.append(modelCode(false, true, false, Optional.empty(), Optional.empty())).append("\n");
+            code.append(usualModelCode(Optional.empty())).append("\n");
+
             for (final CoveragePoint cp : coveragePoints) {
                 if (!cp.covered()) {
                     code.append(cp.promelaLtlProperty(len, true)).append("\n");
