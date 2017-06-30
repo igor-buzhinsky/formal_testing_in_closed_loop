@@ -1,14 +1,15 @@
 package formal_testing;
 
+import formal_testing.coverage.CoveragePoint;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by buzhinsky on 6/30/17.
@@ -16,55 +17,74 @@ import java.util.Scanner;
 public class SpinRunner implements AutoCloseable {
     private final String dirName;
     private final int timeout;
-    private final String modelName;
+    private final int parts;
+    private final Map<String, Integer> propertyToPart = new HashMap<>();
 
     private Process spinProcess;
-    private ProcessBuilder pb;
 
     private static int SPIN_DIR_INDEX = 0;
 
-    private static final String MODEL_FILENAME = ".model.pml";
-    private static final String NESTED_MODEL_FILENAME = ".nested.model.pml";
+    private static final int MAX_CLAIMS_IN_ONE_PAN = 50;
+    private static final String MODEL_FILENAME = "model.pml";
     private static final String FORMAT = "*** %U user, %S system, %e elapsed, %Mk maxresident ***\\n";
 
-    public SpinRunner(String modelCode, int timeout, boolean nested, int optimizationLevel) throws IOException {
+    public SpinRunner(String modelCode, int timeout, int optimizationLevel) throws IOException {
+        this(modelCode, Collections.emptyList(), Collections.emptyList(), timeout, optimizationLevel);
+    }
+
+    public SpinRunner(String modelCode, List<CoveragePoint> coveragePoints, List<String> coverageClaims,
+                      int timeout, int optimizationLevel) throws IOException {
         this.timeout = timeout;
 
-        dirName = "spindir" + SPIN_DIR_INDEX++;
-        Files.createDirectories(Paths.get(dirName));
+        dirName = "spindir." + SPIN_DIR_INDEX++;
+        try {
+            Files.createDirectories(Paths.get(dirName));
+        } catch (FileAlreadyExistsException e) {
+        }
 
-        modelName = nested ? NESTED_MODEL_FILENAME : MODEL_FILENAME;
-        try (final PrintWriter pw = new PrintWriter(modelName)) {
-            pw.println(modelCode);
+        parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
+        for (int i = 0; i < parts; i++) {
+            try (final PrintWriter pw = new PrintWriter(dirName + "/" + MODEL_FILENAME + "." + i)) {
+                pw.println(modelCode);
+                final int start = coverageClaims.size() / parts * i;
+                final int end = coverageClaims.size() / parts * (i + 1);
+                for (int j = start; j < end; j++) {
+                    pw.println(coverageClaims.get(j));
+                    propertyToPart.put(coveragePoints.get(j).promelaLtlName(), i);
+                }
+            }
         }
 
         // generate pan source
-        pb = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-a", "../" + modelName)
-                .redirectErrorStream(true).directory(new File(dirName));
-        spinProcess = pb.start();
-        try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
-            while (sc.hasNextLine()) {
-                final String line = sc.nextLine();
-                if (line.startsWith("***")) {
-                    System.out.println(line);
+        for (int i = 0; i < parts; i++) {
+            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-a", MODEL_FILENAME + "." + i)
+                    .redirectErrorStream(true).directory(new File(dirName)).start();
+            try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
+                while (sc.hasNextLine()) {
+                    final String line = sc.nextLine();
+                    if (line.startsWith("***")) {
+                        System.out.println(line);
+                    }
                 }
             }
-        }
-        waitFor();
+            waitFor();
 
-        // compile pan
-        pb = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "cc", "-O" + optimizationLevel, "-DVECTORSZ=1024",
-                "-o", "pan", "pan.c").redirectErrorStream(true).directory(new File(dirName));
-        spinProcess = pb.start();
-        try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
-            while (sc.hasNextLine()) {
-                final String line = sc.nextLine();
-                if (line.startsWith("***")) {
-                    System.out.println(line);
+            // compile pan
+            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "cc", "-O" + optimizationLevel,
+                    "-DVECTORSZ=1024", "-o", "pan", "pan.c")
+                    .redirectErrorStream(true).directory(new File(dirName)).start();
+            try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
+                while (sc.hasNextLine()) {
+                    final String line = sc.nextLine();
+                    if (line.startsWith("***")) {
+                        System.out.println(line);
+                    }
                 }
             }
+            waitFor();
+
+            Files.move(Paths.get(dirName + "/pan"), Paths.get(dirName + "/pan." + i));
         }
-        waitFor();
     }
 
     private int waitFor() {
@@ -76,13 +96,15 @@ public class SpinRunner implements AutoCloseable {
     }
 
     public List<String> pan(String propertyName) throws IOException {
-        final String trailPath = dirName + "/" + modelName + ".trail";
+        final int part = (propertyToPart.containsKey(propertyName) ? propertyToPart.get(propertyName) : 0);
+        final String suffix = "." + part;
+        final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
         final List<String> result = new ArrayList<>();
         File trailFile = null;
         try {
-            pb = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f", FORMAT, "./pan", "-a", "-N",
-                    propertyName, "-m5000000").redirectErrorStream(true).directory(new File(dirName));
-            spinProcess = pb.start();
+            spinProcess = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f", FORMAT,
+                    "./pan" + suffix, "-a", "-N", propertyName, "-m5000000")
+                    .redirectErrorStream(true).directory(new File(dirName)).start();
             final int retCode = waitFor();
             trailFile = new File(trailPath);
             if (retCode == 124) {
@@ -90,9 +112,9 @@ public class SpinRunner implements AutoCloseable {
             } else if (trailFile.exists()) {
                 result.add("*** " + propertyName + " = FALSE ***");
 
-                pb = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-k", modelName + ".trail", "-pglrs",
-                        "../" + modelName).redirectErrorStream(true).directory(new File(dirName));
-                spinProcess = pb.start();
+                spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-k",
+                        MODEL_FILENAME + suffix + ".trail", "-pglrs", MODEL_FILENAME + suffix)
+                        .redirectErrorStream(true).directory(new File(dirName)).start();
                 try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
                     while (sc.hasNextLine()) {
                         result.add(sc.nextLine());

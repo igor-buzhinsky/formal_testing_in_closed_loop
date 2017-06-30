@@ -41,21 +41,29 @@ public class SynthesizeCoverageTests extends Command {
                 .collect(Collectors.toList());
 
         final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader()),
-                Optional.of(tc.promelaBody(false)), plantCodeCoverage, controllerCodeCoverage, Optional.empty())
-                + "\n" + (checkFiniteCoverage ? coverageProperties(uncovered, steps) : coverageProperties(uncovered));
+                Optional.of(tc.promelaBody(false)), plantCodeCoverage, controllerCodeCoverage, Optional.empty());
+
+        final List<String> claims = Arrays.asList((checkFiniteCoverage ? coverageProperties(uncovered, steps)
+                : coverageProperties(uncovered)).split("\n"));
 
         int newCovered = 0;
-        try (final SpinRunner spinRunner = new SpinRunner(code, 0, true, 2)) {
-            System.out.print("(" + uncovered.size() + ") ");
+        int lines = 0;
+        try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
+            final String prefix = "(" + uncovered.size() + ") ";
+            System.out.print(prefix);
             for (CoveragePoint cp : uncovered) {
                 final List<String> result = spinRunner.pan(cp.promelaLtlName());
                 for (String line : result) {
+                    final String suffix = lines > 0 && lines % 150 == 0
+                            ? ("\n" + new String(new char[prefix.length()]).replace('\0', ' ')) : "";
                     if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
+                        lines++;
                         cp.cover();
                         newCovered++;
-                        System.out.print("+");
+                        System.out.print("+" + suffix);
                     } else if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                        System.out.print("-");
+                        lines++;
+                        System.out.print("-" + suffix);
                     }
                 }
             }
@@ -85,16 +93,16 @@ public class SynthesizeCoverageTests extends Command {
         final String trailRegexp = "^.*proc.*state.*\\[" + nondetName + " = [0-9]+\\].*$";
         for (int len = 1; len <= maxLength; len++) {
             System.out.println("*** Test synthesis for length " + len + "...");
-            final StringBuilder code = new StringBuilder();
-            code.append(usualModelCode(Optional.empty())).append("\n");
 
-            for (final CoveragePoint cp : coveragePoints) {
-                if (!cp.covered()) {
-                    code.append(cp.promelaLtlProperty(len, true)).append("\n");
-                }
+            final String code = usualModelCode(Optional.empty());
+            final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
+                    .collect(Collectors.toList());
+            final List<String> claims = new ArrayList<>();
+            for (CoveragePoint cp : uncovered) {
+                claims.add(cp.promelaLtlProperty(len, true));
             }
 
-            try (final SpinRunner spinRunner = new SpinRunner(code.toString(), 0, false, 2)) {
+            try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
                 for (final CoveragePoint cp : coveragePoints) {
                     if (cp.covered()) {
                         continue;

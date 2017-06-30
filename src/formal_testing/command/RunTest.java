@@ -30,7 +30,7 @@ public class RunTest extends Command {
                 Optional.empty());
 
         System.out.println("Running test suite " + filename + "...");
-        try (final SpinRunner spinRunner = new SpinRunner(code, 0, false, 2)) {
+        try (final SpinRunner spinRunner = new SpinRunner(code, 0, 2)) {
             for (String prop : propsFromCode(code)) {
                 final List<String> result = spinRunner.pan(prop);
                 result.stream().filter(line -> verbose || line.startsWith("***")).forEach(System.out::println);

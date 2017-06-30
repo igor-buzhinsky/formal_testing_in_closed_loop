@@ -23,7 +23,7 @@ public class ClosedLoopVerify extends Command {
         final String code = modelCode(false, true, true, Optional.empty(), Optional.empty(), false, false,
                 Optional.empty());
 
-        try (final SpinRunner spinRunner = new SpinRunner(code, timeout, false, 2)) {
+        try (final SpinRunner spinRunner = new SpinRunner(code, timeout, 2)) {
             for (String prop : propsFromCode(code)) {
                 final List<String> result = spinRunner.pan(prop);
                 result.forEach(System.out::println);
