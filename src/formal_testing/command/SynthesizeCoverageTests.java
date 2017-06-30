@@ -19,7 +19,7 @@ public class SynthesizeCoverageTests extends Command {
     private final boolean checkFiniteCoverage;
 
     public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength, boolean checkFiniteCoverage) {
-        super("synthesize-coverage-tests", data);
+        super(data);
         this.includeInternal = includeInternal;
         this.maxLength = maxLength;
         this.checkFiniteCoverage = false;
@@ -33,25 +33,23 @@ public class SynthesizeCoverageTests extends Command {
                 Optional.of(tc.promelaBody(false))) + "\n" + (checkFiniteCoverage ? coverageProperties(uncovered, steps)
                 : coverageProperties(uncovered));
 
-        final SpinRunner spinRunner = new SpinRunner(code, 0, true, 2);
         int newCovered = 0;
-
         System.out.print("(" + uncovered.size() + ") ");
-        for (CoveragePoint cp : uncovered) {
-            final List<String> result = spinRunner.pan(cp.promelaLtlName());
-            for (String line : result) {
-                if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
-                    cp.cover();
-                    newCovered++;
-                    System.out.print("+");
-                } else if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                    System.out.print("-");
+        try (final SpinRunner spinRunner = new SpinRunner(code, 0, true, 2)) {
+            for (CoveragePoint cp : uncovered) {
+                final List<String> result = spinRunner.pan(cp.promelaLtlName());
+                for (String line : result) {
+                    if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
+                        cp.cover();
+                        newCovered++;
+                        System.out.print("+");
+                    } else if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
+                        System.out.print("-");
+                    }
                 }
             }
         }
         System.out.println();
-
-        spinRunner.cleanup();
         return newCovered;
     }
 
@@ -75,35 +73,34 @@ public class SynthesizeCoverageTests extends Command {
                 }
             }
 
-            final SpinRunner spinRunner = new SpinRunner(code.toString(), 0, false, 2);
-
-            for (final CoveragePoint cp : coveragePoints) {
-                if (cp.covered()) {
-                    continue;
-                }
-                final List<String> result = spinRunner.pan(cp.promelaLtlName());
-                TestCase tc = null;
-                for (String line : result) {
-                    if (line.startsWith("***")) {
-                        System.out.println(line);
+            try (final SpinRunner spinRunner = new SpinRunner(code.toString(), 0, false, 2)) {
+                for (final CoveragePoint cp : coveragePoints) {
+                    if (cp.covered()) {
+                        continue;
                     }
-                    if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                        cp.cover();
-                        coveredPoints++;
-                        tc = new TestCase(data.conf);
-                    } else if (tc != null && line.matches(trailRegexp)) {
-                        final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                        tc.addValue(tokens[1], tokens[2]);
+                    final List<String> result = spinRunner.pan(cp.promelaLtlName());
+                    TestCase tc = null;
+                    for (String line : result) {
+                        if (line.startsWith("***")) {
+                            System.out.println(line);
+                        }
+                        if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
+                            cp.cover();
+                            coveredPoints++;
+                            tc = new TestCase(data.conf);
+                        } else if (tc != null && line.matches(trailRegexp)) {
+                            final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
+                            tc.addValue(tokens[1], tokens[2]);
+                        }
                     }
-                }
-                if (tc != null) {
-                    tc.validate();
-                    coveredPoints += examineTestCase(tc, coveragePoints, len);
-                    System.out.println(tc);
-                    allTestCases.add(tc);
+                    if (tc != null) {
+                        tc.validate();
+                        coveredPoints += examineTestCase(tc, coveragePoints, len);
+                        System.out.println(tc);
+                        allTestCases.add(tc);
+                    }
                 }
             }
-            spinRunner.cleanup();
             if (coveredPoints == totalPoints) {
                 break;
             }

@@ -4,11 +4,10 @@ import formal_testing.ProblemData;
 import formal_testing.SpinRunner;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 
 /**
  * Created by buzhinsky on 6/28/17.
@@ -17,7 +16,7 @@ public class RunTest extends Command {
     private final String filename;
 
     public RunTest(ProblemData data, String filename) {
-        super("run-test", data);
+        super(data);
         this.filename = filename;
     }
 
@@ -26,12 +25,11 @@ public class RunTest extends Command {
         final String header = new String(Files.readAllBytes(Paths.get(filename + ".header")));
         final String body = new String(Files.readAllBytes(Paths.get(filename + ".body")));
         final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body));
-        try (final PrintWriter pw = new PrintWriter(SpinRunner.MODEL_FILENAME)) {
-            pw.println(code);
-        }
-        try (final Scanner sc = SpinRunner.runSpin(0, 0, false)) {
-            while (sc.hasNextLine()) {
-                System.out.println(sc.nextLine());
+
+        try (final SpinRunner spinRunner = new SpinRunner(code, 0, false, 2)) {
+            for (String prop : propsFromCode(code)) {
+                final List<String> result = spinRunner.pan(prop);
+                result.forEach(System.out::println);
             }
         }
     }

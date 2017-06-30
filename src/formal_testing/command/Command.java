@@ -15,13 +15,17 @@ import java.util.stream.Collectors;
  * Created by buzhinsky on 6/27/17.
  */
 public abstract class Command {
-    public final String name;
     public final ProblemData data;
 
-
-    public Command(String name, ProblemData data) {
-        this.name = name;
+    public Command(ProblemData data) {
         this.data = data;
+    }
+
+    protected List<String> propsFromCode(String code) {
+        return Arrays.stream(code.split("\n"))
+                .filter(s -> s.matches("ltl .*\\{.*\\}.*"))
+                .map(s -> s.replaceAll("^ltl ", "").replaceAll(" .*$", ""))
+                .collect(Collectors.toList());
     }
 
     private String nondetSelection() {

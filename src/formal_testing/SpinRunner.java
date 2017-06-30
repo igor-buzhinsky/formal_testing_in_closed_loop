@@ -13,7 +13,7 @@ import java.util.Scanner;
 /**
  * Created by buzhinsky on 6/30/17.
  */
-public class SpinRunner {
+public class SpinRunner implements AutoCloseable {
     private final String dirName;
     private final int timeout;
     private final String modelName;
@@ -23,8 +23,8 @@ public class SpinRunner {
 
     private static int SPIN_DIR_INDEX = 0;
 
-    public static final String MODEL_FILENAME = ".model.pml";
-    public static final String NESTED_MODEL_FILENAME = ".nested.model.pml";
+    private static final String MODEL_FILENAME = ".model.pml";
+    private static final String NESTED_MODEL_FILENAME = ".nested.model.pml";
     private static final String FORMAT = "*** %U user, %S system, %e elapsed, %Mk maxresident ***\\n";
 
     public SpinRunner(String modelCode, int timeout, boolean nested, int optimizationLevel) throws IOException {
@@ -127,16 +127,8 @@ public class SpinRunner {
         }
     }
 
-    public void cleanup() throws IOException {
+    @Override
+    public void close() throws IOException {
         delete(new File(dirName));
-    }
-
-    public static Scanner runSpin(int timeout, int optimizationLevel, boolean nested) throws IOException {
-        final ProcessBuilder pb = new ProcessBuilder("/bin/bash", "run.sh",
-                nested ? NESTED_MODEL_FILENAME : MODEL_FILENAME,String.valueOf(timeout),
-                String.valueOf(optimizationLevel), "spindir" + SPIN_DIR_INDEX++);
-        pb.redirectError();
-        final Process p = pb.start();
-        return new Scanner(p.getInputStream());
     }
 }

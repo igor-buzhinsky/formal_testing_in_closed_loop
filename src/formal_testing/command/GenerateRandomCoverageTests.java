@@ -11,7 +11,7 @@ public class GenerateRandomCoverageTests extends Command {
     private final boolean includeInternal;
 
     public GenerateRandomCoverageTests(ProblemData data, boolean includeInternal) {
-        super("generate-random-coverage-tests", data);
+        super(data);
         this.includeInternal = includeInternal;
     }
 

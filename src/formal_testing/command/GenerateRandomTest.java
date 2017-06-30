@@ -19,7 +19,7 @@ public class GenerateRandomTest extends Command {
     private final Random random;
 
     public GenerateRandomTest(ProblemData data, int length, String filename, Random random) {
-        super("generate-random-test", data);
+        super(data);
         this.length = length;
         this.filename = filename;
         this.random = random;
