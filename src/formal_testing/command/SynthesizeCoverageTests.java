@@ -79,42 +79,34 @@ public class SynthesizeCoverageTests extends Command {
                     code.append(cp.promelaLtlProperty(len, true)).append("\n");
                 }
             }
-            try (final PrintWriter pw = new PrintWriter(SpinRunner.MODEL_FILENAME)) {
-                pw.println(code);
-            }
 
-            TestCase currentTC = null;
+            final SpinRunner spinRunner = new SpinRunner(code.toString(), 0, false, 2);
 
-            try (final Scanner sc = SpinRunner.runSpin(0, 2, false)) {
-                while (sc.hasNextLine()) {
-                    final String line = sc.nextLine();
-                    if (line.startsWith("***") && line.endsWith("***")) {
-                        if (currentTC != null) {
-                            coveredPoints += examineTestCase(currentTC, coveragePoints, len);
-                            allTestCases.add(currentTC);
-                            currentTC = null;
-                        }
+            for (final CoveragePoint cp : coveragePoints) {
+                if (cp.covered()) {
+                    continue;
+                }
+                final List<String> result = spinRunner.pan(cp.promelaLtlName());
+                TestCase tc = null;
+                for (String line : result) {
+                    if (line.startsWith("***")) {
                         System.out.println(line);
-                        if (line.endsWith(" = FALSE ***")) {
-                            for (CoveragePoint cp : coveragePoints) {
-                                if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                                    if (cp.covered()) {
-                                        currentTC = null;
-                                    } else {
-                                        cp.cover();
-                                        coveredPoints++;
-                                        currentTC = new TestCase(data.conf);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else if (currentTC != null && line.matches(trailRegexp)) {
+                    }
+                    if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
+                        cp.cover();
+                        coveredPoints++;
+                        tc = new TestCase(data.conf);
+                    } else if (tc != null && line.matches(trailRegexp)) {
                         final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                        currentTC.addValue(tokens[1], tokens[2]);
+                        tc.addValue(tokens[1], tokens[2]);
                     }
                 }
+                if (tc != null) {
+                    coveredPoints += examineTestCase(tc, coveragePoints, len);
+                    allTestCases.add(tc);
+                }
             }
+            spinRunner.cleanup();
             if (coveredPoints == totalPoints) {
                 break;
             }

@@ -9,7 +9,7 @@ format="*** %U user, %S system, %e elapsed, %Mk maxresident ***\n"
 mkdir -p "$pandir"
 cd "$pandir"
 echo "*** GENERATING PAN SOURCE ***"
-/usr/bin/time -f "$format" $time spin -a ../"$name" 2>&1
+/usr/bin/time -f "$format" spin -a ../"$name" 2>&1
 echo "*** COMPILING PAN ***"
 /usr/bin/time -f "$format" cc -O$opt -DVECTORSZ=1024 -o pan pan.c 2>&1
 
