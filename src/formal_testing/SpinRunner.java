@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -26,7 +25,10 @@ public class SpinRunner implements AutoCloseable {
 
     private static final int MAX_CLAIMS_IN_ONE_PAN = 50;
     private static final String MODEL_FILENAME = "model.pml";
-    private static final String FORMAT = "*** %U user, %S system, %e elapsed, %Mk maxresident ***\\n";
+    private static final String FORMAT_BASE = ": %U user, %S system, %e elapsed, %Mk maxresident ***\\n";
+    private static final String FORMAT_GENERATE = "*** Generated pan source" + FORMAT_BASE;
+    private static final String FORMAT_COMPILE = "*** Compiled pan" + FORMAT_BASE;
+    private static final String FORMAT_RUN = "*** Executed pan" + FORMAT_BASE;
 
     public SpinRunner(String modelCode, int timeout, int optimizationLevel) throws IOException {
         this(modelCode, Collections.emptyList(), Collections.emptyList(), timeout, optimizationLevel);
@@ -37,10 +39,11 @@ public class SpinRunner implements AutoCloseable {
         this.timeout = timeout;
 
         dirName = "spindir." + SPIN_DIR_INDEX++;
-        try {
-            Files.createDirectories(Paths.get(dirName));
-        } catch (FileAlreadyExistsException e) {
+        final File dir = new File(dirName);
+        if (dir.exists()) {
+            delete(dir);
         }
+        Files.createDirectories(Paths.get(dirName));
 
         parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
         for (int i = 0; i < parts; i++) {
@@ -57,8 +60,8 @@ public class SpinRunner implements AutoCloseable {
 
         // generate pan source
         for (int i = 0; i < parts; i++) {
-            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-a", MODEL_FILENAME + "." + i)
-                    .redirectErrorStream(true).directory(new File(dirName)).start();
+            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT_GENERATE, "spin", "-a",
+                    MODEL_FILENAME + "." + i).redirectErrorStream(true).directory(new File(dirName)).start();
             try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
                 while (sc.hasNextLine()) {
                     final String line = sc.nextLine();
@@ -70,7 +73,7 @@ public class SpinRunner implements AutoCloseable {
             waitFor();
 
             // compile pan
-            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "cc", "-O" + optimizationLevel,
+            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT_COMPILE, "cc", "-O" + optimizationLevel,
                     "-DVECTORSZ=1024", "-o", "pan", "pan.c")
                     .redirectErrorStream(true).directory(new File(dirName)).start();
             try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
@@ -102,9 +105,14 @@ public class SpinRunner implements AutoCloseable {
         final List<String> result = new ArrayList<>();
         File trailFile = null;
         try {
-            spinProcess = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f", FORMAT,
+            spinProcess = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f", FORMAT_RUN,
                     "./pan" + suffix, "-a", "-N", propertyName, "-m5000000")
                     .redirectErrorStream(true).directory(new File(dirName)).start();
+            try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
+                while (sc.hasNextLine()) {
+                    result.add(sc.nextLine());
+                }
+            }
             final int retCode = waitFor();
             trailFile = new File(trailPath);
             if (retCode == 124) {
@@ -112,7 +120,7 @@ public class SpinRunner implements AutoCloseable {
             } else if (trailFile.exists()) {
                 result.add("*** " + propertyName + " = FALSE ***");
 
-                spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT, "spin", "-k",
+                spinProcess = new ProcessBuilder("/usr/bin/time", "-f", FORMAT_RUN, "spin", "-k",
                         MODEL_FILENAME + suffix + ".trail", "-pglrs", MODEL_FILENAME + suffix)
                         .redirectErrorStream(true).directory(new File(dirName)).start();
                 try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {

@@ -1,6 +1,6 @@
 package formal_testing;
 
-import formal_testing.command.*;
+import formal_testing.main.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -49,15 +49,13 @@ public class Main {
                     final boolean includeInternal2 = Boolean.parseBoolean(args[++i]);
                     final int maxLength = Integer.parseInt(args[++i]);
                     final boolean checkFiniteCoverage = Boolean.parseBoolean(args[++i]);
+                    final boolean minimize = Boolean.parseBoolean(args[++i]);
                     final boolean valuePairCoverage = Boolean.parseBoolean(args[++i]);
                     final boolean plantCodeCoverage = Boolean.parseBoolean(args[++i]);
                     final boolean controllerCodeCoverage = Boolean.parseBoolean(args[++i]);
                     final String filename3 = args[++i];
                     commands.add(new SynthesizeCoverageTests(data, includeInternal2, maxLength, checkFiniteCoverage,
-                            valuePairCoverage, plantCodeCoverage, controllerCodeCoverage, filename3));
-                    break;
-                case "exit":
-                    commands.add(new ExitCommand(data));
+                            minimize, valuePairCoverage, plantCodeCoverage, controllerCodeCoverage, filename3));
                     break;
                 default:
                     throw new RuntimeException("Unknown command " + command);

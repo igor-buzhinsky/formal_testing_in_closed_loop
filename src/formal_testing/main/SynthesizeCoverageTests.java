@@ -1,4 +1,4 @@
-package formal_testing.command;
+package formal_testing.main;
 
 import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
@@ -18,18 +18,20 @@ public class SynthesizeCoverageTests extends Command {
     private final boolean includeInternal;
     private final int maxLength;
     private final boolean checkFiniteCoverage;
+    private final boolean minimize;
     private final boolean valuePairCoverage;
     private final boolean plantCodeCoverage;
     private final boolean controllerCodeCoverage;
     private final String outputFilename;
 
     public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength,
-                                   boolean checkFiniteCoverage, boolean valuePairCoverage, boolean plantCodeCoverage,
-                                   boolean controllerCodeCoverage, String outputFilename) {
+                                   boolean checkFiniteCoverage, boolean minimize, boolean valuePairCoverage,
+                                   boolean plantCodeCoverage, boolean controllerCodeCoverage, String outputFilename) {
         super(data);
         this.includeInternal = includeInternal;
         this.maxLength = maxLength;
         this.checkFiniteCoverage = checkFiniteCoverage;
+        this.minimize = minimize;
         this.valuePairCoverage = valuePairCoverage;
         this.plantCodeCoverage = plantCodeCoverage;
         this.controllerCodeCoverage = controllerCodeCoverage;
@@ -93,6 +95,7 @@ public class SynthesizeCoverageTests extends Command {
         final String trailRegexp = "^.*proc.*state.*\\[" + nondetName + " = [0-9]+\\].*$";
         for (int len = 1; len <= maxLength; len++) {
             System.out.println("*** Test synthesis for length " + len + "...");
+            System.out.println("*** Covered points: " + coveredPoints + " / " + totalPoints);
 
             final String code = usualModelCode(Optional.empty());
             final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
@@ -110,21 +113,25 @@ public class SynthesizeCoverageTests extends Command {
                     final List<String> result = spinRunner.pan(cp.promelaLtlName());
                     TestCase tc = null;
                     for (String line : result) {
-                        if (line.startsWith("***")) {
-                            System.out.println(line);
-                        }
                         if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
                             cp.cover();
                             coveredPoints++;
                             tc = new TestCase(data.conf);
+                            System.out.println(cp);
+                        } else if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
+                            System.out.println(cp);
                         } else if (tc != null && line.matches(trailRegexp)) {
                             final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
                             tc.addValue(tokens[1], tokens[2]);
+                        } else if (line.startsWith("***")) {
+                            System.out.println(line);
                         }
                     }
                     if (tc != null) {
-                        tc.validate();
-                        coveredPoints += examineTestCase(tc, coveragePoints, len);
+                        //tc.validate();
+                        if (minimize) {
+                            coveredPoints += examineTestCase(tc, coveragePoints, len);
+                        }
                         System.out.println(tc);
                         testSuite.add(tc);
                     }
@@ -137,9 +144,9 @@ public class SynthesizeCoverageTests extends Command {
 
         System.out.println(testSuite);
         testSuite.print(outputFilename);
-        System.out.println("Covered points: " + coveredPoints + " / " + totalPoints);
+        System.out.println("*** Covered points: " + coveredPoints + " / " + totalPoints);
         if (coveredPoints < totalPoints) {
-            System.out.println("Not covered:");
+            System.out.println("*** Not covered:");
             coveragePoints.stream().filter(cp -> !cp.covered()).forEach(System.out::println);
         }
     }

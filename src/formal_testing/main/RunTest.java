@@ -1,4 +1,4 @@
-package formal_testing.command;
+package formal_testing.main;
 
 import formal_testing.ProblemData;
 import formal_testing.SpinRunner;
