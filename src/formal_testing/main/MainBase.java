@@ -55,6 +55,7 @@ public abstract class MainBase {
     protected void loadData(String configurationFilename, String headerFilename, String plantModelFilename,
                             String controllerModelFilename, String specFilename) throws IOException {
         final Configuration conf = Configuration.fromFile(configurationFilename);
+        System.out.println("Configuration:");
         System.out.println(conf);
         System.out.println();
 

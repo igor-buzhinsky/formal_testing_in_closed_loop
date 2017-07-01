@@ -1,5 +1,6 @@
 package formal_testing.main;
 
+import formal_testing.ResourceMeasurement;
 import formal_testing.SpinRunner;
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
@@ -78,7 +79,8 @@ public class SynthesizeCoverageTests extends MainBase {
         int newCovered = 0;
         int lines = 0;
         try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
-            final String prefix = "(" + uncovered.size() + ") ";
+            System.out.println("    " + spinRunner.creationMeasurement);
+            final String prefix = "    (" + uncovered.size() + ") ";
             System.out.print(prefix);
             for (CoveragePoint cp : uncovered) {
                 final List<String> result = spinRunner.pan(cp.promelaLtlName());
@@ -116,15 +118,16 @@ public class SynthesizeCoverageTests extends MainBase {
                 counter.coverageClaims);
         final int totalPoints = coveragePoints.size();
         int coveredPoints = 0;
-        System.out.println("*** Number of coverage points: " + totalPoints);
+        System.out.println("Coverage test synthesis...");
 
         final TestSuite testSuite = new TestSuite();
         final String nondetName = "(" + String.join("|", data.conf.nondetVars.stream().map(Variable::indexedName)
                 .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ")";
         final String trailRegexp = "^.*proc.*state.*\\[" + nondetName + " = [0-9]+\\].*$";
         for (int len = 1; len <= maxLength; len++) {
-            System.out.println("*** Test synthesis for length " + len + "...");
-            System.out.println("*** Covered points: " + coveredPoints + " / " + totalPoints);
+            System.out.println("  Test synthesis for length " + len + "...");
+            System.out.println("  Covered points: " + coveredPoints + " / " + totalPoints
+                    + ", test synthesis for length " + len + "...");
 
             final String code = usualModelCode(Optional.empty());
             final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
@@ -135,10 +138,12 @@ public class SynthesizeCoverageTests extends MainBase {
             }
 
             try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
+                System.out.println("  " + spinRunner.creationMeasurement);
                 for (final CoveragePoint cp : coveragePoints) {
                     if (cp.covered()) {
                         continue;
                     }
+                    System.out.println("  Test synthesis for " + cp + "...");
                     final List<String> result = spinRunner.pan(cp.promelaLtlName());
                     TestCase tc = null;
                     for (String line : result) {
@@ -146,14 +151,14 @@ public class SynthesizeCoverageTests extends MainBase {
                             cp.cover();
                             coveredPoints++;
                             tc = new TestCase(data.conf);
-                            System.out.println(cp);
+                            System.out.println("    " + cp);
                         } else if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
-                            System.out.println(cp);
+                            System.out.println("    " + cp);
                         } else if (tc != null && line.matches(trailRegexp)) {
                             final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
                             tc.addValue(tokens[1], tokens[2]);
-                        } else if (line.startsWith("***")) {
-                            System.out.println(line);
+                        } else if (ResourceMeasurement.isMeasurement(line)) {
+                            System.out.println("    " + new ResourceMeasurement(line, "test synthesis"));
                         }
                     }
                     if (tc != null) {
@@ -161,7 +166,7 @@ public class SynthesizeCoverageTests extends MainBase {
                         if (minimize) {
                             coveredPoints += examineTestCase(tc, coveragePoints, len);
                         }
-                        System.out.println(tc);
+                        System.out.println("    Generated: " + tc);
                         testSuite.add(tc);
                     }
                 }
@@ -173,10 +178,10 @@ public class SynthesizeCoverageTests extends MainBase {
 
         System.out.println(testSuite);
         testSuite.print(outputFilename);
-        System.out.println("*** Covered points: " + coveredPoints + " / " + totalPoints);
+        System.out.println("  Covered points: " + coveredPoints + " / " + totalPoints);
         if (coveredPoints < totalPoints) {
-            System.out.println("*** Not covered:");
-            coveragePoints.stream().filter(cp -> !cp.covered()).forEach(System.out::println);
+            System.out.println("  Not covered:");
+            coveragePoints.stream().filter(cp -> !cp.covered()).forEach(s -> System.out.println("  " + s));
         }
     }
 }
