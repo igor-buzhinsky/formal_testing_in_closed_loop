@@ -1,13 +1,12 @@
 package formal_testing.main;
 
 import formal_testing.SpinRunner;
+import formal_testing.TestSuite;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,10 +43,9 @@ public class Run extends MainBase {
     protected void launcher() throws IOException, InterruptedException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
-        final String header = new String(Files.readAllBytes(Paths.get(filename + ".header")));
-        final String body = new String(Files.readAllBytes(Paths.get(filename + ".body")));
-        final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body), false, false,
-                Optional.empty());
+        final TestSuite ts = TestSuite.read(filename);
+        final String code = modelCode(true, false, true, Optional.of(ts.promelaHeader()), Optional.of(ts.promelaBody()),
+                false, false, Optional.empty());
 
         System.out.println("Running test suite " + filename + "...");
         try (final SpinRunner spinRunner = new SpinRunner(code, 0, 2)) {

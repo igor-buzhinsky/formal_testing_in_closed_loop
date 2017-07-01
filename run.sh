@@ -16,8 +16,8 @@ run() {
     echo
 }
 
-run synthesize-coverage-tests --maxlen 10 --includeInternal --plantCodeCoverage --controllerCodeCoverage --output test1 --minimize
-run generate-random --number 10 --length 10 --output test2
-run run --input test1
-run run --input test2
+run synthesize-coverage-tests --maxlen 10 --includeInternal --plantCodeCoverage --controllerCodeCoverage --output test1.bin --minimize
+run generate-random --number 10 --length 10 --output test2.bin
+run run --input test1.bin
+run run --input test2.bin
 

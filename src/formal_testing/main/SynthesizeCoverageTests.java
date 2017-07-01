@@ -70,7 +70,7 @@ public class SynthesizeCoverageTests extends MainBase {
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
 
-        final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader()),
+        final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader(false)),
                 Optional.of(tc.promelaBody(false)), plantCodeCoverage, controllerCodeCoverage, Optional.empty());
 
         final List<String> claims = Arrays.asList((checkFiniteCoverage ? coverageProperties(uncovered, steps)
@@ -120,7 +120,7 @@ public class SynthesizeCoverageTests extends MainBase {
         int coveredPoints = 0;
         System.out.println("Coverage test synthesis...");
 
-        final TestSuite testSuite = new TestSuite();
+        final TestSuite testSuite = new TestSuite(true);
         final String nondetName = "(" + String.join("|", data.conf.nondetVars.stream().map(Variable::indexedName)
                 .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ")";
         final String trailRegexp = "^.*proc.*state.*\\[" + nondetName + " = [0-9]+\\].*$";

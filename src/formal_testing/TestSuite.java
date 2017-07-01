@@ -1,17 +1,18 @@
 package formal_testing;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/30/17.
  */
-public class TestSuite {
+public class TestSuite implements Serializable {
     private final Set<TestCase> testCases = new LinkedHashSet<>();
+    private final boolean addOracle;
 
-    public TestSuite(TestCase... testCases) {
+    public TestSuite(boolean addOracle, TestCase... testCases) {
+        this.addOracle = addOracle;
         Arrays.stream(testCases).forEach(this.testCases::add);
     }
 
@@ -32,7 +33,7 @@ public class TestSuite {
         return "int _test_step;" + (trivial() ? "" : "\nint _test_index = -1;");
     }
 
-    public String promelaBody(boolean addOracle) {
+    public String promelaBody() {
         // looping scenario
         final List<TestCase> list = new ArrayList<>(testCases);
         final StringBuilder sb = new StringBuilder();
@@ -74,12 +75,19 @@ public class TestSuite {
         return sb.toString();
     }
 
-    public void print(String filename) throws FileNotFoundException {
-        try (final PrintWriter pw = new PrintWriter(filename + ".header")) {
-            pw.print(promelaHeader());
+    public void print(String filename) throws IOException {
+        try (final ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
+            out.writeObject(this);
         }
-        try (final PrintWriter pw = new PrintWriter(filename + ".body")) {
-            pw.print(promelaBody(true));
+    }
+
+    public static TestSuite read(String filename) throws IOException {
+        try (final ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
+            try {
+                return (TestSuite) in.readObject();
+            } catch (ClassNotFoundException e) {
+                throw new IOException(e);
+            }
         }
     }
 }

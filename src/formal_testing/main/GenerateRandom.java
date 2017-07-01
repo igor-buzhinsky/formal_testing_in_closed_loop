@@ -48,7 +48,7 @@ public class GenerateRandom extends MainBase {
     @Override
     protected void launcher() throws IOException, InterruptedException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
-        final TestSuite ts = new TestSuite();
+        final TestSuite ts = new TestSuite(true);
         final List<List<String>> allValues = data.conf.nondetVars.stream()
                 .map(Variable::promelaValues).collect(Collectors.toList());
         for (int i = 0; i < number; i++) {

@@ -2,12 +2,13 @@ package formal_testing;
 
 import formal_testing.variable.Variable;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
  * Created by buzhinsky on 6/29/17.
  */
-public class TestCase {
+public class TestCase implements Serializable {
     private final Map<String, List<String>> values = new LinkedHashMap<>();
     private int length = 0;
 
@@ -36,8 +37,8 @@ public class TestCase {
         return values.toString();
     }
 
-    public String promelaHeader() {
-        return new TestSuite(this).promelaHeader();
+    public String promelaHeader(boolean addOracle) {
+        return new TestSuite(addOracle, this).promelaHeader();
     }
 
     public void validate() {
@@ -49,7 +50,7 @@ public class TestCase {
     }
 
     public String promelaBody(boolean addOracle) {
-        return new TestSuite(this).promelaBody(addOracle);
+        return new TestSuite(addOracle, this).promelaBody();
     }
 
     @Override
