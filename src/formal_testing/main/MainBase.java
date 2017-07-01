@@ -1,5 +1,6 @@
 package formal_testing.main;
 
+import formal_testing.Configuration;
 import formal_testing.ProblemData;
 import formal_testing.Util;
 import formal_testing.coverage.CoveragePoint;
@@ -8,22 +9,61 @@ import formal_testing.coverage.FlowCoveragePoint;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/**
- * Created by buzhinsky on 6/27/17.
- */
-public abstract class Command {
-    public final ProblemData data;
+public abstract class MainBase {
+    protected ProblemData data;
 
-    public Command(ProblemData data) {
-        this.data = data;
+    protected abstract void launcher() throws IOException, InterruptedException;
+
+    public void run(String[] args) {
+        if (!parseArgs(args)) {
+            return;
+        }
+        try {
+            launcher();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private boolean parseArgs(String[] args) {
+        final CmdLineParser parser = new CmdLineParser(this);
+        try {
+            parser.parseArgument(args);
+            return true;
+        } catch (CmdLineException e) {
+            System.out.print("Usage: java -jar <jar filename> ");
+            parser.printSingleLineUsage(System.out);
+            System.out.println();
+            parser.printUsage(System.out);
+            return false;
+        }
+    }
+
+    protected void loadData(String configurationFilename, String headerFilename, String plantModelFilename,
+                            String controllerModelFilename, String specFilename) throws IOException {
+        final Configuration conf = Configuration.fromFile(configurationFilename);
+        System.out.println(conf);
+        System.out.println();
+
+        data = new ProblemData(conf,
+                new String(Files.readAllBytes(Paths.get(headerFilename))),
+                new String(Files.readAllBytes(Paths.get(plantModelFilename))),
+                new String(Files.readAllBytes(Paths.get(controllerModelFilename))),
+                new String(Files.readAllBytes(Paths.get(specFilename)))
+        );
     }
 
     protected List<String> propsFromCode(String code) {
@@ -201,6 +241,4 @@ public abstract class Command {
         return String.join("\n", coveragePoints.stream().map(cp -> cp.promelaLtlProperty(steps, false))
                 .collect(Collectors.toList()));
     }
-
-    public abstract void execute() throws IOException;
 }

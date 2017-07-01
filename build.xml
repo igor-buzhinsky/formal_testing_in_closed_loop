@@ -6,29 +6,74 @@
     <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
     <property name="commons.lang3.path" value="lib/commons-lang3-3.1.jar"/>
     
-    <property name="main.main" value="formal_testing/Main"/>
-    <property name="main.jar" value="main.jar"/>
+    <property name="closed-loop-verify.main" value="formal_testing/main/ClosedLoopVerify"/>
+    <property name="closed-loop-verify.jar" value="closed-loop-verify.jar"/>
+    
+    <property name="generate-random.main" value="formal_testing/main/GenerateRandom"/>
+    <property name="generate-random.jar" value="generate-random.jar"/>
+    
+    <property name="run.main" value="formal_testing/main/Run"/>
+    <property name="run.jar" value="run.jar"/>
+    
+    <property name="synthesize-coverage-tests.main" value="formal_testing/main/SynthesizeCoverageTests"/>
+    <property name="synthesize-coverage-tests.jar" value="synthesize-coverage-tests.jar"/>
     
     <property name="debug" value="true"/>
     
     <target name="all"
-            depends="main-jar">
+            depends="closed-loop-verify-jar, generate-random-jar, run-jar, synthesize-coverage-tests-jar">
     </target>
 
-    <target name="main-jar">
+    <target name="closed-loop-verify-jar">
         <mkdir dir="${bin.dir}"/>
-        <javac srcdir="${src.dir}"
-               destdir="${bin.dir}"
-               classpath="${commons.lang3.path}:${args4j.path}"
-               includeantruntime="false"
-               debug="${debug}">
-            <include name="${main.main}.java"/>
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+               includeantruntime="false" debug="${debug}">
+            <include name="${closed-loop-verify.main}.java"/>
         </javac>
-        <jar destfile="${jars.dir}/${main.jar}"
-             basedir="${bin.dir}">
-            <manifest>
-                <attribute name="Main-Class" value="${main.main}"/>
-            </manifest>
+        <jar destfile="${jars.dir}/${closed-loop-verify.jar}" basedir="${bin.dir}">
+            <manifest><attribute name="Main-Class" value="${closed-loop-verify.main}"/></manifest>
+            <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+        </jar>
+        <delete dir="${bin.dir}"/>
+    </target>
+    
+    <target name="generate-random-jar">
+        <mkdir dir="${bin.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+               includeantruntime="false" debug="${debug}">
+            <include name="${generate-random.main}.java"/>
+        </javac>
+        <jar destfile="${jars.dir}/${generate-random.jar}" basedir="${bin.dir}">
+            <manifest><attribute name="Main-Class" value="${generate-random.main}"/></manifest>
+            <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+        </jar>
+        <delete dir="${bin.dir}"/>
+    </target>
+    
+    <target name="run-jar">
+        <mkdir dir="${bin.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+               includeantruntime="false" debug="${debug}">
+            <include name="${run.main}.java"/>
+        </javac>
+        <jar destfile="${jars.dir}/${run.jar}" basedir="${bin.dir}">
+            <manifest><attribute name="Main-Class" value="${run.main}"/></manifest>
+            <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
+            <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+        </jar>
+        <delete dir="${bin.dir}"/>
+    </target>
+    
+    <target name="synthesize-coverage-tests-jar">
+        <mkdir dir="${bin.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+               includeantruntime="false" debug="${debug}">
+            <include name="${synthesize-coverage-tests.main}.java"/>
+        </javac>
+        <jar destfile="${jars.dir}/${synthesize-coverage-tests.jar}" basedir="${bin.dir}">
+            <manifest><attribute name="Main-Class" value="${synthesize-coverage-tests.main}"/></manifest>
             <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
         </jar>

@@ -3,15 +3,18 @@ package formal_testing.main;
 import formal_testing.SpinRunner;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by buzhinsky on 6/27/17.
+ * Created by buzhinsky on 6/28/17.
  */
-public class ClosedLoopVerify extends MainBase {
+public class Run extends MainBase {
     @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
     private String configurationFilename;
 
@@ -27,26 +30,33 @@ public class ClosedLoopVerify extends MainBase {
     @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
     private String specFilename;
 
-    @Option(name = "--timeout", usage = "timeout in seconds, default = 0 = no", metaVar = "<timeout>")
-    private int timeout;
+    @Option(name = "--input", usage = "input filename", metaVar = "<filename>")
+    private String filename;
+
+    @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")
+    private boolean verbose;
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        new ClosedLoopVerify().run(args);
+        new Run().run(args);
     }
 
     @Override
     protected void launcher() throws IOException, InterruptedException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
-        final String code = modelCode(false, true, true, Optional.empty(), Optional.empty(), false, false,
+        final String header = new String(Files.readAllBytes(Paths.get(filename + ".header")));
+        final String body = new String(Files.readAllBytes(Paths.get(filename + ".body")));
+        final String code = modelCode(true, false, true, Optional.of(header), Optional.of(body), false, false,
                 Optional.empty());
 
-        try (final SpinRunner spinRunner = new SpinRunner(code, timeout, 2)) {
+        System.out.println("Running test suite " + filename + "...");
+        try (final SpinRunner spinRunner = new SpinRunner(code, 0, 2)) {
             for (String prop : propsFromCode(code)) {
                 final List<String> result = spinRunner.pan(prop);
-                result.forEach(System.out::println);
+                result.stream().filter(line -> verbose || line.startsWith("***")).forEach(System.out::println);
             }
         }
-    }
 
+        // TODO measure coverage
+    }
 }

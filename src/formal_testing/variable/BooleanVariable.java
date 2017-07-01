@@ -24,6 +24,6 @@ public class BooleanVariable extends Variable {
 
     @Override
     public List<String> promelaValues() {
-        return Arrays.asList("false", "true");
+        return Arrays.asList("0", "1");
     }
 }

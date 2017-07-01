@@ -1,41 +1,68 @@
 package formal_testing.main;
 
-import formal_testing.TestSuite;
-import formal_testing.coverage.CoveragePoint;
-import formal_testing.ProblemData;
 import formal_testing.SpinRunner;
 import formal_testing.TestCase;
+import formal_testing.TestSuite;
+import formal_testing.coverage.CoveragePoint;
 import formal_testing.variable.Variable;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/28/17.
  */
-public class SynthesizeCoverageTests extends Command {
-    private final boolean includeInternal;
-    private final int maxLength;
-    private final boolean checkFiniteCoverage;
-    private final boolean minimize;
-    private final boolean valuePairCoverage;
-    private final boolean plantCodeCoverage;
-    private final boolean controllerCodeCoverage;
-    private final String outputFilename;
+public class SynthesizeCoverageTests extends MainBase {
+    @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
+    private String configurationFilename;
 
-    public SynthesizeCoverageTests(ProblemData data, boolean includeInternal, int maxLength,
-                                   boolean checkFiniteCoverage, boolean minimize, boolean valuePairCoverage,
-                                   boolean plantCodeCoverage, boolean controllerCodeCoverage, String outputFilename) {
-        super(data);
-        this.includeInternal = includeInternal;
-        this.maxLength = maxLength;
-        this.checkFiniteCoverage = checkFiniteCoverage;
-        this.minimize = minimize;
-        this.valuePairCoverage = valuePairCoverage;
-        this.plantCodeCoverage = plantCodeCoverage;
-        this.controllerCodeCoverage = controllerCodeCoverage;
-        this.outputFilename = outputFilename;
+    @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
+    private String headerFilename;
+
+    @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
+    private String plantModelFilename;
+
+    @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
+    private String controllerModelFilename;
+
+    @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
+    private String specFilename;
+
+    @Option(name = "--output", usage = "output filename", metaVar = "<filename>")
+    private String outputFilename;
+
+    @Option(name = "--maxlen", usage = "maximum test length, default = 10", metaVar = "<length>")
+    private int maxLength = 10;
+
+    @Option(name = "--includeInternal", handler = BooleanOptionHandler.class, usage = "cover internal variables")
+    private boolean includeInternal;
+
+    @Option(name = "--checkFiniteCoverage", handler = BooleanOptionHandler.class,
+            usage = "while checking coverage, ignore infinite continuations of test cases")
+    private boolean checkFiniteCoverage;
+
+    @Option(name = "--minimize", handler = BooleanOptionHandler.class,
+            usage = "check coverage of each new test, thus making the resultant test suite smaller")
+    private boolean minimize;
+
+    @Option(name = "--valuePairCoverage", handler = BooleanOptionHandler.class, usage = "cover value pairs (slow)")
+    private boolean valuePairCoverage;
+
+    @Option(name = "--plantCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover plant code")
+    private boolean plantCodeCoverage;
+
+    @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
+    private boolean controllerCodeCoverage;
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        new SynthesizeCoverageTests().run(args);
     }
 
     private int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps) throws IOException {
@@ -80,7 +107,9 @@ public class SynthesizeCoverageTests extends Command {
     }
 
     @Override
-    public void execute() throws IOException {
+    protected void launcher() throws IOException, InterruptedException {
+        loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
+
         final CodeCoverageCounter counter = new CodeCoverageCounter();
         usualModelCode(Optional.of(counter));
         final List<CoveragePoint> coveragePoints = coveragePoints(includeInternal, valuePairCoverage,
