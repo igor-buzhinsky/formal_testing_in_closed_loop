@@ -1,6 +1,7 @@
 package formal_testing.main;
 
 import formal_testing.SpinRunner;
+import formal_testing.TestCase;
 import formal_testing.TestSuite;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
@@ -35,6 +36,25 @@ public class Run extends MainBase {
     @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")
     private boolean verbose;
 
+    @Option(name = "--measureCoverage", handler = BooleanOptionHandler.class, usage = "measure coverage")
+    private boolean measureCoverage;
+
+    @Option(name = "--includeInternal", handler = BooleanOptionHandler.class,
+            usage = "if measureCoverage is on, measure coverage of internal variables")
+    private boolean includeInternal;
+
+    @Option(name = "--valuePairCoverage", handler = BooleanOptionHandler.class,
+            usage = "if measureCoverage is on, measure value pair coverage")
+    private boolean valuePairCoverage;
+
+    @Option(name = "--plantCodeCoverage", handler = BooleanOptionHandler.class,
+            usage = "if measureCoverage is on, measure plant code coverage")
+    private boolean plantCodeCoverage;
+
+    @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class,
+            usage = "if measureCoverage is on, measure controller code coverage")
+    private boolean controllerCodeCoverage;
+
     public static void main(String[] args) throws IOException, InterruptedException {
         new Run().run(args);
     }
@@ -55,6 +75,20 @@ public class Run extends MainBase {
             }
         }
 
-        // TODO measure coverage
+        if (measureCoverage) {
+            System.out.println("Measuring test suite coverage...");
+            final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
+                    valuePairCoverage);
+
+            for (TestCase tc : ts.testCases()) {
+                if (info.allCovered()) {
+                    break;
+                }
+                info.coveredPoints += examineTestCase(tc, info.coveragePoints, 0, plantCodeCoverage,
+                        controllerCodeCoverage);
+            }
+
+            info.report();
+        }
     }
 }

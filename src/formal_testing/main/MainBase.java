@@ -1,8 +1,6 @@
 package formal_testing.main;
 
-import formal_testing.Configuration;
-import formal_testing.ProblemData;
-import formal_testing.Util;
+import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
@@ -160,10 +158,6 @@ public abstract class MainBase {
         return Pair.of(transformed.toString(), nextClaimIndex);
     }
 
-    protected class CodeCoverageCounter {
-        public int coverageClaims;
-    }
-
     protected String modelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
                                Optional<String> testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
                                Optional<CodeCoverageCounter> counter) {
@@ -233,13 +227,84 @@ public abstract class MainBase {
         return code.toString();
     }
 
-    protected String coverageProperties(List<CoveragePoint> coveragePoints) {
-        return String.join("\n", coveragePoints.stream().map(CoveragePoint::promelaLtlProperty)
-                .collect(Collectors.toList()));
+    public String usualModelCode(Optional<CodeCoverageCounter> counter, boolean plantCodeCoverage,
+                                  boolean controllerCodeCoverage) {
+        return modelCode(false, true, false, Optional.empty(), Optional.empty(), plantCodeCoverage,
+                controllerCodeCoverage, counter);
     }
 
-    protected String coverageProperties(List<CoveragePoint> coveragePoints, int steps) {
-        return String.join("\n", coveragePoints.stream().map(cp -> cp.promelaLtlProperty(steps, false))
-                .collect(Collectors.toList()));
+    protected List<String> coverageProperties(List<CoveragePoint> coveragePoints, int steps) {
+        return coveragePoints.stream().map(
+                cp -> steps == 0 ? cp.promelaLtlProperty() : cp.promelaLtlProperty(steps, false))
+                .collect(Collectors.toList());
     }
+
+
+    protected int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps,
+                                  boolean plantCodeCoverage, boolean controllerCodeCoverage) throws IOException {
+        final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
+                .collect(Collectors.toList());
+
+        final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader(false)),
+                Optional.of(tc.promelaBody(false)), plantCodeCoverage, controllerCodeCoverage, Optional.empty());
+
+        final List<String> claims = coverageProperties(uncovered, steps);
+
+        int newCovered = 0;
+        int lines = 0;
+        try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
+            System.out.println("    " + spinRunner.creationMeasurement);
+            final String prefix = "    (" + uncovered.size() + ") ";
+            System.out.print(prefix);
+            for (CoveragePoint cp : uncovered) {
+                final List<String> result = spinRunner.pan(cp.promelaLtlName());
+                for (String line : result) {
+                    final String suffix = lines > 0 && lines % 150 == 0
+                            ? ("\n" + new String(new char[prefix.length()]).replace('\0', ' ')) : "";
+                    if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
+                        lines++;
+                        cp.cover();
+                        newCovered++;
+                        System.out.print("+" + suffix);
+                    } else if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
+                        lines++;
+                        System.out.print("-" + suffix);
+                    }
+                }
+            }
+            System.out.println();
+        }
+        return newCovered;
+    }
+
+    private static class CodeCoverageCounter {
+        int coverageClaims;
+    }
+
+    class CoverageInfo {
+        final List<CoveragePoint> coveragePoints;
+        final int totalPoints;
+        int coveredPoints = 0;
+
+        CoverageInfo(boolean plantCodeCoverage, boolean controllerCodeCoverage, boolean includeInternal,
+                     boolean valuePairCoverage) {
+            final CodeCoverageCounter counter = new CodeCoverageCounter();
+            usualModelCode(Optional.of(counter), plantCodeCoverage, controllerCodeCoverage);
+            coveragePoints = coveragePoints(includeInternal, valuePairCoverage, counter.coverageClaims);
+            totalPoints = coveragePoints.size();
+        }
+
+        void report() {
+            System.out.println("  Covered points: " + coveredPoints + " / " + totalPoints);
+            if (coveredPoints < totalPoints) {
+                System.out.println("  Not covered:");
+                coveragePoints.stream().filter(cp -> !cp.covered()).forEach(s -> System.out.println("  " + s));
+            }
+        }
+
+        boolean allCovered() {
+            return coveredPoints == totalPoints;
+        }
+    }
+
 }

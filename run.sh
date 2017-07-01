@@ -1,23 +1,21 @@
 #!/bin/bash
 
 floors=3
-dir=elevator-$floors
-a1="$dir/elevator.conf"
-a2="$dir/header.pml"
-a3="$dir/plant.pml"
-a4="$dir/controller.pml"
-a5="$dir/spec.pml"
-run="java -jar"
 
-run() {
-    name="$1"
+call() {
+    local name="$1"
+    local dir=elevator-$floors
     shift
-    java -jar jars/"$name".jar "$a1" "$a2" "$a3" "$a4" "$a5" $@
+    java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" $@
     echo
 }
 
-run synthesize-coverage-tests --maxlen 10 --includeInternal --plantCodeCoverage --controllerCodeCoverage --output test1.bin --minimize
-run generate-random --number 10 --length 10 --output test2.bin
-run run --input test1.bin
-run run --input test2.bin
+#minimize="--minimize"
+minimize=
+
+call synthesize-coverage-tests --maxlen 10 --includeInternal --output test1.bin $minimize --plantCodeCoverage --controllerCodeCoverage 
+call run --input test1.bin --measureCoverage --plantCodeCoverage --controllerCodeCoverage 
+
+call generate-random --number 10 --length 10 --output test2.bin
+call run --input test2.bin --measureCoverage --plantCodeCoverage --controllerCodeCoverage
 

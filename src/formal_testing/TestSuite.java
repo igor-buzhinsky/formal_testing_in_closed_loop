@@ -16,6 +16,10 @@ public class TestSuite implements Serializable {
         Arrays.stream(testCases).forEach(this.testCases::add);
     }
 
+    public Collection<TestCase> testCases() {
+        return Collections.unmodifiableSet(testCases);
+    }
+
     public void add(TestCase testCase) {
         testCases.add(testCase);
     }
