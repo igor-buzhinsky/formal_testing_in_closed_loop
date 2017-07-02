@@ -18,8 +18,12 @@ public class BooleanVariable extends Variable {
 
     @Override
     public String toPromelaString() {
-        return promelaString("bool");
+        return languageString("bool");
+    }
 
+    @Override
+    public String toNusmvString() {
+        return languageString("boolean");
     }
 
     @Override

@@ -3,7 +3,6 @@ package formal_testing.main;
 import formal_testing.SpinRunner;
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
@@ -15,21 +14,6 @@ import java.util.Optional;
  * Created by buzhinsky on 6/28/17.
  */
 public class Run extends MainBase {
-    @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
-    private String configurationFilename;
-
-    @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
-    private String headerFilename;
-
-    @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
-    private String plantModelFilename;
-
-    @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
-    private String controllerModelFilename;
-
-    @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
-    private String specFilename;
-
     @Option(name = "--input", usage = "input filename", metaVar = "<filename>")
     private String filename;
 
@@ -55,12 +39,12 @@ public class Run extends MainBase {
             usage = "if measureCoverage is on, measure controller code coverage")
     private boolean controllerCodeCoverage;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         new Run().run(args);
     }
 
     @Override
-    protected void launcher() throws IOException, InterruptedException {
+    protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final TestSuite ts = TestSuite.read(filename);

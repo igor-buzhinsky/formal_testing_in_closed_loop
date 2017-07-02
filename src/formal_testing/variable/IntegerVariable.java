@@ -7,8 +7,8 @@ import java.util.List;
  * Created by buzhinsky on 6/26/17.
  */
 public class IntegerVariable extends Variable {
-    final int min;
-    final int max;
+    private final int min;
+    private final int max;
 
     public IntegerVariable(String name, int min, int max, boolean isArrayPart, int arrayLength, int arrayIndex) {
         super(name, isArrayPart, arrayLength, arrayIndex);
@@ -28,8 +28,12 @@ public class IntegerVariable extends Variable {
 
     @Override
     public String toPromelaString() {
-        return promelaString("int");
+        return languageString("int");
+    }
 
+    @Override
+    public String toNusmvString() {
+        return languageString(min + ".." + max);
     }
 
     @Override

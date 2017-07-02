@@ -7,8 +7,10 @@ import formal_testing.coverage.FlowCoveragePoint;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
+import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +22,24 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public abstract class MainBase {
+    @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
+    protected String configurationFilename;
+
+    @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
+    protected String headerFilename;
+
+    @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
+    protected String plantModelFilename;
+
+    @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
+    protected String controllerModelFilename;
+
+    @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
+    protected String specFilename;
+
+    @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV", metaVar = "<language>")
+    private String language;
+
     protected ProblemData data;
 
     protected abstract void launcher() throws IOException, InterruptedException;
@@ -29,6 +49,7 @@ public abstract class MainBase {
             return;
         }
         try {
+            setLanguage(language);
             launcher();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -127,7 +148,7 @@ public abstract class MainBase {
         if (!variables.isEmpty()) {
             sb.append("// ").append(text).append("\n");
         }
-        variables.forEach(v -> sb.append(addNl.apply(v.toPromelaString())));
+        variables.forEach(v -> sb.append(addNl.apply(v.toLanguageString())));
     }
 
     private Pair<String, Integer> instrument(String code, int firstClaimIndex) {
@@ -307,4 +328,12 @@ public abstract class MainBase {
         }
     }
 
+    protected void setLanguage(String language) {
+        try {
+            Util.LANGUAGE = Language.valueOf(language);
+            System.out.println("Language: " + Util.LANGUAGE);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Unsupported language " + language);
+        }
+    }
 }

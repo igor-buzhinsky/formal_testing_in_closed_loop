@@ -21,7 +21,12 @@ public class SetVariable extends Variable {
 
     @Override
     public String toPromelaString() {
-        return promelaString("mtype");
+        return languageString("mtype");
+    }
+
+    @Override
+    public String toNusmvString() {
+        return languageString(values.toString().replace("[", "{").replace("]", "}"));
     }
 
     @Override

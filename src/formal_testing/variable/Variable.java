@@ -1,5 +1,8 @@
 package formal_testing.variable;
 
+import formal_testing.Language;
+import formal_testing.Util;
+
 import java.util.List;
 
 /**
@@ -7,9 +10,9 @@ import java.util.List;
  */
 public abstract class Variable {
     public final String name;
-    public boolean isArrayPart;
-    public int arrayLength;
-    public int arrayIndex;
+    private final boolean isArrayPart;
+    private final int arrayLength;
+    private final int arrayIndex;
 
     public Variable(String name, boolean isArrayPart, int arrayLength, int arrayIndex) {
         this.name = name;
@@ -18,7 +21,12 @@ public abstract class Variable {
         this.arrayIndex = arrayIndex;
     }
 
+    public final String toLanguageString() {
+        return Util.LANGUAGE == Language.PROMELA ? toPromelaString() : toNusmvString();
+    }
+
     public abstract String toPromelaString();
+    public abstract String toNusmvString();
 
     public abstract List<String> promelaValues();
 
@@ -30,13 +38,27 @@ public abstract class Variable {
         return name + indexPart();
     }
 
-    protected String promelaString(String type) {
+    protected final String languageString(String type) {
+        return Util.LANGUAGE == Language.PROMELA ? promelaString(type) : nusmvString(type);
+    }
+
+    private String promelaString(String type) {
         if (isArrayPart && arrayIndex > 0) {
             return "";
         } else if (isArrayPart && arrayIndex == 0) {
             return type + " " + name + "[" + arrayLength + "];";
         } else {
             return type + " " + name + ";";
+        }
+    }
+
+    private String nusmvString(String type) {
+        if (isArrayPart && arrayIndex > 0) {
+            return "";
+        } else if (isArrayPart && arrayIndex == 0) {
+            return name + "[" + arrayLength + "] : " + type + ";";
+        } else {
+            return name + " : " + type + ";";
         }
     }
 }

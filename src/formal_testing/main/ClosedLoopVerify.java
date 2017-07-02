@@ -1,7 +1,6 @@
 package formal_testing.main;
 
 import formal_testing.SpinRunner;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 import java.io.IOException;
@@ -12,30 +11,15 @@ import java.util.Optional;
  * Created by buzhinsky on 6/27/17.
  */
 public class ClosedLoopVerify extends MainBase {
-    @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
-    private String configurationFilename;
-
-    @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
-    private String headerFilename;
-
-    @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
-    private String plantModelFilename;
-
-    @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
-    private String controllerModelFilename;
-
-    @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
-    private String specFilename;
-
     @Option(name = "--timeout", usage = "timeout in seconds, default = 0 = no", metaVar = "<timeout>")
     private int timeout;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         new ClosedLoopVerify().run(args);
     }
 
     @Override
-    protected void launcher() throws IOException, InterruptedException {
+    protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final String code = modelCode(false, true, true, Optional.empty(), Optional.empty(), false, false,

@@ -10,4 +10,6 @@ public class Util {
     public static String indent(String str) {
         return String.join("\n", Arrays.stream(str.split("\n")).map(s -> "    " + s).collect(Collectors.toList()));
     }
+
+    public static Language LANGUAGE;
 }

@@ -1,9 +1,11 @@
 package formal_testing.main;
 
-import formal_testing.*;
+import formal_testing.ResourceMeasurement;
+import formal_testing.SpinRunner;
+import formal_testing.TestCase;
+import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.variable.Variable;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
@@ -17,23 +19,8 @@ import java.util.stream.Collectors;
  * Created by buzhinsky on 6/28/17.
  */
 public class SynthesizeCoverageTests extends MainBase {
-    @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
-    private String configurationFilename;
-
-    @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
-    private String headerFilename;
-
-    @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
-    private String plantModelFilename;
-
-    @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
-    private String controllerModelFilename;
-
-    @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
-    private String specFilename;
-
     @Option(name = "--output", usage = "output filename", metaVar = "<filename>")
-    private String outputFilename;
+    private String outputFilename = "test.bin";
 
     @Option(name = "--maxlen", usage = "maximum test length, default = 10", metaVar = "<length>")
     private int maxLength = 10;
@@ -58,12 +45,12 @@ public class SynthesizeCoverageTests extends MainBase {
     @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
     private boolean controllerCodeCoverage;
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         new SynthesizeCoverageTests().run(args);
     }
 
     @Override
-    protected void launcher() throws IOException, InterruptedException {
+    protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,

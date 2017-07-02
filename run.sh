@@ -1,12 +1,13 @@
 #!/bin/bash
 
 floors=3
+lang="-l PROMELA"
 
 call() {
     local name="$1"
     local dir=elevator-$floors
     shift
-    java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" $@
+    java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" $lang $@
     echo
 }
 
