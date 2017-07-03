@@ -19,6 +19,11 @@ public class SetVariable extends Variable {
         this.values = values;
     }
 
+    public SetVariable(String name, List<String> values) {
+        super(name);
+        this.values = values;
+    }
+
     @Override
     public String toPromelaString() {
         return languageString("mtype");
@@ -32,5 +37,20 @@ public class SetVariable extends Variable {
     @Override
     public List<String> promelaValues() {
         return Collections.unmodifiableList(values);
+    }
+
+    @Override
+    public List<String> nusmvValues() {
+        return promelaValues();
+    }
+
+    @Override
+    public String promelaInitialValue() {
+        return values.get(0);
+    }
+
+    @Override
+    public String nusmvInitialValue() {
+        return values.get(0);
     }
 }

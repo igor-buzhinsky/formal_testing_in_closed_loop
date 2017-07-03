@@ -37,10 +37,16 @@ public class TestSuite implements Serializable {
         return "int _test_step;" + (trivial() ? "" : "\nint _test_index = -1;");
     }
 
+    public String nuSMVBody() {
+        final StringBuilder sb = new StringBuilder();
+        // TODO
+        return sb.toString();
+    }
+
     public String promelaBody() {
         // looping scenario
-        final List<TestCase> list = new ArrayList<>(testCases);
         final StringBuilder sb = new StringBuilder();
+        final List<TestCase> list = new ArrayList<>(testCases);
 
         if (!trivial()) {
             sb.append("if\n");

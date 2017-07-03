@@ -26,7 +26,7 @@ public class ClosedLoopVerify extends MainBase {
                 Optional.empty());
 
         try (final SpinRunner spinRunner = new SpinRunner(code, timeout, 2)) {
-            for (String prop : propsFromCode(code)) {
+            for (String prop : promelaPropsFromCode(code)) {
                 final List<String> result = spinRunner.pan(prop);
                 result.forEach(System.out::println);
             }

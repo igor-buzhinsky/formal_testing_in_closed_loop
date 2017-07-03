@@ -53,7 +53,7 @@ public class Run extends MainBase {
 
         System.out.println("Running test suite " + filename + "...");
         try (final SpinRunner spinRunner = new SpinRunner(code, 0, 2)) {
-            for (String prop : propsFromCode(code)) {
+            for (String prop : promelaPropsFromCode(code)) {
                 final List<String> result = spinRunner.pan(prop);
                 result.stream().filter(line -> verbose || line.startsWith("***")).forEach(System.out::println);
             }

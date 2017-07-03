@@ -11,6 +11,10 @@ public class BooleanVariable extends Variable {
         super(name, isArrayPart, arrayLength, arrayIndex);
     }
 
+    public BooleanVariable(String name) {
+        super(name);
+    }
+
     @Override
     public String toString() {
         return indexedName() + " : bool";
@@ -29,5 +33,20 @@ public class BooleanVariable extends Variable {
     @Override
     public List<String> promelaValues() {
         return Arrays.asList("0", "1");
+    }
+
+    @Override
+    public List<String> nusmvValues() {
+        return Arrays.asList("FALSE", "TRUE");
+    }
+
+    @Override
+    public String promelaInitialValue() {
+        return "0";
+    }
+
+    @Override
+    public String nusmvInitialValue() {
+        return "FALSE";
     }
 }

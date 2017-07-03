@@ -1,0 +1,26 @@
+DEFINE
+    FLOORS := 3;
+ASSIGN
+    next(elevator_pos) := elevator_pos3;
+    next(on_floor[0]) := next(elevator_pos) = 2 * 0;
+    next(on_floor[1]) := next(elevator_pos) = 2 * 1;
+    next(on_floor[2]) := next(elevator_pos) = 2 * 2;
+    next(door_state[0]) := open[0] ? (door_state[0] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[0] in { d_open, d_opening } ? d_closing : d_closed);
+    next(door_state[1]) := open[1] ? (door_state[1] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[1] in { d_open, d_opening } ? d_closing : d_closed);
+    next(door_state[2]) := open[2] ? (door_state[2] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[2] in { d_open, d_opening } ? d_closing : d_closed);
+    next(door_closed[0]) = next(door_state[0]) = d_closed;
+    next(door_closed[1]) = next(door_state[1]) = d_closed;
+    next(door_closed[2]) = next(door_state[2]) = d_closed;
+    next(door_open[0]) = next(door_state[0]) = d_open;
+    next(door_open[1]) = next(door_state[1]) = d_open;
+    next(door_open[2]) = next(door_state[2]) = d_open;
+    next(button[0]) := next(on_floor[0]) & next(door_open[0]) ? FALSE : next(user_floor_button[0]) ? TRUE : button[0];
+    next(button[1]) := next(on_floor[1]) & next(door_open[1]) ? FALSE : next(user_floor_button[1]) ? TRUE : button[1];
+    next(button[2]) := next(on_floor[2]) & next(door_open[2]) ? FALSE : next(user_floor_button[2]) ? TRUE : button[2];
+    next(call[0]) := next(on_floor[0]) & next(door_open[0]) ? FALSE : next(user_cabin_button[0]) ? TRUE : call[0];
+    next(call[1]) := next(on_floor[1]) & next(door_open[1]) ? FALSE : next(user_cabin_button[1]) ? TRUE : call[1];
+    next(call[2]) := next(on_floor[2]) & next(door_open[2]) ? FALSE : next(user_cabin_button[2]) ? TRUE : call[2];
+DEFINE
+    elevator_pos1 := elevator_pos + (up ? 1 : 0) - (down ? 1 : 0);
+    elevator_pos2 := elevator_pos1 > 2 * FLOORS ? 2 * FLOORS : elevator_pos1;
+    elevator_pos3 := elevator_pos2 < 0 ? 0 : elevator_pos2;

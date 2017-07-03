@@ -14,6 +14,10 @@ public abstract class Variable {
     private final int arrayLength;
     private final int arrayIndex;
 
+    public Variable(String name) {
+        this(name, false, 1, 0);
+    }
+
     public Variable(String name, boolean isArrayPart, int arrayLength, int arrayIndex) {
         this.name = name;
         this.isArrayPart = isArrayPart;
@@ -29,6 +33,10 @@ public abstract class Variable {
     public abstract String toNusmvString();
 
     public abstract List<String> promelaValues();
+    public abstract List<String> nusmvValues();
+
+    public abstract String promelaInitialValue();
+    public abstract String nusmvInitialValue();
 
     protected String indexPart() {
         return isArrayPart ? ("[" + arrayIndex + "]") : "";
@@ -42,13 +50,16 @@ public abstract class Variable {
         return Util.LANGUAGE == Language.PROMELA ? promelaString(type) : nusmvString(type);
     }
 
+    /*
+     * with the initial value
+     */
     private String promelaString(String type) {
         if (isArrayPart && arrayIndex > 0) {
             return "";
         } else if (isArrayPart && arrayIndex == 0) {
-            return type + " " + name + "[" + arrayLength + "];";
+            return type + " " + name + "[" + arrayLength + "] = " + promelaInitialValue() + ";";
         } else {
-            return type + " " + name + ";";
+            return type + " " + name + " = " + promelaInitialValue() + ";";
         }
     }
 
@@ -56,9 +67,9 @@ public abstract class Variable {
         if (isArrayPart && arrayIndex > 0) {
             return "";
         } else if (isArrayPart && arrayIndex == 0) {
-            return name + "[" + arrayLength + "] : " + type + ";";
+            return name + ": array 0.." + (arrayLength - 1) + " of " + type + ";";
         } else {
-            return name + " : " + type + ";";
+            return name + ": " + type + ";";
         }
     }
 }

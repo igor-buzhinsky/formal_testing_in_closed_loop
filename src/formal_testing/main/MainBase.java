@@ -4,6 +4,7 @@ import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
+import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +17,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -86,14 +86,14 @@ public abstract class MainBase {
         );
     }
 
-    protected List<String> propsFromCode(String code) {
+    protected List<String> promelaPropsFromCode(String code) {
         return Arrays.stream(code.split("\n"))
                 .filter(s -> s.matches("ltl .*\\{.*\\}.*"))
                 .map(s -> s.replaceAll("^ltl ", "").replaceAll(" .*$", ""))
                 .collect(Collectors.toList());
     }
 
-    private String nondetSelection() {
+    private String nondetSelectionPromela() {
         final StringBuilder sb = new StringBuilder();
         for (Variable var : data.conf.nondetVars) {
             sb.append("if\n");
@@ -143,15 +143,26 @@ public abstract class MainBase {
         return result;
     }
 
-    private void printVars(StringBuilder sb, List<Variable> variables, String text) {
-        final Function<String, String> addNl = s -> s.isEmpty() ? "" : (s + "\n");
-        if (!variables.isEmpty()) {
-            sb.append("// ").append(text).append("\n");
-        }
-        variables.forEach(v -> sb.append(addNl.apply(v.toLanguageString())));
+    private String varFormat(String s, String indent) {
+        return s.isEmpty() ? "" : (indent + s + "\n");
     }
 
-    private Pair<String, Integer> instrument(String code, int firstClaimIndex) {
+    private void printVars(StringBuilder sb, String indent, List<Variable> variables, String text) {
+        if (!variables.isEmpty()) {
+            sb.append(indent + Util.LANGUAGE.commentSymbol).append(" ").append(text).append("\n");
+        }
+        variables.forEach(v -> sb.append(varFormat(v.toLanguageString(), indent)));
+    }
+
+    private void printAllVars(StringBuilder sb, String indent) {
+        printVars(sb, indent, data.conf.inputVars, "Inputs");
+        printVars(sb, indent, data.conf.outputVars, "Outputs");
+        printVars(sb, indent, data.conf.nondetVars, "Nondeterministic variables");
+        printVars(sb, indent, data.conf.plantInternalVars, "Plant internal variables");
+        printVars(sb, indent, data.conf.controllerInternalVars, "Controller internal variables");
+    }
+
+    private Pair<String, Integer> promelaInstrument(String code, int firstClaimIndex) {
         int nextClaimIndex = firstClaimIndex;
         final Pattern p = Pattern.compile("::");
         final Matcher m = p.matcher(code);
@@ -182,6 +193,83 @@ public abstract class MainBase {
     protected String modelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
                                Optional<String> testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
                                Optional<CodeCoverageCounter> counter) {
+        return Util.LANGUAGE == Language.PROMELA
+                ? promelaModelCode(testing, nondetSelection, spec, testHeader, testBody, plantCodeCoverage,
+                controllerCodeCoverage, counter)
+                : nusmvModelCode(testing, nondetSelection, spec, testHeader, testBody);
+    }
+
+    private <T> List<T> merge(List<List<T>> list) {
+        final List<T> merged = new ArrayList<>();
+        list.forEach(merged::addAll);
+        return merged;
+    }
+
+    private String argList(List<List<Variable>> variables) {
+        final List<Variable> allVars = merge(variables);
+        final Set<String> indicesRemoved = allVars.stream().map(v -> v.name)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        return "(" + String.join(", ", indicesRemoved) + ")";
+    }
+
+    private final BooleanVariable testingVar = new BooleanVariable("_test_passed");
+
+    private String nusmvModelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
+                                    Optional<String> testBody) {
+        final StringBuilder code = new StringBuilder();
+
+        // can contain e.g. some module declarations
+        code.append(data.header).append("\n");
+
+        code.append("MODULE _NONDET_VAR_SELECTION").append(argList(Collections.singletonList(data.conf.nondetVars)))
+                .append("\n");
+        if (testBody.isPresent()) {
+            code.append(testBody.get()).append("\n");
+        }
+
+        code.append("MODULE _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+                data.conf.plantInternalVars, data.conf.outputVars))).append("\n")
+                .append(Util.indent(data.plantModel)).append("\n\n");
+
+        code.append("MODULE _CONTROLLER").append(argList(Arrays.asList(data.conf.inputVars,
+                data.conf.controllerInternalVars, data.conf.outputVars))).append("\n")
+                .append(Util.indent(data.controllerModel)).append("\n\n");
+
+        code.append("MODULE main\n").append("VAR\n");
+        printAllVars(code, "    ");
+        code.append("    -- Misc\n");
+        if (testing) {
+            code.append(varFormat(testingVar.toNusmvString(), "    "));
+        }
+        code.append("    _nondet_var_selection: _NONDET_SELECTION")
+                .append(argList(Collections.singletonList(data.conf.nondetVars)))
+                .append(";\n");
+        code.append("    _plant: _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+                data.conf.plantInternalVars, data.conf.outputVars))).append(";\n");
+        code.append("    _controller: _CONTROLLER").append(argList(Arrays.asList(data.conf.inputVars,
+                data.conf.controllerInternalVars, data.conf.outputVars))).append(";\n");
+
+        code.append("DEFINE\n");
+        for (Variable var : merge(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+                data.conf.controllerInternalVars, data.conf.plantInternalVars, data.conf.outputVars,
+                testing ? Collections.emptyList() : Collections.singletonList(testingVar)))) {
+            code.append("    init(").append(var.indexedName()).append(") := ")
+                    .append(var.nusmvInitialValue()).append(";\n");
+        }
+
+        if (spec) {
+            code.append("\n").append(data.spec);
+        }
+        if (testing) {
+            code.append("\n").append("CTLSPEC AF _test_passed\n");
+        }
+
+        return code.toString();
+    }
+
+    private String promelaModelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
+                               Optional<String> testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
+                               Optional<CodeCoverageCounter> counter) {
         final StringBuilder code = new StringBuilder();
 
         final Set<String> mtypeValues = new LinkedHashSet<>();
@@ -194,24 +282,20 @@ public abstract class MainBase {
             code.append("mtype ").append(mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
         }
 
-        printVars(code, data.conf.inputVars, "Inputs");
-        printVars(code, data.conf.outputVars, "Outputs");
-        printVars(code, data.conf.nondetVars, "Nondeterministic variables");
-        printVars(code, data.conf.plantInternalVars, "Plant internal variables");
-        printVars(code, data.conf.controllerInternalVars, "Controller internal variables");
+        printAllVars(code, "");
 
         int coverageClaims = 0;
 
         String plantCode = data.plantModel;
         if (plantCodeCoverage) {
-            final Pair<String, Integer> p = instrument(plantCode, coverageClaims);
+            final Pair<String, Integer> p = promelaInstrument(plantCode, coverageClaims);
             plantCode = p.getKey();
             coverageClaims = p.getValue();
         }
 
         String controllerCode = data.controllerModel;
         if (controllerCodeCoverage) {
-            final Pair<String, Integer> p = instrument(controllerCode, coverageClaims);
+            final Pair<String, Integer> p = promelaInstrument(controllerCode, coverageClaims);
             controllerCode = p.getKey();
             coverageClaims = p.getValue();
         }
@@ -220,7 +304,7 @@ public abstract class MainBase {
             code.append("\n").append("bool _cover[").append(coverageClaims).append("];\n");
         }
         if (testing) {
-            code.append("\n").append("bool _test_passed;\n");
+            code.append("\n").append(varFormat(testingVar.toPromelaString(), ""));
         }
         code.append("\n").append(data.header);
         if (testHeader.isPresent()) {
@@ -228,7 +312,7 @@ public abstract class MainBase {
         }
         code.append("\n").append("\n").append("init { do :: atomic {\n");
         if (nondetSelection) {
-            code.append(Util.indent(nondetSelection())).append("\n");
+            code.append(Util.indent(nondetSelectionPromela())).append("\n");
         }
         if (testBody.isPresent()) {
             code.append(Util.indent(testBody.get())).append("\n");
