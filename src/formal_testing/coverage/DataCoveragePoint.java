@@ -1,5 +1,6 @@
 package formal_testing.coverage;
 
+import formal_testing.Util;
 import formal_testing.variable.Variable;
 
 import java.util.Arrays;
@@ -34,9 +35,9 @@ public class DataCoveragePoint extends CoveragePoint {
     private String conditions() {
         final String[] arr = new String[vars.size()];
         for (int i = 0; i < arr.length; i++) {
-            arr[i] = vars.get(i).indexedName() + " == " + values.get(i);
+            arr[i] = vars.get(i).indexedName() + Util.LANGUAGE.equals + values.get(i);
         }
-        return String.join(" && ", Arrays.asList(arr));
+        return String.join(Util.LANGUAGE.and, Arrays.asList(arr));
     }
 
     @Override
@@ -47,6 +48,11 @@ public class DataCoveragePoint extends CoveragePoint {
     @Override
     protected String promelaLtlProperty(String opStart, String opEnd) {
         return "ltl " + promelaLtlName() + " { " + opStart + conditions() + opEnd + " }";
+    }
+
+    @Override
+    protected String nusmvLtlProperty(String opStart, String opEnd) {
+        return "LTLSPEC " + opStart + conditions() + opEnd;
     }
 
     @Override

@@ -1,7 +1,7 @@
 // Plant execution
 d_step {
     elevator_pos = elevator_pos + up - down;
-    elevator_pos = (elevator_pos > 2 * FLOORS -> 2 * FLOORS : elevator_pos);
+    elevator_pos = (elevator_pos > 2 * (FLOORS - 1) -> 2 * (FLOORS - 1) : elevator_pos);
     elevator_pos = (elevator_pos < 0 -> 0 : elevator_pos);
     
     int floor;

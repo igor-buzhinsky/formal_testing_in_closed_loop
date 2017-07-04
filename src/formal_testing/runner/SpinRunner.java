@@ -1,5 +1,8 @@
-package formal_testing;
+package formal_testing.runner;
 
+import formal_testing.ProblemData;
+import formal_testing.ResourceMeasurement;
+import formal_testing.TestCase;
 import formal_testing.coverage.CoveragePoint;
 
 import java.io.*;
@@ -11,37 +14,22 @@ import java.util.*;
 /**
  * Created by buzhinsky on 6/30/17.
  */
-public class SpinRunner implements AutoCloseable {
-    private final String dirName;
-    private final int timeout;
-    private final int parts;
+public class SpinRunner extends Runner {
     private final Map<String, Integer> propertyToPart = new HashMap<>();
-
-    private Process spinProcess;
 
     private static int SPIN_DIR_INDEX = 0;
 
     private static final int MAX_CLAIMS_IN_ONE_PAN = 50;
+    private static final int OPTIMIZATION_LEVEL = 2;
     private static final String MODEL_FILENAME = "model.pml";
 
     public final ResourceMeasurement creationMeasurement;
 
-    public SpinRunner(String modelCode, int timeout, int optimizationLevel) throws IOException {
-        this(modelCode, Collections.emptyList(), Collections.emptyList(), timeout, optimizationLevel);
-    }
+    SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps,
+               boolean claimNegate, int timeout) throws IOException {
+        super(data, timeout, "spindir." + SPIN_DIR_INDEX++, modelCode, coveragePoints, claimSteps, claimNegate);
 
-    public SpinRunner(String modelCode, List<CoveragePoint> coveragePoints, List<String> coverageClaims,
-                      int timeout, int optimizationLevel) throws IOException {
-        this.timeout = timeout;
-
-        dirName = "spindir." + SPIN_DIR_INDEX++;
-        final File dir = new File(dirName);
-        if (dir.exists()) {
-            delete(dir);
-        }
-        Files.createDirectories(Paths.get(dirName));
-
-        parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
+        final int parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
         for (int i = 0; i < parts; i++) {
             try (final PrintWriter pw = new PrintWriter(dirName + "/" + MODEL_FILENAME + "." + i)) {
                 pw.println(modelCode);
@@ -57,77 +45,83 @@ public class SpinRunner implements AutoCloseable {
         // generate pan source
         ResourceMeasurement measurement = new ResourceMeasurement();
         for (int i = 0; i < parts; i++) {
-            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", ResourceMeasurement.FORMAT, "spin", "-a",
+            process = new ProcessBuilder(TIME, "-f", ResourceMeasurement.FORMAT, "spin", "-a",
                     MODEL_FILENAME + "." + i).redirectErrorStream(true).directory(new File(dirName)).start();
-            try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
+            final List<String> allLines = new ArrayList<>();
+            try (final Scanner sc = new Scanner(process.getInputStream())) {
                 while (sc.hasNextLine()) {
                     final String line = sc.nextLine();
                     if (ResourceMeasurement.isMeasurement(line)) {
                         measurement = measurement.add(new ResourceMeasurement(line, "generating pan source"));
                     }
+                    allLines.add(line);
                 }
             }
-            waitFor();
+            waitFor(allLines);
 
             // compile pan
-            spinProcess = new ProcessBuilder("/usr/bin/time", "-f", ResourceMeasurement.FORMAT, "cc",
-                    "-O" + optimizationLevel, "-DVECTORSZ=1024", "-o", "pan", "pan.c")
+            process = new ProcessBuilder(TIME, "-f", ResourceMeasurement.FORMAT, "cc",
+                    "-O" + OPTIMIZATION_LEVEL, "-DVECTORSZ=1024", "-o", "pan", "pan.c")
                     .redirectErrorStream(true).directory(new File(dirName)).start();
-            try (final Scanner sc = new Scanner(spinProcess.getInputStream())) {
+            try (final Scanner sc = new Scanner(process.getInputStream())) {
                 while (sc.hasNextLine()) {
                     final String line = sc.nextLine();
                     if (ResourceMeasurement.isMeasurement(line)) {
                         measurement = measurement.add(new ResourceMeasurement(line, "compiling pan"));
                     }
+                    allLines.add(line);
                 }
             }
-            waitFor();
+            waitFor(allLines);
 
             Files.move(Paths.get(dirName + "/pan"), Paths.get(dirName + "/pan." + i));
         }
         creationMeasurement = measurement;
     }
 
-    private int waitFor() {
-        try {
-            return spinProcess.waitFor();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    @Override
+    public RunnerResult verify(String property, int stepsLimit) throws IOException {
+        final RunnerResult result = new RunnerResult();
+        final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp() + "\\].*$";
 
-    public List<String> pan(String propertyName) throws IOException {
-        final int part = (propertyToPart.containsKey(propertyName) ? propertyToPart.get(propertyName) : 0);
+        final int part = (propertyToPart.containsKey(property) ? propertyToPart.get(property) : 0);
         final String suffix = "." + part;
         final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
-        final List<String> result = new ArrayList<>();
+        final List<String> log = new ArrayList<>();
         File trailFile = null;
         try {
-            spinProcess = new ProcessBuilder("timeout", timeout + "s", "/usr/bin/time", "-f",
-                    ResourceMeasurement.FORMAT, "./pan" + suffix, "-a", "-N", propertyName, "-m5000000")
+            process = new ProcessBuilder("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT,
+                    "./pan" + suffix, "-a", "-N", property, "-m5000000")
                     .redirectErrorStream(true).directory(new File(dirName)).start();
             try (final BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(spinProcess.getInputStream(), StandardCharsets.UTF_8))) {
-                reader.lines().forEach(result::add);
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                reader.lines().forEach(log::add);
             }
             final int retCode = waitFor();
             trailFile = new File(trailPath);
             if (retCode == 124) {
-                result.add("*** " + propertyName + " : TIMEOUT ***");
+                log.add("*** " + property + " : TIMEOUT ***");
             } else if (trailFile.exists()) {
-                result.add("*** " + propertyName + " = FALSE ***");
-
+                result.outcome(false);
+                final TestCase testCase = new TestCase(data.conf);
+                result.set(testCase);
+                testCase.setMaxLength(stepsLimit);
                 // counterexample trace reading
-                spinProcess = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
+                process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
                         MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
 
                 try (final BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(spinProcess.getInputStream(), StandardCharsets.UTF_8))) {
-                    reader.lines().forEach(result::add);
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    reader.lines().forEach(line -> {
+                        if (line.matches(trailRegexp)) {
+                            final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
+                            testCase.addValue(tokens[1], tokens[2]);
+                        }
+                    });
                 }
                 waitFor();
             } else {
-                result.add("*** " + propertyName + " = TRUE ***");
+                result.outcome(true);
             }
         } finally {
             if (trailFile != null && trailFile.exists()) {
@@ -139,22 +133,12 @@ public class SpinRunner implements AutoCloseable {
             }
         }
 
+        result.log(log);
         return result;
     }
 
-    private void delete(File f) throws IOException {
-        if (f.isDirectory()) {
-            for (File c : f.listFiles()) {
-                delete(c);
-            }
-        }
-        if (!f.delete()) {
-            throw new FileNotFoundException("Failed to delete file: " + f);
-        }
-    }
-
     @Override
-    public void close() throws IOException {
-        delete(new File(dirName));
+    public String creationReport() {
+        return creationMeasurement.toString();
     }
 }

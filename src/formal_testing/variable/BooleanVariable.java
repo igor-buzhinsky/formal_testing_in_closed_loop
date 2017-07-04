@@ -1,18 +1,21 @@
 package formal_testing.variable;
 
+import formal_testing.value.BooleanValue;
+
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by buzhinsky on 6/26/17.
  */
-public class BooleanVariable extends Variable {
-    public BooleanVariable(String name, boolean isArrayPart, int arrayLength, int arrayIndex) {
-        super(name, isArrayPart, arrayLength, arrayIndex);
+public class BooleanVariable extends Variable<BooleanValue> {
+    public BooleanVariable(String name, BooleanValue initialValue, boolean isArrayPart, int arrayLength,
+                           int arrayIndex) {
+        super(name, initialValue, isArrayPart, arrayLength, arrayIndex);
     }
 
-    public BooleanVariable(String name) {
-        super(name);
+    public BooleanVariable(String name, BooleanValue initialValue) {
+        super(name, initialValue);
     }
 
     @Override
@@ -31,22 +34,7 @@ public class BooleanVariable extends Variable {
     }
 
     @Override
-    public List<String> promelaValues() {
-        return Arrays.asList("0", "1");
-    }
-
-    @Override
-    public List<String> nusmvValues() {
-        return Arrays.asList("FALSE", "TRUE");
-    }
-
-    @Override
-    public String promelaInitialValue() {
-        return "0";
-    }
-
-    @Override
-    public String nusmvInitialValue() {
-        return "FALSE";
+    public List<BooleanValue> values() {
+        return Arrays.asList(BooleanValue.FALSE, BooleanValue.TRUE);
     }
 }

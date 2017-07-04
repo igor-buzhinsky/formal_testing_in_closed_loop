@@ -1,26 +1,24 @@
 package formal_testing.variable;
 
+import formal_testing.value.SetValue;
+
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by buzhinsky on 6/29/17.
  */
-public class SetVariable extends Variable {
-    private final List<String> values;
+public class SetVariable extends Variable<SetValue> {
+    private final List<SetValue> values;
 
     @Override
     public String toString() {
         return indexedName() + " : " + values.toString().replace("[", "{").replace("]", "}");
     }
 
-    public SetVariable(String name, List<String> values, boolean isArrayPart, int arrayLength, int arrayIndex) {
-        super(name, isArrayPart, arrayLength, arrayIndex);
-        this.values = values;
-    }
-
-    public SetVariable(String name, List<String> values) {
-        super(name);
+    public SetVariable(String name, SetValue initialValue, List<SetValue> values, boolean isArrayPart,
+                       int arrayLength, int arrayIndex) {
+        super(name, initialValue, isArrayPart, arrayLength, arrayIndex);
         this.values = values;
     }
 
@@ -35,22 +33,7 @@ public class SetVariable extends Variable {
     }
 
     @Override
-    public List<String> promelaValues() {
+    public List<SetValue> values() {
         return Collections.unmodifiableList(values);
-    }
-
-    @Override
-    public List<String> nusmvValues() {
-        return promelaValues();
-    }
-
-    @Override
-    public String promelaInitialValue() {
-        return values.get(0);
-    }
-
-    @Override
-    public String nusmvInitialValue() {
-        return values.get(0);
     }
 }

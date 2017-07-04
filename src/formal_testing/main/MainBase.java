@@ -4,6 +4,10 @@ import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
+import formal_testing.runner.NuSMVRunner;
+import formal_testing.runner.Runner;
+import formal_testing.runner.RunnerResult;
+import formal_testing.value.BooleanValue;
 import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
@@ -23,28 +27,28 @@ import java.util.stream.Collectors;
 
 public abstract class MainBase {
     @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
-    protected String configurationFilename;
+    String configurationFilename;
 
     @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
-    protected String headerFilename;
+    String headerFilename;
 
     @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
-    protected String plantModelFilename;
+    String plantModelFilename;
 
     @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
-    protected String controllerModelFilename;
+    String controllerModelFilename;
 
     @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
-    protected String specFilename;
+    String specFilename;
 
     @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV", metaVar = "<language>")
     private String language;
 
-    protected ProblemData data;
+    ProblemData data;
 
     protected abstract void launcher() throws IOException, InterruptedException;
 
-    public void run(String[] args) {
+    void run(String[] args) {
         if (!parseArgs(args)) {
             return;
         }
@@ -71,8 +75,8 @@ public abstract class MainBase {
         }
     }
 
-    protected void loadData(String configurationFilename, String headerFilename, String plantModelFilename,
-                            String controllerModelFilename, String specFilename) throws IOException {
+    void loadData(String configurationFilename, String headerFilename, String plantModelFilename,
+                  String controllerModelFilename, String specFilename) throws IOException {
         final Configuration conf = Configuration.fromFile(configurationFilename);
         System.out.println("Configuration:");
         System.out.println(conf);
@@ -86,18 +90,28 @@ public abstract class MainBase {
         );
     }
 
-    protected List<String> promelaPropsFromCode(String code) {
+    private List<String> propsFromCode(String code) {
+        return Util.LANGUAGE == Language.PROMELA ? promelaPropsFromCode(code) : nusmvPropsFromCode(code);
+    }
+
+    private List<String> promelaPropsFromCode(String code) {
         return Arrays.stream(code.split("\n"))
                 .filter(s -> s.matches("ltl .*\\{.*\\}.*"))
                 .map(s -> s.replaceAll("^ltl ", "").replaceAll(" .*$", ""))
                 .collect(Collectors.toList());
     }
 
+    private List<String> nusmvPropsFromCode(String code) {
+        return Arrays.stream(code.split("\n"))
+                .filter(s -> s.matches("(LTLSTEP|CTLSPEC|SPEC) .*"))
+                .collect(Collectors.toList());
+    }
+
     private String nondetSelectionPromela() {
         final StringBuilder sb = new StringBuilder();
-        for (Variable var : data.conf.nondetVars) {
+        for (Variable<?> var : data.conf.nondetVars) {
             sb.append("if\n");
-            for (String value : var.promelaValues()) {
+            for (String value : var.stringValues()) {
                 sb.append(":: ").append(var.indexedName()).append(" = ").append(value).append(";\n");
             }
             sb.append("fi\n");
@@ -105,8 +119,7 @@ public abstract class MainBase {
         return sb.toString();
     }
 
-    protected List<CoveragePoint> coveragePoints(boolean includeInternal, boolean valuePairCoverage,
-                                                 int coverageClaims) {
+    private List<CoveragePoint> coveragePoints(boolean includeInternal, boolean valuePairCoverage, int coverageClaims) {
         final List<Variable> variables = new ArrayList<>();
         variables.addAll(data.conf.inputVars);
         variables.addAll(data.conf.nondetVars);
@@ -120,19 +133,19 @@ public abstract class MainBase {
 
         if (valuePairCoverage && variables.size() > 1) {
             for (int i = 0; i < variables.size(); i++) {
-                final Variable varI = variables.get(i);
+                final Variable<?> varI = variables.get(i);
                 for (int j = i + 1; j < variables.size(); j++) {
-                    final Variable varJ = variables.get(j);
-                    for (String valueI : varI.promelaValues()) {
-                        for (String valueJ : varJ.promelaValues()) {
+                    final Variable<?> varJ = variables.get(j);
+                    for (String valueI : varI.stringValues()) {
+                        for (String valueJ : varJ.stringValues()) {
                             result.add(new DataCoveragePoint(varI, valueI, varJ, valueJ));
                         }
                     }
                 }
             }
         } else {
-            for (Variable var : variables) {
-                result.addAll(var.promelaValues().stream().map(value -> new DataCoveragePoint(var, value))
+            for (Variable<?> var : variables) {
+                result.addAll(var.stringValues().stream().map(value -> new DataCoveragePoint(var, value))
                         .collect(Collectors.toList()));
             }
         }
@@ -147,9 +160,9 @@ public abstract class MainBase {
         return s.isEmpty() ? "" : (indent + s + "\n");
     }
 
-    private void printVars(StringBuilder sb, String indent, List<Variable> variables, String text) {
+    private void printVars(StringBuilder sb, String indent, List<Variable<?>> variables, String text) {
         if (!variables.isEmpty()) {
-            sb.append(indent + Util.LANGUAGE.commentSymbol).append(" ").append(text).append("\n");
+            sb.append(indent).append(Util.LANGUAGE.commentSymbol).append(" ").append(text).append("\n");
         }
         variables.forEach(v -> sb.append(varFormat(v.toLanguageString(), indent)));
     }
@@ -190,9 +203,9 @@ public abstract class MainBase {
         return Pair.of(transformed.toString(), nextClaimIndex);
     }
 
-    protected String modelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
-                               Optional<String> testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
-                               Optional<CodeCoverageCounter> counter) {
+    String modelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
+                     String testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
+                     CodeCoverageCounter counter) {
         return Util.LANGUAGE == Language.PROMELA
                 ? promelaModelCode(testing, nondetSelection, spec, testHeader, testBody, plantCodeCoverage,
                 controllerCodeCoverage, counter)
@@ -205,26 +218,26 @@ public abstract class MainBase {
         return merged;
     }
 
-    private String argList(List<List<Variable>> variables) {
-        final List<Variable> allVars = merge(variables);
+    private String argList(List<List<Variable<?>>> variables) {
+        final List<Variable<?>> allVars = merge(variables);
         final Set<String> indicesRemoved = allVars.stream().map(v -> v.name)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         return "(" + String.join(", ", indicesRemoved) + ")";
     }
 
-    private final BooleanVariable testingVar = new BooleanVariable("_test_passed");
+    private final BooleanVariable testingVar = new BooleanVariable("_test_passed", BooleanValue.FALSE);
 
-    private String nusmvModelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
-                                    Optional<String> testBody) {
+    private String nusmvModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
+                                  String testBody) {
         final StringBuilder code = new StringBuilder();
 
         // can contain e.g. some module declarations
         code.append(data.header).append("\n");
 
         code.append("MODULE _NONDET_VAR_SELECTION").append(argList(Collections.singletonList(data.conf.nondetVars)))
-                .append("\n");
-        if (testBody.isPresent()) {
-            code.append(testBody.get()).append("\n");
+                .append("\n\n");
+        if (testBody != null) {
+            code.append(testBody).append("\n");
         }
 
         code.append("MODULE _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
@@ -241,7 +254,7 @@ public abstract class MainBase {
         if (testing) {
             code.append(varFormat(testingVar.toNusmvString(), "    "));
         }
-        code.append("    _nondet_var_selection: _NONDET_SELECTION")
+        code.append("    _nondet_var_selection: _NONDET_VAR_SELECTION")
                 .append(argList(Collections.singletonList(data.conf.nondetVars)))
                 .append(";\n");
         code.append("    _plant: _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
@@ -249,12 +262,12 @@ public abstract class MainBase {
         code.append("    _controller: _CONTROLLER").append(argList(Arrays.asList(data.conf.inputVars,
                 data.conf.controllerInternalVars, data.conf.outputVars))).append(";\n");
 
-        code.append("DEFINE\n");
-        for (Variable var : merge(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+        code.append("ASSIGN\n");
+        for (Variable<?> var : merge(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
                 data.conf.controllerInternalVars, data.conf.plantInternalVars, data.conf.outputVars,
-                testing ? Collections.emptyList() : Collections.singletonList(testingVar)))) {
+                testing ?  Collections.singletonList(testingVar) : Collections.emptyList()))) {
             code.append("    init(").append(var.indexedName()).append(") := ")
-                    .append(var.nusmvInitialValue()).append(";\n");
+                    .append(var.initialValue()).append(";\n");
         }
 
         if (spec) {
@@ -267,17 +280,17 @@ public abstract class MainBase {
         return code.toString();
     }
 
-    private String promelaModelCode(boolean testing, boolean nondetSelection, boolean spec, Optional<String> testHeader,
-                               Optional<String> testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
-                               Optional<CodeCoverageCounter> counter) {
+    private String promelaModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
+                                    String testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
+                                    CodeCoverageCounter counter) {
         final StringBuilder code = new StringBuilder();
 
         final Set<String> mtypeValues = new LinkedHashSet<>();
-        for (List<Variable> list : Arrays.asList(data.conf.inputVars, data.conf.outputVars, data.conf.nondetVars,
-                data.conf.plantInternalVars, data.conf.controllerInternalVars)) {
-            list.stream().filter(var -> var instanceof SetVariable)
-                    .forEach(var -> mtypeValues.addAll(var.promelaValues()));
-        }
+
+        merge(Arrays.asList(data.conf.inputVars, data.conf.outputVars, data.conf.nondetVars,
+                data.conf.plantInternalVars, data.conf.controllerInternalVars)).stream()
+                .filter(v -> v instanceof SetVariable).forEach(v -> mtypeValues.addAll(v.stringValues()));
+
         if (!mtypeValues.isEmpty()) {
             code.append("mtype ").append(mtypeValues.toString().replace("[", "{").replace("]", "}")).append("\n");
         }
@@ -307,15 +320,15 @@ public abstract class MainBase {
             code.append("\n").append(varFormat(testingVar.toPromelaString(), ""));
         }
         code.append("\n").append(data.header);
-        if (testHeader.isPresent()) {
-            code.append("\n").append(testHeader.get());
+        if (testHeader != null) {
+            code.append("\n").append(testHeader);
         }
         code.append("\n").append("\n").append("init { do :: atomic {\n");
         if (nondetSelection) {
             code.append(Util.indent(nondetSelectionPromela())).append("\n");
         }
-        if (testBody.isPresent()) {
-            code.append(Util.indent(testBody.get())).append("\n");
+        if (testBody != null) {
+            code.append(Util.indent(testBody)).append("\n");
         }
         code.append("\n").append(Util.indent(plantCode)).append("\n\n")
                 .append(Util.indent(controllerCode)).append("\n").append("} od }\n");
@@ -326,56 +339,42 @@ public abstract class MainBase {
             code.append("\n").append("ltl test_passed { <>_test_passed }\n");
         }
 
-        if (counter.isPresent()) {
-            counter.get().coverageClaims = coverageClaims;
+        if (counter != null) {
+            counter.coverageClaims = coverageClaims;
         }
         return code.toString();
     }
 
-    public String usualModelCode(Optional<CodeCoverageCounter> counter, boolean plantCodeCoverage,
-                                  boolean controllerCodeCoverage) {
-        return modelCode(false, true, false, Optional.empty(), Optional.empty(), plantCodeCoverage,
+    String usualModelCode(CodeCoverageCounter counter, boolean plantCodeCoverage, boolean controllerCodeCoverage) {
+        return modelCode(false, true, false, null, null, plantCodeCoverage,
                 controllerCodeCoverage, counter);
     }
 
-    protected List<String> coverageProperties(List<CoveragePoint> coveragePoints, int steps) {
-        return coveragePoints.stream().map(
-                cp -> steps == 0 ? cp.promelaLtlProperty() : cp.promelaLtlProperty(steps, false))
-                .collect(Collectors.toList());
-    }
-
-
-    protected int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps,
-                                  boolean plantCodeCoverage, boolean controllerCodeCoverage) throws IOException {
+    int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps, boolean plantCodeCoverage,
+                        boolean controllerCodeCoverage) throws IOException {
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
 
-        final String code = modelCode(false, false, false, Optional.of(tc.promelaHeader(false)),
-                Optional.of(tc.promelaBody(false)), plantCodeCoverage, controllerCodeCoverage, Optional.empty());
-
-        final List<String> claims = coverageProperties(uncovered, steps);
+        final String code = modelCode(false, false, false, tc.promelaHeader(false), tc.promelaBody(false),
+                plantCodeCoverage, controllerCodeCoverage, null);
 
         int newCovered = 0;
-        int lines = 0;
-        try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
-            System.out.println("    " + spinRunner.creationMeasurement);
+        try (final Runner runner = Runner.create(data, code, uncovered, steps, true, 0)) {
+            System.out.println(runner.creationReport());
             final String prefix = "    (" + uncovered.size() + ") ";
             System.out.print(prefix);
-            for (CoveragePoint cp : uncovered) {
-                final List<String> result = spinRunner.pan(cp.promelaLtlName());
-                for (String line : result) {
-                    final String suffix = lines > 0 && lines % 150 == 0
-                            ? ("\n" + new String(new char[prefix.length()]).replace('\0', ' ')) : "";
-                    if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
-                        lines++;
-                        cp.cover();
-                        newCovered++;
-                        System.out.print("+" + suffix);
-                    } else if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                        lines++;
-                        System.out.print("-" + suffix);
-                    }
+            for (int i = 0; i < uncovered.size(); i++) {
+                final CoveragePoint cp = uncovered.get(i);
+                final RunnerResult result = runner.verify(cp.promelaLtlName(), steps);
+                if (result.found()) {
+                    cp.cover();
+                    newCovered++;
+                    System.out.print("+");
+                } else {
+                    System.out.print("-");
                 }
+                System.out.print(i > 0 && i % 150 == 0 ? ("\n" +
+                        new String(new char[prefix.length()]).replace('\0', ' ')) : "");
             }
             System.out.println();
         }
@@ -394,7 +393,7 @@ public abstract class MainBase {
         CoverageInfo(boolean plantCodeCoverage, boolean controllerCodeCoverage, boolean includeInternal,
                      boolean valuePairCoverage) {
             final CodeCoverageCounter counter = new CodeCoverageCounter();
-            usualModelCode(Optional.of(counter), plantCodeCoverage, controllerCodeCoverage);
+            usualModelCode(counter, plantCodeCoverage, controllerCodeCoverage);
             coveragePoints = coveragePoints(includeInternal, valuePairCoverage, counter.coverageClaims);
             totalPoints = coveragePoints.size();
         }
@@ -412,12 +411,31 @@ public abstract class MainBase {
         }
     }
 
-    protected void setLanguage(String language) {
+    private void setLanguage(String language) {
         try {
             Util.LANGUAGE = Language.valueOf(language);
             System.out.println("Language: " + Util.LANGUAGE);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Unsupported language " + language);
+        }
+    }
+
+    void verifyAll(String code, int timeout, boolean verbose) throws IOException {
+        try (final Runner runner = Runner.create(data, code, timeout)) {
+            if (runner instanceof NuSMVRunner) {
+                final List<String> result = ((NuSMVRunner) runner).verifyAll();
+                result.stream().filter(s -> verbose || s.startsWith("-- specification ")).forEach(System.out::println);
+            } else {
+                for (String prop : propsFromCode(code)) {
+                    final RunnerResult result = runner.verify(prop, Integer.MAX_VALUE);
+                    System.out.println(result.measurement());
+                    if (verbose) {
+                        result.log().forEach(System.out::println);
+                    } else {
+                        System.out.println("*** " + prop + " = " + result.outcome() + " ***");
+                    }
+                }
+            }
         }
     }
 }

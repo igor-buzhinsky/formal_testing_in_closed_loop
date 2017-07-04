@@ -1,5 +1,8 @@
 package formal_testing;
 
+import formal_testing.value.BooleanValue;
+import formal_testing.value.IntegerValue;
+import formal_testing.value.SetValue;
 import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.IntegerVariable;
 import formal_testing.variable.SetVariable;
@@ -11,16 +14,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/26/17.
  */
 public class Configuration {
-    public final List<Variable> inputVars = new ArrayList<>();
-    public final List<Variable> outputVars = new ArrayList<>();
-    public final List<Variable> nondetVars = new ArrayList<>();
-    public final List<Variable> plantInternalVars = new ArrayList<>();
-    public final List<Variable> controllerInternalVars = new ArrayList<>();
+    public final List<Variable<?>> inputVars = new ArrayList<>();
+    public final List<Variable<?>> outputVars = new ArrayList<>();
+    public final List<Variable<?>> nondetVars = new ArrayList<>();
+    public final List<Variable<?>> plantInternalVars = new ArrayList<>();
+    public final List<Variable<?>> controllerInternalVars = new ArrayList<>();
 
     @Override
     public String toString() {
@@ -39,10 +43,10 @@ public class Configuration {
                 if (line.isEmpty()) {
                     continue;
                 }
-                final String[] tokens = line.split(" +", 3);
+                final String[] tokens = line.split(" +");
                 final String varType = tokens[0];
                 final String datatype = tokens[2];
-                final List<Variable> list;
+                final List<Variable<?>> list;
                 switch (varType) {
                     case "input": list = conf.inputVars; break;
                     case "output": list = conf.outputVars; break;
@@ -65,12 +69,22 @@ public class Configuration {
                     size = 1;
                     isArray = false;
                 }
+                final String initialValue = tokens[3];
                 for (int i = 0; i < size; i++) {
-                    list.add(datatype.startsWith("{") ? new SetVariable(realName,
-                            Arrays.asList(datatype.replace("{", "").replace("}", "").trim().split(" *, *")),
-                            isArray, size, i) : datatype.equals("bool")
-                            ? new BooleanVariable(realName, isArray, size, i)
-                            : new IntegerVariable(realName, datatype, isArray, size, i));
+                    final Variable<?> var;
+
+                    if (datatype.equals("bool")) {
+                        var = new BooleanVariable(realName, BooleanValue.read(initialValue), isArray, size, i);
+                    } else if (datatype.contains("..")) {
+                        var = new IntegerVariable(realName, IntegerValue.read(initialValue), datatype, isArray, size, i);
+                    } else {
+                        final List<String> stringValues = Arrays.asList(datatype.split(","));
+                        final List<SetValue> values = stringValues.stream().map(SetValue::new)
+                                .collect(Collectors.toList());
+                        var = new SetVariable(realName, SetValue.read(initialValue, stringValues), values, isArray,
+                                size, i);
+                    }
+                    list.add(var);
                 }
             }
         }

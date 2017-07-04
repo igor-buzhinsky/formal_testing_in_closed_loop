@@ -1,4 +1,4 @@
-// plant
+-- plant
 LTLSPEC X( G((elevator_pos = 0) & down & !up -> X(elevator_pos = 0)) )
 LTLSPEC X( G((elevator_pos = 0) & !down & up -> X(elevator_pos = 1)) )
 LTLSPEC X( G((elevator_pos = 0) & (down = up) -> X(elevator_pos = 0)) )
@@ -27,18 +27,18 @@ LTLSPEC X( !F G(!open[0] & !door_closed[0]) )
 LTLSPEC X( !F G(!open[1] & !door_closed[1]) )
 LTLSPEC X( !F G(!open[2] & !door_closed[2]) )
 
-// open-loop
+-- open-loop
 LTLSPEC X( G!(up & down) )
 
-// closed-loop
-LTLSPEC X( GF!down
-LTLSPEC X( GF!up
+-- closed-loop
+LTLSPEC X( G F !down )
+LTLSPEC X( G F !up )
 LTLSPEC X( G(!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0] & door_closed[1] & door_closed[2]) )
 
-LTLSPEC X( G((user_floor_button[0] || user_cabin_button[0]) -> F(on_floor[0] || user_floor_button[1] || user_cabin_button[1] || user_floor_button[2] || user_cabin_button[2])) )
-LTLSPEC X( G((user_floor_button[1] || user_cabin_button[1]) -> F(on_floor[1] || user_floor_button[0] || user_cabin_button[0] || user_floor_button[2] || user_cabin_button[2])) )
-LTLSPEC X( G((user_floor_button[2] || user_cabin_button[2]) -> F(on_floor[2] || user_floor_button[0] || user_cabin_button[0] || user_floor_button[1] || user_cabin_button[1])) )
+LTLSPEC X( G((user_floor_button[0] | user_cabin_button[0]) -> F(on_floor[0] | user_floor_button[1] | user_cabin_button[1] | user_floor_button[2] | user_cabin_button[2])) )
+LTLSPEC X( G((user_floor_button[1] | user_cabin_button[1]) -> F(on_floor[1] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[2] | user_cabin_button[2])) )
+LTLSPEC X( G((user_floor_button[2] | user_cabin_button[2]) -> F(on_floor[2] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[1] | user_cabin_button[1])) )
 
-LTLSPEC X( G((user_floor_button[0] || user_cabin_button[0]) -> F on_floor[0]) // false
-LTLSPEC X( G((user_floor_button[1] || user_cabin_button[1]) -> F on_floor[1]) // false
-LTLSPEC X( G((user_floor_button[2] || user_cabin_button[2]) -> F on_floor[2]) // false
+LTLSPEC X( G((user_floor_button[0] | user_cabin_button[0]) -> F on_floor[0]) ) -- false
+LTLSPEC X( G((user_floor_button[1] | user_cabin_button[1]) -> F on_floor[1]) ) -- false
+LTLSPEC X( G((user_floor_button[2] | user_cabin_button[2]) -> F on_floor[2]) ) -- false

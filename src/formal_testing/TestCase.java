@@ -11,12 +11,17 @@ import java.util.*;
 public class TestCase implements Serializable {
     private final Map<String, List<String>> values = new LinkedHashMap<>();
     private int length = 0;
+    private int maxLength = Integer.MAX_VALUE;
+
+    public void setMaxLength(int maxLength) {
+        this.maxLength = maxLength;
+    }
 
     public int length() {
         return length;
     }
 
-    public Map<String, List<String>> values() {
+    Map<String, List<String>> values() {
         return Collections.unmodifiableMap(values);
     }
 
@@ -28,8 +33,10 @@ public class TestCase implements Serializable {
 
     public void addValue(String varName, String value) {
         final List<String> varValues = values.get(varName);
-        varValues.add(value);
-        length = Math.max(length, varValues.size());
+        if (varValues.size() < maxLength) {
+            varValues.add(value);
+            length = Math.max(length, varValues.size());
+        }
     }
 
     @Override
@@ -64,5 +71,13 @@ public class TestCase implements Serializable {
     @Override
     public int hashCode() {
         return values.hashCode();
+    }
+
+    public void padMissing() {
+        for (List<String> list : values.values()) {
+            while (list.size() < length) {
+                list.add(list.get(list.size() - 1));
+            }
+        }
     }
 }

@@ -1,18 +1,16 @@
 package formal_testing.main;
 
 import formal_testing.ResourceMeasurement;
-import formal_testing.SpinRunner;
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
-import formal_testing.variable.Variable;
+import formal_testing.runner.Runner;
+import formal_testing.runner.RunnerResult;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -59,55 +57,43 @@ public class SynthesizeCoverageTests extends MainBase {
         System.out.println("Coverage test synthesis...");
 
         final TestSuite testSuite = new TestSuite(true);
-        final String nondetName = "(" + String.join("|", data.conf.nondetVars.stream().map(Variable::indexedName)
-                .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ")";
-        final String trailRegexp = "^.*proc.*state.*\\[" + nondetName + " = [0-9]+\\].*$";
         for (int len = 1; len <= maxLength; len++) {
             System.out.println("  Test synthesis for length " + len + "...");
             System.out.println("  Covered points: " + info.coveredPoints + " / " + info.totalPoints
                     + ", test synthesis for length " + len + "...");
 
-            final String code = usualModelCode(Optional.empty(), plantCodeCoverage, controllerCodeCoverage);
+            final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
             final List<CoveragePoint> uncovered = info.coveragePoints.stream().filter(cp -> !cp.covered())
                     .collect(Collectors.toList());
-            final List<String> claims = new ArrayList<>();
-            for (CoveragePoint cp : uncovered) {
-                claims.add(cp.promelaLtlProperty(len, true));
-            }
 
-            try (final SpinRunner spinRunner = new SpinRunner(code, uncovered, claims, 0, 2)) {
-                System.out.println("  " + spinRunner.creationMeasurement);
+            try (final Runner runner = Runner.create(data, code, uncovered, len, true, 0)) {
+                System.out.println("  " + runner.creationReport());
                 for (final CoveragePoint cp : info.coveragePoints) {
                     if (cp.covered()) {
                         continue;
                     }
                     System.out.println("  Test synthesis for " + cp + "...");
-                    final List<String> result = spinRunner.pan(cp.promelaLtlName());
+                    final RunnerResult result = runner.verify(cp.promelaLtlName(), len);
                     TestCase tc = null;
-                    for (String line : result) {
-                        if (line.equals("*** " + cp.promelaLtlName() + " = FALSE ***")) {
-                            cp.cover();
-                            info.coveredPoints++;
-                            tc = new TestCase(data.conf);
-                            System.out.println("    " + cp);
-                        } else if (line.equals("*** " + cp.promelaLtlName() + " = TRUE ***")) {
-                            System.out.println("    " + cp);
-                        } else if (tc != null && line.matches(trailRegexp)) {
-                            final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                            tc.addValue(tokens[1], tokens[2]);
-                        } else if (ResourceMeasurement.isMeasurement(line)) {
-                            System.out.println("    " + new ResourceMeasurement(line, "test synthesis"));
-                        }
-                    }
-                    if (tc != null) {
+                    if (result.found()) {
+                        cp.cover();
+                        info.coveredPoints++;
+                        tc = result.testCase();
+                        System.out.println("    " + cp);
                         //tc.validate();
                         if (minimize) {
                             info.coveredPoints += examineTestCase(tc, info.coveragePoints,
-                                    checkFiniteCoverage ? len : 0, plantCodeCoverage, controllerCodeCoverage);
+                                    checkFiniteCoverage ? len : -1, plantCodeCoverage, controllerCodeCoverage);
                         }
                         System.out.println("    Generated: " + tc);
                         testSuite.add(tc);
+                    } else {
+                        System.out.println("    " + cp);
                     }
+                    System.out.println("    " + cp);
+                    result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
+                            System.out.println("    " + new ResourceMeasurement(line, "test synthesis"))
+                    );
                 }
             }
             if (info.allCovered()) {

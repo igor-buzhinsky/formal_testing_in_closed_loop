@@ -18,7 +18,7 @@ public class ResourceMeasurement {
         this(0, 0, 0, 0);
     }
 
-    public ResourceMeasurement(double userTime, double systemTime, double elapsedTime, int maxResident) {
+    private ResourceMeasurement(double userTime, double systemTime, double elapsedTime, int maxResident) {
         this.userTime = userTime;
         this.systemTime = systemTime;
         this.elapsedTime = elapsedTime;

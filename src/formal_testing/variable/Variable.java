@@ -2,24 +2,28 @@ package formal_testing.variable;
 
 import formal_testing.Language;
 import formal_testing.Util;
+import formal_testing.value.Value;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/26/17.
  */
-public abstract class Variable {
+public abstract class Variable<T extends Value> {
     public final String name;
+    private final T initialValue;
     private final boolean isArrayPart;
     private final int arrayLength;
     private final int arrayIndex;
 
-    public Variable(String name) {
-        this(name, false, 1, 0);
+    public Variable(String name, T initialValue) {
+        this(name, initialValue, false, 1, 0);
     }
 
-    public Variable(String name, boolean isArrayPart, int arrayLength, int arrayIndex) {
+    public Variable(String name, T initialValue, boolean isArrayPart, int arrayLength, int arrayIndex) {
         this.name = name;
+        this.initialValue = initialValue;
         this.isArrayPart = isArrayPart;
         this.arrayLength = arrayLength;
         this.arrayIndex = arrayIndex;
@@ -32,11 +36,15 @@ public abstract class Variable {
     public abstract String toPromelaString();
     public abstract String toNusmvString();
 
-    public abstract List<String> promelaValues();
-    public abstract List<String> nusmvValues();
+    protected abstract List<? extends Value> values();
 
-    public abstract String promelaInitialValue();
-    public abstract String nusmvInitialValue();
+    public List<String> stringValues() {
+        return values().stream().map(Value::toString).collect(Collectors.toList());
+    }
+
+    public String initialValue() {
+        return initialValue.toString();
+    }
 
     protected String indexPart() {
         return isArrayPart ? ("[" + arrayIndex + "]") : "";
@@ -57,9 +65,9 @@ public abstract class Variable {
         if (isArrayPart && arrayIndex > 0) {
             return "";
         } else if (isArrayPart && arrayIndex == 0) {
-            return type + " " + name + "[" + arrayLength + "] = " + promelaInitialValue() + ";";
+            return type + " " + name + "[" + arrayLength + "] = " + initialValue() + ";";
         } else {
-            return type + " " + name + " = " + promelaInitialValue() + ";";
+            return type + " " + name + " = " + initialValue() + ";";
         }
     }
 

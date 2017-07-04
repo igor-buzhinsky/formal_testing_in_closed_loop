@@ -1,11 +1,9 @@
 package formal_testing.main;
 
-import formal_testing.SpinRunner;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by buzhinsky on 6/27/17.
@@ -14,6 +12,9 @@ public class ClosedLoopVerify extends MainBase {
     @Option(name = "--timeout", usage = "timeout in seconds, default = 0 = no", metaVar = "<timeout>")
     private int timeout;
 
+    @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")
+    private boolean verbose;
+
     public static void main(String[] args) throws IOException {
         new ClosedLoopVerify().run(args);
     }
@@ -21,16 +22,7 @@ public class ClosedLoopVerify extends MainBase {
     @Override
     protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
-
-        final String code = modelCode(false, true, true, Optional.empty(), Optional.empty(), false, false,
-                Optional.empty());
-
-        try (final SpinRunner spinRunner = new SpinRunner(code, timeout, 2)) {
-            for (String prop : promelaPropsFromCode(code)) {
-                final List<String> result = spinRunner.pan(prop);
-                result.forEach(System.out::println);
-            }
-        }
+        final String code = modelCode(false, true, true, null, null, false, false, null);
+        verifyAll(code, timeout, verbose);
     }
-
 }

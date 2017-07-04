@@ -1,50 +1,30 @@
-DEFINE
-    FLOORS := 3;
 ASSIGN
-
-d_step {
-    int floor;
-    bool on_some_floor = false;
-    bool is_requested = false;
-    
-    for (floor : 0..(FLOORS - 1)) {
-        on_some_floor = on_some_floor || on_floor[floor];
-        is_requested = is_requested || button[floor] || call[floor];
-        // Close door if open
-        open[floor] = (door_open[floor] -> false : open[floor]);
-    }
-    
-    bool need_stop = false;
-    
-    if
-    // Doesn't change direction while moving
-    :: !on_some_floor -> ;
-    // Stop if nowhere to go
-    :: !is_requested -> up = false; down = false;
-    :: else ->
-        for (floor : 0..(FLOORS - 1)) {
-            need_stop = need_stop || !door_closed[floor] || on_floor[floor] && (button[floor] || call[floor]);
-            open[floor] = open[floor] || on_floor[floor] && (button[floor] || call[floor]);
-        }
-        
-        if
-        :: need_stop -> up = false; down = false;
-        :: else ->
-            int floor_cur;
-            for (floor : 0..(FLOORS - 1)) {
-                for (floor_cur : 0..(floor - 1)) {
-                    if
-                    :: on_floor[floor_cur] && (button[floor] || call[floor]) -> up = true; down = false;
-                    :: else -> ;
-                    fi
-                }
-                for (floor_cur : (floor + 1)..(FLOORS - 1)) {
-                    if
-                    :: on_floor[floor_cur] && (button[floor] || call[floor]) -> up = false; down = true;
-                    :: else -> ;
-                    fi
-                }
-            }
-        fi
-    fi
-}
+    next(open[0]) := open[0] & !next(door_open[0]) | next(on_floor[0]) & call0;
+    next(open[1]) := open[1] & !next(door_open[1]) | next(on_floor[1]) & call1;
+    next(open[2]) := open[2] & !next(door_open[2]) | next(on_floor[2]) & call2;
+    next(up) := case
+            !is_requested | need_stop: FALSE;
+            next(on_floor[0]) & (call1 | call2): TRUE;
+            next(on_floor[1]) & (call2)        : TRUE;
+            next(on_floor[2]) & (call0 | call1): FALSE;
+            next(on_floor[1]) & (call0)        : FALSE;
+            TRUE: up;
+        esac;
+    next(down) := case
+            !is_requested | need_stop: FALSE;
+            next(on_floor[0]) & (call1 | call2): FALSE;
+            next(on_floor[1]) & (call2)        : FALSE;
+            next(on_floor[2]) & (call0 | call1): TRUE;
+            next(on_floor[1]) & (call0)        : TRUE;
+            TRUE: down;
+        esac;
+DEFINE
+    call0 := next(button[0]) | next(call[0]);
+    call1 := next(button[1]) | next(call[1]);
+    call2 := next(button[2]) | next(call[2]);
+    is_requested := call0 | call1 | call2;
+    on_some_floor := next(on_floor[0]) | next(on_floor[1]) | next(on_floor[2]);
+    need_stop := !next(door_closed[0]) | next(on_floor[0]) & call0
+               | !next(door_closed[1]) | next(on_floor[1]) & call1
+               | !next(door_closed[2]) | next(on_floor[2]) & call2
+               ;

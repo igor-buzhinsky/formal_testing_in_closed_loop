@@ -1,29 +1,27 @@
 package formal_testing.variable;
 
+import formal_testing.value.IntegerValue;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by buzhinsky on 6/26/17.
  */
-public class IntegerVariable extends Variable {
+public class IntegerVariable extends Variable<IntegerValue> {
     private final int min;
     private final int max;
 
-    public IntegerVariable(String name, int min, int max, boolean isArrayPart, int arrayLength, int arrayIndex) {
-        super(name, isArrayPart, arrayLength, arrayIndex);
+    public IntegerVariable(String name, IntegerValue initialValue, int min, int max,
+                           boolean isArrayPart, int arrayLength, int arrayIndex) {
+        super(name, initialValue, isArrayPart, arrayLength, arrayIndex);
         this.min = min;
         this.max = max;
     }
 
-    public IntegerVariable(String name, int min, int max) {
-        super(name);
-        this.min = min;
-        this.max = max;
-    }
-
-    public IntegerVariable(String name, String typeInterval, boolean isArrayPart, int arrayLength, int arrayIndex) {
-        this(name, Integer.parseInt(typeInterval.split("\\.\\.")[0]),
+    public IntegerVariable(String name, IntegerValue initialValue, String typeInterval, boolean isArrayPart,
+                           int arrayLength, int arrayIndex) {
+        this(name, initialValue, Integer.parseInt(typeInterval.split("\\.\\.")[0]),
                 Integer.parseInt(typeInterval.split("\\.\\.")[1]), isArrayPart, arrayLength, arrayIndex);
     }
 
@@ -43,26 +41,11 @@ public class IntegerVariable extends Variable {
     }
 
     @Override
-    public List<String> promelaValues() {
-        final List<String> values = new ArrayList<>();
+    public List<IntegerValue> values() {
+        final List<IntegerValue> values = new ArrayList<>();
         for (int i = min; i <= max; i++) {
-            values.add(String.valueOf(i));
+            values.add(new IntegerValue(i));
         }
         return values;
-    }
-
-    @Override
-    public List<String> nusmvValues() {
-        return promelaValues();
-    }
-
-    @Override
-    public String promelaInitialValue() {
-        return String.valueOf(min);
-    }
-
-    @Override
-    public String nusmvInitialValue() {
-        return String.valueOf(min);
     }
 }

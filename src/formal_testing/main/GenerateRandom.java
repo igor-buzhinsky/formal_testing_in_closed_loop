@@ -34,7 +34,7 @@ public class GenerateRandom extends MainBase {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
         final TestSuite ts = new TestSuite(true);
         final List<List<String>> allValues = data.conf.nondetVars.stream()
-                .map(Variable::promelaValues).collect(Collectors.toList());
+                .map(Variable::stringValues).collect(Collectors.toList());
         for (int i = 0; i < number; i++) {
             final TestCase tc = new TestCase(data.conf);
             for (int j = 0; j < length; j++) {
