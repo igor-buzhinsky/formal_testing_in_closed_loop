@@ -17,6 +17,9 @@ public class Run extends MainBase {
     @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")
     private boolean verbose;
 
+    @Option(name = "--verify", handler = BooleanOptionHandler.class, usage = "verify temporal specification")
+    private boolean verify;
+
     @Option(name = "--measureCoverage", handler = BooleanOptionHandler.class, usage = "measure coverage")
     private boolean measureCoverage;
 
@@ -47,10 +50,12 @@ public class Run extends MainBase {
         final TestSuite ts = TestSuite.read(filename);
         final String code = modelCode(true, false, true, ts.header(), ts.body(), false, false, null);
 
-        System.out.println("Running test suite " + filename + "...");
-        verifyAll(code, 0, verbose);
+        System.out.println("Running verification for test suite " + filename + "...");
+        if (verify) {
+            verifyAll(code, 0, verbose);
+        }
         if (measureCoverage) {
-            System.out.println("\nMeasuring test suite coverage...");
+            System.out.println("\nMeasuring coverage of test suite " + filename + "...");
             final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
                     valuePairCoverage);
 

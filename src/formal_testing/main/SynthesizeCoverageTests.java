@@ -75,13 +75,11 @@ public class SynthesizeCoverageTests extends MainBase {
                     }
                     System.out.println("  Test synthesis for " + cp + "...");
                     final RunnerResult result = runner.verify(cp, len, negate, len);
-                    TestCase tc = null;
                     if (result.found()) {
                         cp.cover();
                         info.coveredPoints++;
-                        tc = result.testCase();
                         System.out.println("    " + cp);
-                        //tc.validate();
+                        final TestCase tc = result.testCase();
                         if (minimize) {
                             info.coveredPoints += examineTestCase(tc, info.coveragePoints,
                                     checkFiniteCoverage ? len : -1, plantCodeCoverage, controllerCodeCoverage);
@@ -91,7 +89,6 @@ public class SynthesizeCoverageTests extends MainBase {
                     } else {
                         System.out.println("    " + cp);
                     }
-                    System.out.println("    " + cp);
                     result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
                             System.out.println("    " + new ResourceMeasurement(line, "test synthesis"))
                     );
