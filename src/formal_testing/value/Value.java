@@ -1,6 +1,6 @@
 package formal_testing.value;
 
-import formal_testing.Language;
+import formal_testing.enums.Language;
 import formal_testing.Util;
 
 import java.io.Serializable;

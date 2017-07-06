@@ -1,6 +1,6 @@
 package formal_testing.variable;
 
-import formal_testing.Language;
+import formal_testing.enums.Language;
 import formal_testing.Util;
 import formal_testing.value.Value;
 

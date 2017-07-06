@@ -1,5 +1,8 @@
 package formal_testing;
 
+import formal_testing.enums.Language;
+import formal_testing.enums.NuSMVMode;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -12,4 +15,5 @@ public class Util {
     }
 
     public static Language LANGUAGE;
+    public static NuSMVMode NUSMV_MODE;
 }

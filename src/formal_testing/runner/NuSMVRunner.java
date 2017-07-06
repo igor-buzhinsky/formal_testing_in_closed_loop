@@ -3,7 +3,9 @@ package formal_testing.runner;
 import formal_testing.ProblemData;
 import formal_testing.ResourceMeasurement;
 import formal_testing.TestCase;
+import formal_testing.Util;
 import formal_testing.coverage.CoveragePoint;
+import formal_testing.enums.NuSMVMode;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -33,10 +35,13 @@ public class NuSMVRunner extends Runner {
         }
     }
 
-    private int run(List<String> result, boolean disableCounterexamples) throws IOException {
+    private int run(List<String> result, boolean disableCounterexamples, int stepsLimit) throws IOException {
         final List<String> command = new ArrayList<>();
         command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT, "NuSMV",
                 "-df", "-cpp"));
+        if (Util.NUSMV_MODE == NuSMVMode.BMC && stepsLimit >= 0) {
+            command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
+        }
         if (disableCounterexamples) {
             command.add("-dcx");
         }
@@ -53,7 +58,7 @@ public class NuSMVRunner extends Runner {
     public List<String> verifyAll(boolean disableCounterexamples) throws IOException {
         final List<String> result = new ArrayList<>();
         writeModel(null);
-        final int retCode = run(result, disableCounterexamples);
+        final int retCode = run(result, disableCounterexamples, -1);
         if (retCode == 124) {
             result.add("*** TIMEOUT ***");
         }
@@ -65,12 +70,13 @@ public class NuSMVRunner extends Runner {
         final RunnerResult result = new RunnerResult();
         writeModel(property);
         final List<String> log = new ArrayList<>();
-        final int retCode = run(log, disableCounterexample);
+        final int retCode = run(log, disableCounterexample, stepsLimit);
         final String trailRegexp = "    " + trailRegexp();
         if (retCode == 124) {
             log.add("*** " + property + " : TIMEOUT ***");
         } else {
             TestCase testCase = null;
+            Integer loopPosition = null;
             for (String line : log) {
                 //System.out.println(line);
                 if (line.startsWith("-- specification")) {
@@ -82,20 +88,32 @@ public class NuSMVRunner extends Runner {
                         result.set(testCase);
                     }
                 } else if (testCase != null) {
-                    if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
-                        if (testCase.length() == stepsLimit) {
+                    if (line.equals("  -- Loop starts here")) {
+                        loopPosition = testCase.length();
+                    } else if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
+                        if (testCase.length() == stepsLimit + 1) {
                             break;
                         } else if (testCase.length() > 0) {
                             testCase.padMissing();
                         }
+                        testCase.newElement();
                     } else if (line.matches(trailRegexp)) {
                         final String[] tokens = line.split("((    )|( = ))");
                         testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
                     }
                 }
             }
-            if (testCase != null) {
+            if (testCase != null && !disableCounterexample) {
                 testCase.padMissing();
+                if (loopPosition != null) {
+                    testCase.loopFromPosition(loopPosition, stepsLimit + 1);
+                }
+                testCase.removeInitial();
+                testCase.validate();
+                if (testCase.length() != stepsLimit) {
+                    throw new RuntimeException("Bad test case length, expected " + stepsLimit + " but in fact "
+                            + testCase.length() + "; log: \n" + String.join("\n", log));
+                }
             }
         }
 

@@ -81,4 +81,30 @@ public class TestCase implements Serializable {
             }
         }
     }
+
+    public void newElement() {
+        length++;
+    }
+
+    public void removeInitial() {
+        for (List<Value> list : values.values()) {
+            list.remove(0);
+        }
+        length--;
+    }
+
+    public void loopFromPosition(int position, int desiredLength) {
+        int curPosition = position;
+        int loopEnd = length;
+        while (length < desiredLength) {
+            for (List<Value> list : values.values()) {
+                list.add(list.get(curPosition));
+            }
+            curPosition++;
+            if (curPosition == loopEnd) {
+                curPosition = position;
+            }
+            length++;
+        }
+    }
 }

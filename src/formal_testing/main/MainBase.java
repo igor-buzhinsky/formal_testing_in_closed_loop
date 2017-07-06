@@ -4,6 +4,8 @@ import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
+import formal_testing.enums.Language;
+import formal_testing.enums.NuSMVMode;
 import formal_testing.runner.NuSMVRunner;
 import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
@@ -46,6 +48,9 @@ public abstract class MainBase {
     @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV", metaVar = "<language>")
     private String language;
 
+    @Option(name = "--nusmv_mode", usage = "NuSMV mode: LTL (default), CTL, BMC", metaVar = "<mode>")
+    private String nuSMVMode = "LTL";
+
     ProblemData data;
 
     protected abstract void launcher() throws IOException, InterruptedException;
@@ -55,7 +60,7 @@ public abstract class MainBase {
             return;
         }
         try {
-            setLanguage(language);
+            setLanguage(language, nuSMVMode);
             launcher();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -93,7 +98,7 @@ public abstract class MainBase {
     }
 
     private List<String> propsFromCode(String code) {
-        return Util.LANGUAGE == Language.PROMELA ? promelaPropsFromCode(code) : nusmvPropsFromCode(code);
+        return Util.LANGUAGE == Language.PROMELA ? promelaPropsFromCode(code) : nuSMVPropsFromCode(code);
     }
 
     private List<String> promelaPropsFromCode(String code) {
@@ -103,9 +108,9 @@ public abstract class MainBase {
                 .collect(Collectors.toList());
     }
 
-    private List<String> nusmvPropsFromCode(String code) {
+    private List<String> nuSMVPropsFromCode(String code) {
         return Arrays.stream(code.split("\n"))
-                .filter(s -> s.matches("(LTLSTEP|CTLSPEC|SPEC) .*"))
+                .filter(s -> s.matches("(LTLSTEP|CTLSPEC|SPEC|PSLSPEC) .*"))
                 .collect(Collectors.toList());
     }
 
@@ -284,7 +289,8 @@ public abstract class MainBase {
             code.append("\n").append(data.spec);
         }
         if (testing) {
-            code.append("\n").append("LTLSPEC F _test_passed\n");
+            code.append("\n").append(Util.NUSMV_MODE.specDeclaration).append(" ").append(Util.NUSMV_MODE.fOperator)
+                    .append("  _test_passed\n");
         }
 
         return code.toString();
@@ -422,12 +428,17 @@ public abstract class MainBase {
         }
     }
 
-    private void setLanguage(String language) {
+    private void setLanguage(String language, String nuSMVMode) {
         try {
             Util.LANGUAGE = Language.valueOf(language);
             System.out.println("Language: " + Util.LANGUAGE);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Unsupported language " + language);
+        }
+        try {
+            Util.NUSMV_MODE = NuSMVMode.valueOf(nuSMVMode);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Unsupported NuSMV mode " + nuSMVMode);
         }
     }
 

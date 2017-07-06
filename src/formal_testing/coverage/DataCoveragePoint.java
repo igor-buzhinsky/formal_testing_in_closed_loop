@@ -51,8 +51,8 @@ public class DataCoveragePoint extends CoveragePoint {
     }
 
     @Override
-    protected String nusmvLtlProperty(String opStart, String opEnd) {
-        return "LTLSPEC " + opStart + conditions() + opEnd;
+    protected String nuSMVTemporalProperty(String opStart, String opEnd) {
+        return Util.NUSMV_MODE.specDeclaration + " " + opStart + conditions() + opEnd;
     }
 
     @Override

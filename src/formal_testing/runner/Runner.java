@@ -1,6 +1,6 @@
 package formal_testing.runner;
 
-import formal_testing.Language;
+import formal_testing.enums.Language;
 import formal_testing.ProblemData;
 import formal_testing.Util;
 import formal_testing.coverage.CoveragePoint;

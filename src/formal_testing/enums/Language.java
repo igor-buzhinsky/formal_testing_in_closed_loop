@@ -1,4 +1,4 @@
-package formal_testing;
+package formal_testing.enums;
 
 /**
  * Created by buzhinsky on 7/2/17.
@@ -6,9 +6,9 @@ package formal_testing;
 public enum Language {
     PROMELA("//", " && ", " == "), NUSMV("--", " & ", " = ");
 
-    public String commentSymbol;
-    public String and;
-    public String equals;
+    public final String commentSymbol;
+    public final String and;
+    public final String equals;
 
     Language(String commentSymbol, String and, String equals) {
         this.commentSymbol = commentSymbol;

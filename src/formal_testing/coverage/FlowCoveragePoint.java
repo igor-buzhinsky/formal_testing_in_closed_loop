@@ -21,7 +21,7 @@ public class FlowCoveragePoint extends CoveragePoint {
     }
 
     @Override
-    protected String nusmvLtlProperty(String opStart, String opEnd) {
+    protected String nuSMVTemporalProperty(String opStart, String opEnd) {
         throw new RuntimeException("Flow coverage points and not supported for NuSMV.");
     }
 
