@@ -45,11 +45,11 @@ public abstract class MainBase {
     @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
     String specFilename;
 
-    @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV", metaVar = "<language>")
+    @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV, NUXMV", metaVar = "<language>")
     private String language;
 
-    @Option(name = "--nusmv_mode", usage = "NuSMV mode: LTL (default), CTL, BMC", metaVar = "<mode>")
-    private String nuSMVMode = "LTL";
+    @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode: LTL, CTL, BMC (default)", metaVar = "<mode>")
+    private String nuSMVMode = "BMC";
 
     ProblemData data;
 

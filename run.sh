@@ -12,7 +12,7 @@ call_nusmv() {
     local name="$1"
     echo " >>> $name"
     shift
-    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/spec.smv" -l NUSMV --nusmv_mode LTL $@ 2>&1
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/spec.smv" -l NUSMV --nusmv_mode BMC $@ 2>&1
     echo
 }
 

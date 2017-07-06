@@ -4,7 +4,7 @@ package formal_testing.enums;
  * Created by buzhinsky on 7/2/17.
  */
 public enum Language {
-    PROMELA("//", " && ", " == "), NUSMV("--", " & ", " = ");
+    PROMELA("//", " && ", " == "), NUSMV("--", " & ", " = "), NUXMV("--", " & ", " = ");
 
     public final String commentSymbol;
     public final String and;

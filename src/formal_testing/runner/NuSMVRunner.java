@@ -5,6 +5,7 @@ import formal_testing.ResourceMeasurement;
 import formal_testing.TestCase;
 import formal_testing.Util;
 import formal_testing.coverage.CoveragePoint;
+import formal_testing.enums.Language;
 import formal_testing.enums.NuSMVMode;
 
 import java.io.*;
@@ -37,8 +38,8 @@ public class NuSMVRunner extends Runner {
 
     private int run(List<String> result, boolean disableCounterexamples, int stepsLimit) throws IOException {
         final List<String> command = new ArrayList<>();
-        command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT, "NuSMV",
-                "-df", "-cpp"));
+        command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT,
+                Util.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
         if (Util.NUSMV_MODE == NuSMVMode.BMC && stepsLimit >= 0) {
             command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
         }
