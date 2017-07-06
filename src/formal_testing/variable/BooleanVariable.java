@@ -14,6 +14,11 @@ public class BooleanVariable extends Variable<BooleanValue> {
         super(name, initialValue, isArrayPart, arrayLength, arrayIndex);
     }
 
+    @Override
+    public BooleanValue readValue(String value) {
+        return BooleanValue.read(value);
+    }
+
     public BooleanVariable(String name, BooleanValue initialValue) {
         super(name, initialValue);
     }

@@ -1,5 +1,7 @@
 package formal_testing;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,17 +35,141 @@ public class TestSuite implements Serializable {
         return testCases.size() <= 1;
     }
 
-    public String promelaHeader() {
+    private int maxLength() {
+        return testCases.stream().mapToInt(TestCase::length).max().getAsInt();
+    }
+
+    public String header() {
+        return Util.LANGUAGE == Language.PROMELA ? promelaHeader() : nuSMVHeader();
+    }
+
+    public String body() {
+        return Util.LANGUAGE == Language.PROMELA ? promelaBody() : nuSMVBody();
+    }
+
+    private String promelaHeader() {
         return "int _test_step;" + (trivial() ? "" : "\nint _test_index = -1;");
     }
 
-    public String nuSMVBody() {
+    private String nuSMVHeader() {
+        return "VAR\n    _test_step: -1.." + (maxLength() - 1) + ";\n    _test_index: -1.." + (testCases.size() - 1) +
+                ";\nASSIGN\n    init(_test_step) := -1;\n    init(_test_index) := -1;";
+    }
+
+    private static List<Pair<Integer, Integer>> intervals(Collection<Integer> values) {
+        final List<Pair<Integer, Integer>> intervals = new ArrayList<>();
+        int min = -1;
+        int max = -1;
+        for (int value : values) {
+            if (min == -1) {
+                min = max = value;
+            } else if (value == max + 1) {
+                max = value;
+            } else if (value <= max) {
+                throw new AssertionError("Input set must contain increasing values.");
+            } else {
+                intervals.add(Pair.of(min, max));
+                min = max = value;
+            }
+        }
+        intervals.add(Pair.of(min, max));
+        return intervals;
+    }
+
+    private static String expressWithIntervalsNuSMV(Collection<Integer> values) {
+        final List<Pair<Integer, Integer>> intervals = intervals(values);
+        final List<String> stringIntervals = new ArrayList<>();
+        final Set<Integer> separate = new TreeSet<>();
+        for (Pair<Integer, Integer> interval : intervals) {
+            if (interval.getLeft() + 1 >= interval.getRight()) {
+                separate.add(interval.getLeft());
+                separate.add(interval.getRight());
+            } else {
+                stringIntervals.add(interval.getLeft() + ".." + interval.getRight());
+            }
+        }
+        if (!separate.isEmpty()) {
+            stringIntervals.add(separate.toString().replace("[", "{").replace("]", "}"));
+        }
+        return String.join(" union ", stringIntervals);
+    }
+
+    private String nuSMVBody() {
         final StringBuilder sb = new StringBuilder();
-        // TODO
+        final List<TestCase> list = new ArrayList<>(testCases);
+        sb.append("ASSIGN\n");
+        if (trivial()) {
+            sb.append("    next(_test_index) := 0;\n");
+        } else {
+            sb.append("    next(_test_index) := _test_index = -1 ? 0..").append(testCases.size() - 1)
+                    .append(" : _test_index;\n");
+        }
+
+        for (String varName : list.get(0).values().keySet()) {
+            sb.append("    next(").append(varName).append(") := case\n");
+            final Map<String, Map<Integer, Set<Integer>>> buckets = new TreeMap<>();
+            for (int i = 0; i < list.size(); i++) {
+                final TestCase tc = list.get(i);
+                for (int j = 0; j < tc.length(); j++) {
+                    final String value = tc.values().get(varName).get(j).toString();
+                    Map<Integer, Set<Integer>> bucket = buckets.get(value);
+                    if (bucket == null) {
+                        bucket = new TreeMap<>();
+                        buckets.put(value, bucket);
+                    }
+                    Set<Integer> valueSet = bucket.get(i);
+                    if (valueSet == null) {
+                        valueSet = new TreeSet<>();
+                        bucket.put(i, valueSet);
+                    }
+                    valueSet.add(j);
+                }
+            }
+            final List<String> allValues = new ArrayList<>(buckets.keySet());
+            for (Map.Entry<String, Map<Integer, Set<Integer>>> entry : buckets.entrySet()) {
+                final String value = entry.getKey();
+                final Map<Integer, Set<Integer>> bucket = entry.getValue();
+                if (bucket.isEmpty()) {
+                    continue;
+                }
+                final String condition = value.equals(allValues.get(allValues.size() - 1)) ? "TRUE"
+                        : String.join("\n            | ", bucket.entrySet().stream()
+                        .map(e -> (trivial() ? "" : ("next(_test_index) = " + e.getKey() + " & "))
+                                + "next(_test_step) in "
+                                + expressWithIntervalsNuSMV(e.getValue())).collect(Collectors.toList()));
+                sb.append("        ").append(condition).append(": ").append(value).append(";\n");
+            }
+            sb.append("    esac;\n");
+        }
+        sb.append("    next(_test_step) := (_test_step + 1) mod (case\n");
+        final Map<Integer, Set<Integer>> lengthBuckets = new TreeMap<>();
+        for (int i = 0; i < list.size(); i++) {
+            final int length = list.get(i).length();
+            Set<Integer> valueSet = lengthBuckets.get(length);
+            if (valueSet == null) {
+                valueSet = new TreeSet<>();
+                lengthBuckets.put(length, valueSet);
+            }
+            valueSet.add(i);
+        }
+        final List<Integer> allLengths = new ArrayList<>(lengthBuckets.keySet());
+        for (Map.Entry<Integer, Set<Integer>> e : lengthBuckets.entrySet()) {
+            final int length = e.getKey();
+            final String condition = length == allLengths.get(allLengths.size() - 1)
+                ? "TRUE" : ("next(_test_index) in " + expressWithIntervalsNuSMV(e.getValue()));
+            sb.append("        ").append(condition).append(": ").append(e.getKey()).append(";\n");
+        }
+
+        sb.append("    esac);\n");
+
+        if (addOracle) {
+            sb.append("    next(_test_passed) := next(_test_step) = 0 ? TRUE : _test_passed;\n");
+        }
+
         return sb.toString();
     }
 
-    public String promelaBody() {
+    private String promelaBody() {
         // looping scenario
         final StringBuilder sb = new StringBuilder();
         final List<TestCase> list = new ArrayList<>(testCases);

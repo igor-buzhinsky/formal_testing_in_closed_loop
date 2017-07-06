@@ -33,10 +33,12 @@ public abstract class Variable<T extends Value> {
         return Util.LANGUAGE == Language.PROMELA ? toPromelaString() : toNusmvString();
     }
 
+    public abstract T readValue(String value);
+
     public abstract String toPromelaString();
     public abstract String toNusmvString();
 
-    protected abstract List<? extends Value> values();
+    public abstract List<? extends Value> values();
 
     public List<String> stringValues() {
         return values().stream().map(Value::toString).collect(Collectors.toList());
@@ -46,7 +48,7 @@ public abstract class Variable<T extends Value> {
         return initialValue.toString();
     }
 
-    protected String indexPart() {
+    private String indexPart() {
         return isArrayPart ? ("[" + arrayIndex + "]") : "";
     }
 
@@ -54,7 +56,7 @@ public abstract class Variable<T extends Value> {
         return name + indexPart();
     }
 
-    protected final String languageString(String type) {
+    final String languageString(String type) {
         return Util.LANGUAGE == Language.PROMELA ? promelaString(type) : nusmvString(type);
     }
 

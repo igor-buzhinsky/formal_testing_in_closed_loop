@@ -65,6 +65,7 @@ public class NuSMVRunner extends Runner {
         } else {
             TestCase testCase = null;
             for (String line : log) {
+                //System.out.println(line);
                 if (line.startsWith("-- specification")) {
                     if (line.endsWith(" is true")) {
                         result.outcome(true);
@@ -82,7 +83,7 @@ public class NuSMVRunner extends Runner {
                         }
                     } else if (line.matches(trailRegexp)) {
                         final String[] tokens = line.split("((    )|( = ))");
-                        testCase.addValue(tokens[1], tokens[2]);
+                        testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
                     }
                 }
             }

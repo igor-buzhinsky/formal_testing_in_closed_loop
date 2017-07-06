@@ -66,14 +66,15 @@ public class SynthesizeCoverageTests extends MainBase {
             final List<CoveragePoint> uncovered = info.coveragePoints.stream().filter(cp -> !cp.covered())
                     .collect(Collectors.toList());
 
-            try (final Runner runner = Runner.create(data, code, uncovered, len, true, 0)) {
+            final boolean negate = true;
+            try (final Runner runner = Runner.create(data, code, uncovered, len, negate, 0)) {
                 System.out.println("  " + runner.creationReport());
                 for (final CoveragePoint cp : info.coveragePoints) {
                     if (cp.covered()) {
                         continue;
                     }
                     System.out.println("  Test synthesis for " + cp + "...");
-                    final RunnerResult result = runner.verify(cp.promelaLtlName(), len);
+                    final RunnerResult result = runner.verify(cp, len, negate, len);
                     TestCase tc = null;
                     if (result.found()) {
                         cp.cover();

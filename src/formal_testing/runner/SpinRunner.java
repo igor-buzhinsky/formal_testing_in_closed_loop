@@ -115,7 +115,7 @@ public class SpinRunner extends Runner {
                     reader.lines().forEach(line -> {
                         if (line.matches(trailRegexp)) {
                             final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                            testCase.addValue(tokens[1], tokens[2]);
+                            testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
                         }
                     });
                 }

@@ -31,6 +31,11 @@ public class IntegerVariable extends Variable<IntegerValue> {
     }
 
     @Override
+    public IntegerValue readValue(String value) {
+        return IntegerValue.read(value);
+    }
+
+    @Override
     public String toPromelaString() {
         return languageString("int");
     }

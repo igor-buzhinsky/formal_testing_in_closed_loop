@@ -10,10 +10,7 @@ import formal_testing.variable.Variable;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -25,6 +22,12 @@ public class Configuration {
     public final List<Variable<?>> nondetVars = new ArrayList<>();
     public final List<Variable<?>> plantInternalVars = new ArrayList<>();
     public final List<Variable<?>> controllerInternalVars = new ArrayList<>();
+
+    private final Map<String, Variable<?>> variablesByNames = new LinkedHashMap<>();
+
+    public Variable<?> byName(String indexedName) {
+        return variablesByNames.get(indexedName);
+    }
 
     @Override
     public String toString() {
@@ -85,6 +88,7 @@ public class Configuration {
                                 size, i);
                     }
                     list.add(var);
+                    conf.variablesByNames.put(var.indexedName(), var);
                 }
             }
         }

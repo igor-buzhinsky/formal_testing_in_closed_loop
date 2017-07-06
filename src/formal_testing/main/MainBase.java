@@ -8,7 +8,9 @@ import formal_testing.runner.NuSMVRunner;
 import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
 import formal_testing.value.BooleanValue;
+import formal_testing.value.IntegerValue;
 import formal_testing.variable.BooleanVariable;
+import formal_testing.variable.IntegerVariable;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
@@ -209,7 +211,7 @@ public abstract class MainBase {
         return Util.LANGUAGE == Language.PROMELA
                 ? promelaModelCode(testing, nondetSelection, spec, testHeader, testBody, plantCodeCoverage,
                 controllerCodeCoverage, counter)
-                : nusmvModelCode(testing, nondetSelection, spec, testHeader, testBody);
+                : nuSMVModelCode(testing, nondetSelection, spec, testHeader, testBody);
     }
 
     private <T> List<T> merge(List<List<T>> list) {
@@ -226,19 +228,26 @@ public abstract class MainBase {
     }
 
     private final BooleanVariable testingVar = new BooleanVariable("_test_passed", BooleanValue.FALSE);
+    private final Variable<?> testIndexVar = new IntegerVariable("_test_index", new IntegerValue(0), 0, 1, false, 1, 0);
+    private final Variable<?> testStepVar = new IntegerVariable("_test_step", new IntegerValue(0), 0, 1, false, 1, 0);
 
-    private String nusmvModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
+    private String nuSMVModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
                                   String testBody) {
         final StringBuilder code = new StringBuilder();
 
         // can contain e.g. some module declarations
-        code.append(data.header).append("\n");
-
-        code.append("MODULE _NONDET_VAR_SELECTION").append(argList(Collections.singletonList(data.conf.nondetVars)))
-                .append("\n\n");
-        if (testBody != null) {
-            code.append(testBody).append("\n");
+        if (!data.header.isEmpty()) {
+            code.append(data.header).append("\n");
         }
+
+        final String nondetArgList = argList(Arrays.asList(data.conf.nondetVars,
+                testBody != null ? Arrays.asList(testIndexVar, testStepVar) : Collections.emptyList(),
+                testing ? Collections.singletonList(testingVar) : Collections.emptyList()));
+        code.append("MODULE _NONDET_VAR_SELECTION").append(nondetArgList).append("\n");
+        if (testBody != null) {
+            code.append(testBody);
+        }
+        code.append("\n");
 
         code.append("MODULE _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
                 data.conf.plantInternalVars, data.conf.outputVars))).append("\n")
@@ -254,13 +263,14 @@ public abstract class MainBase {
         if (testing) {
             code.append(varFormat(testingVar.toNusmvString(), "    "));
         }
-        code.append("    _nondet_var_selection: _NONDET_VAR_SELECTION")
-                .append(argList(Collections.singletonList(data.conf.nondetVars)))
-                .append(";\n");
+        code.append("    _nondet_var_selection: _NONDET_VAR_SELECTION").append(nondetArgList).append(";\n");
         code.append("    _plant: _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
                 data.conf.plantInternalVars, data.conf.outputVars))).append(";\n");
         code.append("    _controller: _CONTROLLER").append(argList(Arrays.asList(data.conf.inputVars,
                 data.conf.controllerInternalVars, data.conf.outputVars))).append(";\n");
+        if (testHeader != null) {
+            code.append(testHeader).append("\n");
+        }
 
         code.append("ASSIGN\n");
         for (Variable<?> var : merge(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
@@ -274,7 +284,7 @@ public abstract class MainBase {
             code.append("\n").append(data.spec);
         }
         if (testing) {
-            code.append("\n").append("CTLSPEC AF _test_passed\n");
+            code.append("\n").append("LTLSPEC F _test_passed\n");
         }
 
         return code.toString();
@@ -355,17 +365,18 @@ public abstract class MainBase {
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
 
-        final String code = modelCode(false, false, false, tc.promelaHeader(false), tc.promelaBody(false),
-                plantCodeCoverage, controllerCodeCoverage, null);
+        final String code = modelCode(false, false, false, tc.header(false), tc.body(false), plantCodeCoverage,
+                controllerCodeCoverage, null);
 
         int newCovered = 0;
-        try (final Runner runner = Runner.create(data, code, uncovered, steps, true, 0)) {
+        final boolean negate = true;
+        try (final Runner runner = Runner.create(data, code, uncovered, steps, negate, 0)) {
             System.out.println(runner.creationReport());
             final String prefix = "    (" + uncovered.size() + ") ";
             System.out.print(prefix);
             for (int i = 0; i < uncovered.size(); i++) {
                 final CoveragePoint cp = uncovered.get(i);
-                final RunnerResult result = runner.verify(cp.promelaLtlName(), steps);
+                final RunnerResult result = runner.verify(cp, steps, negate, steps);
                 if (result.found()) {
                     cp.cover();
                     newCovered++;

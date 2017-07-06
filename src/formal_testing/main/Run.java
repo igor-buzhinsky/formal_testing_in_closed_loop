@@ -45,8 +45,7 @@ public class Run extends MainBase {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final TestSuite ts = TestSuite.read(filename);
-        final String code = modelCode(true, false, true, ts.promelaHeader(), ts.promelaBody(),
-                false, false, null);
+        final String code = modelCode(true, false, true, ts.header(), ts.body(), false, false, null);
 
         System.out.println("Running test suite " + filename + "...");
         verifyAll(code, 0, verbose);

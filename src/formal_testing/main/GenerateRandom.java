@@ -2,6 +2,7 @@ package formal_testing.main;
 
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
+import formal_testing.value.Value;
 import formal_testing.variable.Variable;
 import org.kohsuke.args4j.Option;
 
@@ -20,10 +21,11 @@ public class GenerateRandom extends MainBase {
     @Option(name = "--number", usage = "test case number, default = 10", metaVar = "<number>")
     private int number = 10;
 
+    @Option(name = "--seed", usage = "random seed", metaVar = "<seed>")
+    private Long seed;
+
     @Option(name = "--output", usage = "output filename", metaVar = "<filename>")
     private String outputFilename = "test.bin";
-
-    private final Random random = new Random();
 
     public static void main(String[] args) throws IOException {
         new GenerateRandom().run(args);
@@ -31,15 +33,16 @@ public class GenerateRandom extends MainBase {
 
     @Override
     protected void launcher() throws IOException {
+        final Random random = seed == null ? new Random() : new Random(seed);
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
         final TestSuite ts = new TestSuite(true);
-        final List<List<String>> allValues = data.conf.nondetVars.stream()
-                .map(Variable::stringValues).collect(Collectors.toList());
+        final List<List<? extends Value>> allValues = data.conf.nondetVars.stream()
+                .map(Variable::values).collect(Collectors.toList());
         for (int i = 0; i < number; i++) {
             final TestCase tc = new TestCase(data.conf);
             for (int j = 0; j < length; j++) {
                 for (int k = 0; k < data.conf.nondetVars.size(); k++) {
-                    final Variable var = data.conf.nondetVars.get(k);
+                    final Variable<?> var = data.conf.nondetVars.get(k);
                     tc.addValue(var.indexedName(), allValues.get(k).get(random.nextInt(allValues.get(k).size())));
                 }
             }

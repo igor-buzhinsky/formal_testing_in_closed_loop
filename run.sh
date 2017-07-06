@@ -2,6 +2,7 @@
 
 floors=3
 dir=elevator-$floors
+seed="--seed 200"
 
 call_spin() {
     local name="$1"
@@ -21,7 +22,10 @@ call_nusmv() {
 minimize=
 
 
-call_nusmv closed-loop-verify --verbose 
+#call_nusmv closed-loop-verify --verbose 
+call_spin generate-random --number 10 --length 10 --output test2.bin $seed
+call_spin run --input test2.bin --measureCoverage --includeInternal
+call_nusmv run --input test2.bin --measureCoverage --includeInternal
 
 #call_spin closed-loop-verify --verbose 
 #call_spin generate-random --number 10 --length 10 --output test2.bin
