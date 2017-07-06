@@ -20,6 +20,10 @@ public class Run extends MainBase {
     @Option(name = "--verify", handler = BooleanOptionHandler.class, usage = "verify temporal specification")
     private boolean verify;
 
+    @Option(name = "--checkFiniteCoverage", handler = BooleanOptionHandler.class,
+            usage = "while checking coverage, ignore infinite continuations of test cases")
+    private boolean checkFiniteCoverage;
+
     @Option(name = "--measureCoverage", handler = BooleanOptionHandler.class, usage = "measure coverage")
     private boolean measureCoverage;
 
@@ -63,8 +67,8 @@ public class Run extends MainBase {
                 if (info.allCovered()) {
                     break;
                 }
-                info.coveredPoints += examineTestCase(tc, info.coveragePoints, -1, plantCodeCoverage,
-                        controllerCodeCoverage);
+                info.coveredPoints += examineTestCase(tc, info.coveragePoints, checkFiniteCoverage ? tc.length() : -1,
+                        plantCodeCoverage, controllerCodeCoverage);
             }
 
             info.report();
