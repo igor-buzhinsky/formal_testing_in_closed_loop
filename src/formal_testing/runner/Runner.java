@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -88,11 +87,13 @@ public abstract class Runner implements AutoCloseable {
         return create(data, modelCode, Collections.emptyList(), 0, false, timeout);
     }
 
-    public abstract RunnerResult verify(String property, int stepsLimit) throws IOException;
+    public abstract RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample)
+            throws IOException;
 
-    public RunnerResult verify(CoveragePoint point, int steps, boolean negate, int stepsLimit) throws IOException {
+    public RunnerResult verify(CoveragePoint point, int steps, boolean negate, int stepsLimit,
+                               boolean disableCounterexample) throws IOException {
         return verify(Util.LANGUAGE == Language.PROMELA ? point.promelaLtlName() : point.ltlProperty(steps, negate),
-                stepsLimit);
+                stepsLimit, disableCounterexample);
     }
 
     String trailRegexp() {
@@ -100,12 +101,9 @@ public abstract class Runner implements AutoCloseable {
                 .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ") = [\\w]+";
     }
 
-    Map<String, Variable> nondetVariablesByNames;
-
     @Override
     public void close() throws IOException {
-        //delete(new File(dirName));
-        // FIXME
+        delete(new File(dirName));
     }
 
     public abstract String creationReport();

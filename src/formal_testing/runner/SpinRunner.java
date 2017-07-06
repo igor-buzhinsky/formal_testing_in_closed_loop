@@ -80,7 +80,7 @@ public class SpinRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verify(String property, int stepsLimit) throws IOException {
+    public RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample) throws IOException {
         final RunnerResult result = new RunnerResult();
         final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp() + "\\].*$";
 
@@ -105,21 +105,23 @@ public class SpinRunner extends Runner {
                 result.outcome(false);
                 final TestCase testCase = new TestCase(data.conf);
                 result.set(testCase);
-                testCase.setMaxLength(stepsLimit);
-                // counterexample trace reading
-                process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
-                        MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
+                if (!disableCounterexample) {
+                    testCase.setMaxLength(stepsLimit);
+                    // counterexample trace reading
+                    process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
+                            MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
 
-                try (final BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                    reader.lines().forEach(line -> {
-                        if (line.matches(trailRegexp)) {
-                            final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                            testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
-                        }
-                    });
+                    try (final BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                        reader.lines().forEach(line -> {
+                            if (line.matches(trailRegexp)) {
+                                final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
+                                testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
+                            }
+                        });
+                    }
+                    waitFor();
                 }
-                waitFor();
             } else {
                 result.outcome(true);
             }

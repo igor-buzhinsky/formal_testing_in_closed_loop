@@ -74,7 +74,7 @@ public class SynthesizeCoverageTests extends MainBase {
                         continue;
                     }
                     System.out.println("  Test synthesis for " + cp + "...");
-                    final RunnerResult result = runner.verify(cp, len, negate, len);
+                    final RunnerResult result = runner.verify(cp, len, negate, len, false);
                     if (result.found()) {
                         cp.cover();
                         info.coveredPoints++;

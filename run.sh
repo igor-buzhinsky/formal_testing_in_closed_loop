@@ -1,45 +1,38 @@
 #!/bin/bash
 
-floors=5
-dir=elevator-$floors
-seed="--seed 200"
-maxlen=12
-
 call_spin() {
     local name="$1"
+    echo " >>> $name"
     shift
-    java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" -l PROMELA $@
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" -l PROMELA $@ 2>&1
     echo
 }
 
 call_nusmv() {
     local name="$1"
+    echo " >>> $name"
     shift
-    java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/spec.smv" -l NUSMV $@
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/spec.smv" -l NUSMV $@ 2>&1
     echo
 }
 
-#minimize="--minimize"
-minimize=
+seed="--seed 200"
+maxlen=12
 
+for floors in 3; do
+    for language in nusmv spin; do
+        echo ">>> RUN $language $floors"
+        dir=elevator-$floors
 
-#call_nusmv closed-loop-verify --verbose 
-#call_spin generate-random --number 10 --length 10 --output test2.bin $seed
-#call_spin run --input test2.bin --verify --measureCoverage --includeInternal
-#call_nusmv run --input test2.bin --verify --measureCoverage --includeInternal
-call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $minimize
-call_spin run --input test1.bin --measureCoverage --includeInternal
+        call_$language closed-loop-verify --verbose 
+        call_$language generate-random --number 10 --length 10 --output test2.bin $seed
+        call_$language run --input test2.bin --verify --measureCoverage --includeInternal
+        for minimize in "" "--minimize"; do
+            call_$language synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $minimize
+            call_$language run --input test1.bin --measureCoverage --includeInternal
+        done
+    done
+done
 
-#call_spin closed-loop-verify --verbose 
-#call_spin generate-random --number 10 --length 10 --output test2.bin
-#call_spin run --input test2.bin --verify --measureCoverage --includeInternal --plantCodeCoverage --controllerCodeCoverage
 #call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $minimize --plantCodeCoverage --controllerCodeCoverage 
-#call_spin run --input test1.bin --verify --measureCoverage --includeInternal --plantCodeCoverage --controllerCodeCoverage 
-
-
-exit
-
-
-
-
 

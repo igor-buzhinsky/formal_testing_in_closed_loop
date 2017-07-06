@@ -8,6 +8,7 @@ import formal_testing.coverage.CoveragePoint;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -20,7 +21,7 @@ public class NuSMVRunner extends Runner {
 
     NuSMVRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps, boolean claimNegate,
                 int timeout) throws IOException {
-        super(data, timeout, "nusmv." + NUSMV_DIR_INDEX++, modelCode, coveragePoints, claimSteps, claimNegate);
+        super(data, timeout, "nusmvdir." + NUSMV_DIR_INDEX++, modelCode, coveragePoints, claimSteps, claimNegate);
     }
 
     private void writeModel(String property) throws FileNotFoundException {
@@ -32,10 +33,16 @@ public class NuSMVRunner extends Runner {
         }
     }
 
-    private int run(List<String> result) throws IOException {
-        process = new ProcessBuilder("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT, "NuSMV",
-                "-df", MODEL_FILENAME)
-                .redirectErrorStream(true).directory(new File(dirName)).start();
+    private int run(List<String> result, boolean disableCounterexamples) throws IOException {
+        final List<String> command = new ArrayList<>();
+        command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT, "NuSMV",
+                "-df", "-cpp"));
+        if (disableCounterexamples) {
+            command.add("-dcx");
+        }
+        command.add(MODEL_FILENAME);
+
+        process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
         try (final BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             reader.lines().forEach(result::add);
@@ -43,10 +50,10 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    public List<String> verifyAll() throws IOException {
+    public List<String> verifyAll(boolean disableCounterexamples) throws IOException {
         final List<String> result = new ArrayList<>();
         writeModel(null);
-        final int retCode = run(result);
+        final int retCode = run(result, disableCounterexamples);
         if (retCode == 124) {
             result.add("*** TIMEOUT ***");
         }
@@ -54,11 +61,11 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verify(String property, int stepsLimit) throws IOException {
+    public RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample) throws IOException {
         final RunnerResult result = new RunnerResult();
         writeModel(property);
         final List<String> log = new ArrayList<>();
-        final int retCode = run(log);
+        final int retCode = run(log, disableCounterexample);
         final String trailRegexp = "    " + trailRegexp();
         if (retCode == 124) {
             log.add("*** " + property + " : TIMEOUT ***");

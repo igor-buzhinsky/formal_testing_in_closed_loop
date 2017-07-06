@@ -1,5 +1,3 @@
-DEFINE
-    FLOORS := 4;
 ASSIGN
     next(elevator_pos) := elevator_pos3;
     next(on_floor[0]) := next(elevator_pos) = 2 * 0;
