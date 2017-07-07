@@ -22,21 +22,22 @@ maxlen=100
 finite="--checkFiniteCoverage"
 #finite=
 
+#floors=13
+#dir=elevator-$floors
+#call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite --coi
+#call_nusmv run --input test1.bin --measureCoverage --includeInternal $finite
+dexit
+
 floors=13
 dir=elevator-$floors
 # Synthesize tests
-call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite --coi
+call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite
 java -jar jars/print-test-suite.jar --input test1.bin -l PROMELA
 java -jar jars/print-test-suite.jar --input test1.bin -l NUSMV
 # Run tests
-call_spin run --input test1.bin --output out.pml --verify 
+call_spin run --input test1.bin --output out.pml --verify
 # Run verification
 call_nusmv closed-loop-verify --verbose --dynamic --coi
-
-#floors=5
-#dir=elevator-$floors
-#call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite --valuePairCoverage
-#call_nusmv run --input test1.bin --measureCoverage --includeInternal $finite --valuePairCoverage
 
 exit
 
@@ -44,7 +45,7 @@ exit
 for language in nusmv spin; do
     for floors in 3 4 5; do
         echo ">>> RUN $language $floors"
-        dir=elevator-$floors
+        dir=elevator-$#floors
 
         for minimize in "" "--minimize"; do
             call_$language synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $minimize $finite

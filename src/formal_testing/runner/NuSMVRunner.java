@@ -33,12 +33,35 @@ public class NuSMVRunner extends Runner {
         }
     }
 
+    private int runBatchBMC(List<String> result, int steps) throws IOException {
+        final String language = Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv";
+        final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
+                ResourceMeasurement.FORMAT, language, "-df", "-cpp", "-int"));
+        command.add(MODEL_FILENAME);
+
+        process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
+        try (PrintWriter pw = new PrintWriter(process.getOutputStream())) {
+            pw.println("read_model\n" + "flatten_hierarchy\n" + "encode_variables\n" + "build_boolean_model\n" +
+                    "bmc_setup\n" + "go_bmc\n" + "check_ltlspec_bmc_onepb -n 0 -l X -k " + steps + "\n" + "quit\n");
+            pw.flush();
+        }
+        try (final BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            reader.lines().forEach(line -> result.add(line.replace(language + " > ", "")));
+        }
+        inspectResourceConsumption(result);
+        return waitFor();
+    }
+
     private int run(List<String> result, boolean disableCounterexamples, int stepsLimit) throws IOException {
-        final List<String> command = new ArrayList<>();
-        command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT,
-                Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
+        final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
+                ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
         if (Settings.NUSMV_MODE == NuSMVMode.BMC && stepsLimit >= 0) {
-            command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
+            if (!disableCounterexamples) {
+                return runBatchBMC(result, stepsLimit);
+            } else {
+                command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
+            }
         }
         if (disableCounterexamples) {
             command.add("-dcx");
@@ -84,8 +107,9 @@ public class NuSMVRunner extends Runner {
             Integer loopPosition = null;
             for (String line : log) {
                 //System.out.println(line);
-                if (line.startsWith("-- specification")) {
-                    if (line.endsWith(" is true")) {
+                final boolean bmcNoCE = line.startsWith("-- no counterexample found with bound ");
+                if (line.startsWith("-- specification") | bmcNoCE) {
+                    if (line.endsWith(" is true") | bmcNoCE) {
                         result.outcome(true);
                     } else if (line.endsWith(" is false")) {
                         result.outcome(false);
