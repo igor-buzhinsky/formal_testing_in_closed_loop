@@ -1,44 +1,44 @@
 -- plant
-LTLSPEC X( G((elevator_pos = 0) & down & !up -> X(elevator_pos = 0)) )
-LTLSPEC X( G((elevator_pos = 0) & !down & up -> X(elevator_pos = 1)) )
-LTLSPEC X( G((elevator_pos = 0) & (down = up) -> X(elevator_pos = 0)) )
-LTLSPEC X( G((elevator_pos = 1) & down & !up -> X(elevator_pos = 0)) )
-LTLSPEC X( G((elevator_pos = 1) & !down & up -> X(elevator_pos = 2)) )
-LTLSPEC X( G((elevator_pos = 1) & (down = up) -> X(elevator_pos = 1)) )
-LTLSPEC X( G((elevator_pos = 2) & down & !up -> X(elevator_pos = 1)) )
-LTLSPEC X( G((elevator_pos = 2) & !down & up -> X(elevator_pos = 3)) )
-LTLSPEC X( G((elevator_pos = 2) & (down = up) -> X(elevator_pos = 2)) )
-LTLSPEC X( G((elevator_pos = 3) & down & !up -> X(elevator_pos = 2)) )
-LTLSPEC X( G((elevator_pos = 3) & !down & up -> X(elevator_pos = 4)) )
-LTLSPEC X( G((elevator_pos = 3) & (down = up) -> X(elevator_pos = 3)) )
-LTLSPEC X( G((elevator_pos = 4) & down & !up -> X(elevator_pos = 3)) )
-LTLSPEC X( G((elevator_pos = 4) & !down & up -> X(elevator_pos = 4)) )
-LTLSPEC X( G((elevator_pos = 4) & (down = up) -> X(elevator_pos = 4)) )
+CTLSPEC AX( AG((elevator_pos = 0) & down & !up -> AX(elevator_pos = 0)) )
+CTLSPEC AX( AG((elevator_pos = 0) & !down & up -> AX(elevator_pos = 1)) )
+CTLSPEC AX( AG((elevator_pos = 0) & (down = up) -> AX(elevator_pos = 0)) )
+CTLSPEC AX( AG((elevator_pos = 1) & down & !up -> AX(elevator_pos = 0)) )
+CTLSPEC AX( AG((elevator_pos = 1) & !down & up -> AX(elevator_pos = 2)) )
+CTLSPEC AX( AG((elevator_pos = 1) & (down = up) -> AX(elevator_pos = 1)) )
+CTLSPEC AX( AG((elevator_pos = 2) & down & !up -> AX(elevator_pos = 1)) )
+CTLSPEC AX( AG((elevator_pos = 2) & !down & up -> AX(elevator_pos = 3)) )
+CTLSPEC AX( AG((elevator_pos = 2) & (down = up) -> AX(elevator_pos = 2)) )
+CTLSPEC AX( AG((elevator_pos = 3) & down & !up -> AX(elevator_pos = 2)) )
+CTLSPEC AX( AG((elevator_pos = 3) & !down & up -> AX(elevator_pos = 4)) )
+CTLSPEC AX( AG((elevator_pos = 3) & (down = up) -> AX(elevator_pos = 3)) )
+CTLSPEC AX( AG((elevator_pos = 4) & down & !up -> AX(elevator_pos = 3)) )
+CTLSPEC AX( AG((elevator_pos = 4) & !down & up -> AX(elevator_pos = 4)) )
+CTLSPEC AX( AG((elevator_pos = 4) & (down = up) -> AX(elevator_pos = 4)) )
 
-LTLSPEC X( G (on_floor[0] <-> (elevator_pos = 0)) )
-LTLSPEC X( G (on_floor[1] <-> (elevator_pos = 2)) )
-LTLSPEC X( G (on_floor[2] <-> (elevator_pos = 4)) )
+CTLSPEC AX( AG (on_floor[0] <-> (elevator_pos = 0)) )
+CTLSPEC AX( AG (on_floor[1] <-> (elevator_pos = 2)) )
+CTLSPEC AX( AG (on_floor[2] <-> (elevator_pos = 4)) )
 
-LTLSPEC X( !F G(open[0] & !door_open[0]) )
-LTLSPEC X( !F G(open[1] & !door_open[1]) )
-LTLSPEC X( !F G(open[2] & !door_open[2]) )
+CTLSPEC AX( AG AF !(open[0] & !door_open[0]) )
+CTLSPEC AX( AG AF !(open[1] & !door_open[1]) )
+CTLSPEC AX( AG AF !(open[2] & !door_open[2]) )
 
-LTLSPEC X( !F G(!open[0] & !door_closed[0]) )
-LTLSPEC X( !F G(!open[1] & !door_closed[1]) )
-LTLSPEC X( !F G(!open[2] & !door_closed[2]) )
+CTLSPEC AX( AG AF !(!open[0] & !door_closed[0]) )
+CTLSPEC AX( AG AF !(!open[1] & !door_closed[1]) )
+CTLSPEC AX( AG AF !(!open[2] & !door_closed[2]) )
 
 -- open-loop
-LTLSPEC X( G!(up & down) )
+CTLSPEC AX( AG!(up & down) )
 
 -- closed-loop
-LTLSPEC X( G F !down )
-LTLSPEC X( G F !up )
-LTLSPEC X( G(!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0] & door_closed[1] & door_closed[2]) )
+CTLSPEC AX( AG AF !down )
+CTLSPEC AX( AG AF !up )
+CTLSPEC AX( AG(!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0] & door_closed[1] & door_closed[2]) )
 
-LTLSPEC X( G((user_floor_button[0] | user_cabin_button[0]) -> F(on_floor[0] | user_floor_button[1] | user_cabin_button[1] | user_floor_button[2] | user_cabin_button[2])) )
-LTLSPEC X( G((user_floor_button[1] | user_cabin_button[1]) -> F(on_floor[1] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[2] | user_cabin_button[2])) )
-LTLSPEC X( G((user_floor_button[2] | user_cabin_button[2]) -> F(on_floor[2] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[1] | user_cabin_button[1])) )
+CTLSPEC AX( AG((user_floor_button[0] | user_cabin_button[0]) -> AF(on_floor[0] | user_floor_button[1] | user_cabin_button[1] | user_floor_button[2] | user_cabin_button[2])) )
+CTLSPEC AX( AG((user_floor_button[1] | user_cabin_button[1]) -> AF(on_floor[1] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[2] | user_cabin_button[2])) )
+CTLSPEC AX( AG((user_floor_button[2] | user_cabin_button[2]) -> AF(on_floor[2] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[1] | user_cabin_button[1])) )
 
-LTLSPEC X( G((user_floor_button[0] | user_cabin_button[0]) -> F on_floor[0]) ) -- false
-LTLSPEC X( G((user_floor_button[1] | user_cabin_button[1]) -> F on_floor[1]) ) -- false
-LTLSPEC X( G((user_floor_button[2] | user_cabin_button[2]) -> F on_floor[2]) ) -- false
+CTLSPEC AX( AG((user_floor_button[0] | user_cabin_button[0]) -> AF on_floor[0]) ) -- false
+CTLSPEC AX( AG((user_floor_button[1] | user_cabin_button[1]) -> AF on_floor[1]) ) -- false
+CTLSPEC AX( AG((user_floor_button[2] | user_cabin_button[2]) -> AF on_floor[2]) ) -- false
