@@ -22,10 +22,12 @@ maxlen=15
 finite="--checkFiniteCoverage"
 #finite=
 
-floors=5
+floors=3
 dir=elevator-$floors
 # Synthesize tests
 call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite
+java -jar jars/print-test-suite.jar --input test1.bin -l PROMELA
+java -jar jars/print-test-suite.jar --input test1.bin -l NUSMV
 # Run tests
 call_spin run --input test1.bin --output out.smv --verify 
 # Run verification

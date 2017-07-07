@@ -1,6 +1,9 @@
 package formal_testing.main;
 
-import formal_testing.*;
+import formal_testing.Configuration;
+import formal_testing.ProblemData;
+import formal_testing.TestCase;
+import formal_testing.Util;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
@@ -16,7 +19,6 @@ import formal_testing.variable.IntegerVariable;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
-import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -30,22 +32,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public abstract class MainBase {
-    @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
-    String configurationFilename;
-
-    @Argument(usage = "header filename", metaVar = "<filename>", required = true, index = 1)
-    String headerFilename;
-
-    @Argument(usage = "plant model filename", metaVar = "<filename>", required = true, index = 2)
-    String plantModelFilename;
-
-    @Argument(usage = "controller model filename", metaVar = "<filename>", required = true, index = 3)
-    String controllerModelFilename;
-
-    @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
-    String specFilename;
-
-    @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV, NUXMV", metaVar = "<language>")
+    @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV, NUXMV", metaVar = "<language>",
+            required = true)
     private String language;
 
     @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode: LTL, CTL, BMC (default)", metaVar = "<mode>")

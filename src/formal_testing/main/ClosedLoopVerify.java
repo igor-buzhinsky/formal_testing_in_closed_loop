@@ -8,7 +8,7 @@ import java.io.IOException;
 /**
  * Created by buzhinsky on 6/27/17.
  */
-public class ClosedLoopVerify extends MainBase {
+public class ClosedLoopVerify extends MainArgs {
     @Option(name = "--timeout", usage = "timeout in seconds, default = 0 = no", metaVar = "<timeout>")
     private int timeout;
 

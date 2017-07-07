@@ -11,8 +11,8 @@ import java.io.PrintWriter;
 /**
  * Created by buzhinsky on 6/28/17.
  */
-public class Run extends MainBase {
-    @Option(name = "--input", usage = "input filename", metaVar = "<filename>")
+public class Run extends MainArgs {
+    @Option(name = "--input", usage = "input filename", metaVar = "<filename>", required = true)
     private String filename;
 
     @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")

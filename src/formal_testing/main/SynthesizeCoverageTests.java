@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Created by buzhinsky on 6/28/17.
  */
-public class SynthesizeCoverageTests extends MainBase {
+public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--output", usage = "output filename", metaVar = "<filename>")
     private String outputFilename = "test.bin";
 

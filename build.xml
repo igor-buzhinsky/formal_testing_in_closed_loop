@@ -15,13 +15,16 @@
     <property name="run.main" value="formal_testing/main/Run"/>
     <property name="run.jar" value="run.jar"/>
     
+    <property name="print.test.suite.main" value="formal_testing/main/PrintTestSuite"/>
+    <property name="print.test.suite.jar" value="print-test-suite.jar"/>
+    
     <property name="synthesize-coverage-tests.main" value="formal_testing/main/SynthesizeCoverageTests"/>
     <property name="synthesize-coverage-tests.jar" value="synthesize-coverage-tests.jar"/>
     
     <property name="debug" value="true"/>
     
     <target name="all"
-            depends="closed-loop-verify-jar, generate-random-jar, run-jar, synthesize-coverage-tests-jar">
+            depends="closed-loop-verify-jar, generate-random-jar, run-jar, print-test-suite-jar, synthesize-coverage-tests-jar">
     </target>
 
     <target name="closed-loop-verify-jar">
@@ -51,15 +54,29 @@
         </jar>
         <delete dir="${bin.dir}"/>
     </target>
-    
+
     <target name="run-jar">
+    <mkdir dir="${bin.dir}"/>
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+            includeantruntime="false" debug="${debug}">
+        <include name="${run.main}.java"/>
+    </javac>
+    <jar destfile="${jars.dir}/${run.jar}" basedir="${bin.dir}">
+        <manifest><attribute name="Main-Class" value="${run.main}"/></manifest>
+        <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
+        <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+    </jar>
+    <delete dir="${bin.dir}"/>
+    </target>
+
+    <target name="print-test-suite-jar">
         <mkdir dir="${bin.dir}"/>
         <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
                includeantruntime="false" debug="${debug}">
-            <include name="${run.main}.java"/>
+            <include name="${print.test.suite.main}.java"/>
         </javac>
-        <jar destfile="${jars.dir}/${run.jar}" basedir="${bin.dir}">
-            <manifest><attribute name="Main-Class" value="${run.main}"/></manifest>
+        <jar destfile="${jars.dir}/${print.test.suite.jar}" basedir="${bin.dir}">
+            <manifest><attribute name="Main-Class" value="${print.test.suite.main}"/></manifest>
             <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
         </jar>

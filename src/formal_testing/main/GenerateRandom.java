@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * Created by buzhinsky on 6/28/17.
  */
-public class GenerateRandom extends MainBase {
+public class GenerateRandom extends MainArgs {
     @Option(name = "--length", usage = "test case length, default = 10", metaVar = "<length>")
     private int length = 10;
 
