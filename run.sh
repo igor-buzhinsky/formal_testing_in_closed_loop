@@ -17,12 +17,12 @@ call_nusmv() {
 }
 
 seed="--seed 200"
-maxlen=15
+maxlen=20
 
 finite="--checkFiniteCoverage"
 #finite=
 
-floors=6
+floors=7
 dir=elevator-$floors
 # Synthesize tests
 call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite
