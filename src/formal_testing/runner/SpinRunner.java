@@ -1,8 +1,6 @@
 package formal_testing.runner;
 
-import formal_testing.ProblemData;
-import formal_testing.ResourceMeasurement;
-import formal_testing.TestCase;
+import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 
 import java.io.*;
@@ -20,7 +18,6 @@ public class SpinRunner extends Runner {
     private static int SPIN_DIR_INDEX = 0;
 
     private static final int MAX_CLAIMS_IN_ONE_PAN = 50;
-    private static final int OPTIMIZATION_LEVEL = 2;
     private static final String MODEL_FILENAME = "model.pml";
 
     private final ResourceMeasurement creationMeasurement;
@@ -61,7 +58,7 @@ public class SpinRunner extends Runner {
 
             // compile pan
             process = new ProcessBuilder(TIME, "-f", ResourceMeasurement.FORMAT, "cc",
-                    "-O" + OPTIMIZATION_LEVEL, "-DVECTORSZ=1024", "-o", "pan", "pan.c")
+                    "-O" + Settings.PAN_OPTIMIZATION_LEVEL, "-DVECTORSZ=1024", "-o", "pan", "pan.c")
                     .redirectErrorStream(true).directory(new File(dirName)).start();
             try (final Scanner sc = new Scanner(process.getInputStream())) {
                 while (sc.hasNextLine()) {

@@ -41,11 +41,11 @@ public class TestSuite implements Serializable {
     }
 
     public String header() {
-        return Util.LANGUAGE == Language.PROMELA ? promelaHeader() : nuSMVHeader();
+        return Settings.LANGUAGE == Language.PROMELA ? promelaHeader() : nuSMVHeader();
     }
 
     public String body() {
-        return Util.LANGUAGE == Language.PROMELA ? promelaBody() : nuSMVBody();
+        return Settings.LANGUAGE == Language.PROMELA ? promelaBody() : nuSMVBody();
     }
 
     private String promelaHeader() {
@@ -223,7 +223,7 @@ public class TestSuite implements Serializable {
             }
             sb.append("    fi\n");
         }
-        sb.append(addOracle ? "    _test_passed = (_test_step == 0 -> true : _test_passed);\n" : "")
+        sb.append(addOracle ? "    _test_passed = (_test_step == 0 -> 1 : _test_passed);\n" : "")
                 .append("}\n");
         return sb.toString();
     }

@@ -1,9 +1,9 @@
 package formal_testing.runner;
 
 import formal_testing.ResourceMeasurement;
+import formal_testing.Settings;
 import formal_testing.enums.Language;
 import formal_testing.ProblemData;
-import formal_testing.Util;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.variable.Variable;
 
@@ -91,7 +91,7 @@ public abstract class Runner implements AutoCloseable {
 
     public static Runner create(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps,
                                 boolean claimNegate, int timeout) throws IOException {
-        return Util.LANGUAGE == Language.PROMELA
+        return Settings.LANGUAGE == Language.PROMELA
                 ? new SpinRunner(data, modelCode, coveragePoints, claimSteps, claimNegate, timeout)
                 : new NuSMVRunner(data, modelCode, coveragePoints, claimSteps, claimNegate, timeout);
     }
@@ -105,7 +105,7 @@ public abstract class Runner implements AutoCloseable {
 
     public RunnerResult verify(CoveragePoint point, int steps, boolean negate, int stepsLimit,
                                boolean disableCounterexample) throws IOException {
-        return verify(Util.LANGUAGE == Language.PROMELA ? point.promelaLtlName() : point.ltlProperty(steps, negate),
+        return verify(Settings.LANGUAGE == Language.PROMELA ? point.promelaLtlName() : point.ltlProperty(steps, negate),
                 stepsLimit, disableCounterexample);
     }
 

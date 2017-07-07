@@ -24,14 +24,12 @@ finite="--checkFiniteCoverage"
 
 floors=13
 dir=elevator-$floors
-#call_nusmv closed-loop-verify --verbose --dynamic --coi
-#exit
 # Synthesize tests
 call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite
 java -jar jars/print-test-suite.jar --input test1.bin -l PROMELA
 java -jar jars/print-test-suite.jar --input test1.bin -l NUSMV
 # Run tests
-call_spin run --input test1.bin --output out.smv --verify 
+call_spin run --input test1.bin --output out.pml --verify 
 # Run verification
 call_nusmv closed-loop-verify --verbose --dynamic --coi
 

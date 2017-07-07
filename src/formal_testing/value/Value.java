@@ -1,7 +1,7 @@
 package formal_testing.value;
 
+import formal_testing.Settings;
 import formal_testing.enums.Language;
-import formal_testing.Util;
 
 import java.io.Serializable;
 
@@ -14,6 +14,6 @@ public abstract class Value implements Serializable {
 
     @Override
     public String toString() {
-        return Util.LANGUAGE == Language.PROMELA ? toPromelaString() : toNuSMVString();
+        return Settings.LANGUAGE == Language.PROMELA ? toPromelaString() : toNuSMVString();
     }
 }

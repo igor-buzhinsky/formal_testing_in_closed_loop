@@ -1,9 +1,6 @@
 package formal_testing.runner;
 
-import formal_testing.ProblemData;
-import formal_testing.ResourceMeasurement;
-import formal_testing.TestCase;
-import formal_testing.Util;
+import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.enums.Language;
 import formal_testing.enums.NuSMVMode;
@@ -40,8 +37,8 @@ public class NuSMVRunner extends Runner {
             throws IOException {
         final List<String> command = new ArrayList<>();
         command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT,
-                Util.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
-        if (Util.NUSMV_MODE == NuSMVMode.BMC && stepsLimit >= 0) {
+                Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
+        if (Settings.NUSMV_MODE == NuSMVMode.BMC && stepsLimit >= 0) {
             command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
         }
         if (disableCounterexamples) {

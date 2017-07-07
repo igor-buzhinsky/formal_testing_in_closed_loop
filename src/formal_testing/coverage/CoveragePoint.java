@@ -1,7 +1,7 @@
 package formal_testing.coverage;
 
+import formal_testing.Settings;
 import formal_testing.enums.Language;
-import formal_testing.Util;
 
 import java.util.Collections;
 
@@ -25,7 +25,7 @@ public abstract class CoveragePoint {
     public abstract String promelaLtlName();
 
     public String ltlProperty(int steps, boolean negate) {
-        return Util.LANGUAGE == Language.PROMELA
+        return Settings.LANGUAGE == Language.PROMELA
                 ? promelaLtlProperty(steps, negate)
                 : nuSMVTemporalProperty(steps, negate);
     }
@@ -37,8 +37,8 @@ public abstract class CoveragePoint {
     }
 
     private String nuSMVTemporalProperty(int steps, boolean negate) {
-        final String x = Util.NUSMV_MODE.xOperator;
-        final String f = Util.NUSMV_MODE.fOperator;
+        final String x = Settings.NUSMV_MODE.xOperator;
+        final String f = Settings.NUSMV_MODE.fOperator;
         return steps == -1
                 ? nuSMVTemporalProperty((negate ? "!" : "") + x + "(" + f + "(", "))")
                 : nuSMVTemporalProperty(nTimes(steps, x + "(") + (negate ? "!(" : "("), nTimes(steps + 1, ")"));

@@ -1,7 +1,7 @@
 package formal_testing.variable;
 
+import formal_testing.Settings;
 import formal_testing.enums.Language;
-import formal_testing.Util;
 import formal_testing.value.Value;
 
 import java.util.List;
@@ -30,7 +30,7 @@ public abstract class Variable<T extends Value> {
     }
 
     public final String toLanguageString() {
-        return Util.LANGUAGE == Language.PROMELA ? toPromelaString() : toNusmvString();
+        return Settings.LANGUAGE == Language.PROMELA ? toPromelaString() : toNusmvString();
     }
 
     public abstract T readValue(String value);
@@ -57,7 +57,7 @@ public abstract class Variable<T extends Value> {
     }
 
     final String languageString(String type) {
-        return Util.LANGUAGE == Language.PROMELA ? promelaString(type) : nusmvString(type);
+        return Settings.LANGUAGE == Language.PROMELA ? promelaString(type) : nusmvString(type);
     }
 
     /*

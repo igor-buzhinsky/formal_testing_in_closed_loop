@@ -1,9 +1,6 @@
 package formal_testing.main;
 
-import formal_testing.Configuration;
-import formal_testing.ProblemData;
-import formal_testing.TestCase;
-import formal_testing.Util;
+import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
@@ -39,6 +36,9 @@ abstract class MainBase {
     @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode: LTL, CTL, BMC (default)", metaVar = "<mode>")
     private String nuSMVMode = NuSMVMode.BMC.toString();
 
+    @Option(name = "--panO", usage = "optimization level to compile pan, default = 2", metaVar = "<number>")
+    int panO = 2;
+
     ProblemData data;
 
     protected abstract void launcher() throws IOException, InterruptedException;
@@ -47,8 +47,8 @@ abstract class MainBase {
         if (!parseArgs(args)) {
             return;
         }
+        setup();
         try {
-            setLanguage(language, nuSMVMode);
             launcher();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -86,7 +86,7 @@ abstract class MainBase {
     }
 
     private List<String> propsFromCode(String code) {
-        return Util.LANGUAGE == Language.PROMELA ? promelaPropsFromCode(code) : nuSMVPropsFromCode(code);
+        return Settings.LANGUAGE == Language.PROMELA ? promelaPropsFromCode(code) : nuSMVPropsFromCode(code);
     }
 
     private List<String> promelaPropsFromCode(String code) {
@@ -157,7 +157,7 @@ abstract class MainBase {
 
     private void printVars(StringBuilder sb, String indent, List<Variable<?>> variables, String text) {
         if (!variables.isEmpty()) {
-            sb.append(indent).append(Util.LANGUAGE.commentSymbol).append(" ").append(text).append("\n");
+            sb.append(indent).append(Settings.LANGUAGE.commentSymbol).append(" ").append(text).append("\n");
         }
         variables.forEach(v -> sb.append(varFormat(v.toLanguageString(), indent)));
     }
@@ -201,7 +201,7 @@ abstract class MainBase {
     String modelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
                      String testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
                      CodeCoverageCounter counter) {
-        return Util.LANGUAGE == Language.PROMELA
+        return Settings.LANGUAGE == Language.PROMELA
                 ? promelaModelCode(testing, nondetSelection, spec, testHeader, testBody, plantCodeCoverage,
                 controllerCodeCoverage, counter)
                 : nuSMVModelCode(testing, spec, testHeader, testBody);
@@ -414,21 +414,23 @@ abstract class MainBase {
         }
     }
 
-    private void setLanguage(String language, String nuSMVMode) {
+    private void setup() {
         try {
-            Util.LANGUAGE = Language.valueOf(language);
-            System.out.println("Language: " + Util.LANGUAGE);
+            Settings.LANGUAGE = Language.valueOf(language);
+            System.out.println("Language: " + Settings.LANGUAGE);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Unsupported language " + language);
         }
         try {
-            Util.NUSMV_MODE = NuSMVMode.valueOf(nuSMVMode);
+            Settings.NUSMV_MODE = NuSMVMode.valueOf(nuSMVMode);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Unsupported NuSMV mode " + nuSMVMode);
         }
+        Settings.PAN_OPTIMIZATION_LEVEL = panO;
     }
 
-    void verifyAll(String code, int timeout, boolean verbose, boolean dynamic, boolean coi) throws IOException {
+    void verifyAll(String code, int timeout, boolean verbose, boolean dynamic, boolean coi)
+            throws IOException {
         try (final Runner runner = Runner.create(data, code, timeout)) {
             if (runner instanceof NuSMVRunner) {
                 final List<String> result = ((NuSMVRunner) runner).verifyAll(!verbose, dynamic, coi);

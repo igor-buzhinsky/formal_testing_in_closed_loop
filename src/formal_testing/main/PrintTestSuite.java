@@ -1,7 +1,7 @@
 package formal_testing.main;
 
+import formal_testing.Settings;
 import formal_testing.TestSuite;
-import formal_testing.Util;
 import formal_testing.enums.Language;
 import org.kohsuke.args4j.Option;
 
@@ -26,7 +26,7 @@ public class PrintTestSuite extends MainBase {
     }
 
     private static String extension() {
-        return Util.LANGUAGE == Language.PROMELA ? "pml" : "smv";
+        return Settings.LANGUAGE == Language.PROMELA ? "pml" : "smv";
     }
 
     @Override
