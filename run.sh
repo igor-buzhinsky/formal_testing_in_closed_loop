@@ -17,10 +17,27 @@ call_nusmv() {
 }
 
 seed="--seed 200"
-maxlen=12
+maxlen=15
 
 finite="--checkFiniteCoverage"
 #finite=
+
+floors=5
+dir=elevator-$floors
+# Synthesize tests
+call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite
+# Run tests
+call_spin run --input test1.bin --output out.smv --verify 
+# Run verification
+call_nusmv closed-loop-verify --verbose
+
+#floors=5
+#dir=elevator-$floors
+#call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite --valuePairCoverage
+#call_nusmv run --input test1.bin --measureCoverage --includeInternal $finite --valuePairCoverage
+
+exit
+
 
 for language in nusmv spin; do
     for floors in 3 4 5; do

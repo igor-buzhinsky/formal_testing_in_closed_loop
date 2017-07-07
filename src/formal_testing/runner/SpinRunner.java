@@ -23,7 +23,7 @@ public class SpinRunner extends Runner {
     private static final int OPTIMIZATION_LEVEL = 2;
     private static final String MODEL_FILENAME = "model.pml";
 
-    public final ResourceMeasurement creationMeasurement;
+    private final ResourceMeasurement creationMeasurement;
 
     SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps,
                boolean claimNegate, int timeout) throws IOException {
@@ -77,6 +77,7 @@ public class SpinRunner extends Runner {
             Files.move(Paths.get(dirName + "/pan"), Paths.get(dirName + "/pan." + i));
         }
         creationMeasurement = measurement;
+        totalResourceMeasurement = totalResourceMeasurement.add(measurement);
     }
 
     @Override
@@ -97,6 +98,7 @@ public class SpinRunner extends Runner {
                     new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                 reader.lines().forEach(log::add);
             }
+            inspectResourceConsumption(log);
             final int retCode = waitFor();
             trailFile = new File(trailPath);
             if (retCode == 124) {
@@ -114,6 +116,7 @@ public class SpinRunner extends Runner {
                     try (final BufferedReader reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                         reader.lines().forEach(line -> {
+                            inspectResourceConsumption(Collections.singletonList(line));
                             if (line.matches(trailRegexp)) {
                                 final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
                                 testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));

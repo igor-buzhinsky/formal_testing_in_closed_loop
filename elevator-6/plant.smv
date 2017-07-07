@@ -23,7 +23,7 @@ ASSIGN
     next(door_open[2]) := next(door_state[2]) = d_open;
     next(door_open[3]) := next(door_state[3]) = d_open;
     next(door_open[4]) := next(door_state[4]) = d_open;
-    next(door_open[6]) := next(door_state[6]) = d_open;
+    next(door_open[5]) := next(door_state[5]) = d_open;
     next(button[0]) := (next(on_floor[0]) & next(door_open[0])) ? FALSE : next(user_floor_button[0]) ? TRUE : button[0];
     next(button[1]) := (next(on_floor[1]) & next(door_open[1])) ? FALSE : next(user_floor_button[1]) ? TRUE : button[1];
     next(button[2]) := (next(on_floor[2]) & next(door_open[2])) ? FALSE : next(user_floor_button[2]) ? TRUE : button[2];

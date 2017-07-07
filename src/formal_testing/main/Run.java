@@ -6,6 +6,7 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Created by buzhinsky on 6/28/17.
@@ -19,6 +20,9 @@ public class Run extends MainBase {
 
     @Option(name = "--verify", handler = BooleanOptionHandler.class, usage = "verify temporal specification")
     private boolean verify;
+
+    @Option(name = "--output", usage = "output filename for formal model", metaVar = "<filename>")
+    private String outputFilename = "test.bin";
 
     @Option(name = "--checkFiniteCoverage", handler = BooleanOptionHandler.class,
             usage = "while checking coverage, ignore infinite continuations of test cases")
@@ -54,8 +58,14 @@ public class Run extends MainBase {
         final TestSuite ts = TestSuite.read(filename);
         final String code = modelCode(true, false, true, ts.header(), ts.body(), false, false, null);
 
-        System.out.println("Running verification for test suite " + filename + "...");
+        if (outputFilename != null) {
+            System.out.println("Writing formal model to " + outputFilename + "...");
+            try (PrintWriter pw = new PrintWriter(outputFilename)) {
+                pw.println(code);
+            }
+        }
         if (verify) {
+            System.out.println("Running verification for test suite " + filename + "...");
             verifyAll(code, 0, verbose);
         }
         if (measureCoverage) {

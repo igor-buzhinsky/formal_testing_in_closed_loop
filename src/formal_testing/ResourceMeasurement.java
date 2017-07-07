@@ -18,11 +18,13 @@ public class ResourceMeasurement {
         this(0, 0, 0, 0);
     }
 
-    private ResourceMeasurement(double userTime, double systemTime, double elapsedTime, int maxResident) {
+    public ResourceMeasurement(double userTime, double systemTime, double elapsedTime, int maxResident,
+                                String... comments) {
         this.userTime = userTime;
         this.systemTime = systemTime;
         this.elapsedTime = elapsedTime;
         this.maxResident = maxResident;
+        Arrays.stream(comments).forEach(this.comments::add);
     }
 
     /*

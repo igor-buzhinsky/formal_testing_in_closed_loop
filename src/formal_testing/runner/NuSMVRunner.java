@@ -53,6 +53,7 @@ public class NuSMVRunner extends Runner {
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
             reader.lines().forEach(result::add);
         }
+        inspectResourceConsumption(result);
         return waitFor();
     }
 

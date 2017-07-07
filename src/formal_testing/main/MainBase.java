@@ -49,7 +49,7 @@ public abstract class MainBase {
     private String language;
 
     @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode: LTL, CTL, BMC (default)", metaVar = "<mode>")
-    private String nuSMVMode = "BMC";
+    private String nuSMVMode = NuSMVMode.BMC.toString();
 
     ProblemData data;
 
@@ -216,7 +216,7 @@ public abstract class MainBase {
         return Util.LANGUAGE == Language.PROMELA
                 ? promelaModelCode(testing, nondetSelection, spec, testHeader, testBody, plantCodeCoverage,
                 controllerCodeCoverage, counter)
-                : nuSMVModelCode(testing, nondetSelection, spec, testHeader, testBody);
+                : nuSMVModelCode(testing, spec, testHeader, testBody);
     }
 
     private <T> List<T> merge(List<List<T>> list) {
@@ -236,8 +236,7 @@ public abstract class MainBase {
     private final Variable<?> testIndexVar = new IntegerVariable("_test_index", new IntegerValue(0), 0, 1, false, 1, 0);
     private final Variable<?> testStepVar = new IntegerVariable("_test_step", new IntegerValue(0), 0, 1, false, 1, 0);
 
-    private String nuSMVModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
-                                  String testBody) {
+    private String nuSMVModelCode(boolean testing, boolean spec, String testHeader, String testBody) {
         final StringBuilder code = new StringBuilder();
 
         // can contain e.g. some module declarations
@@ -289,8 +288,7 @@ public abstract class MainBase {
             code.append("\n").append(data.spec);
         }
         if (testing) {
-            code.append("\n").append(Util.NUSMV_MODE.specDeclaration).append(" ").append(Util.NUSMV_MODE.fOperator)
-                    .append("  _test_passed\n");
+            code.append("\nCTLSPEC AF _test_passed\n");
         }
 
         return code.toString();
@@ -458,6 +456,7 @@ public abstract class MainBase {
                     }
                 }
             }
+            System.out.println(runner.totalResourceReport());
         }
     }
 }

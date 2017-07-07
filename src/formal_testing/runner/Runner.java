@@ -1,5 +1,6 @@
 package formal_testing.runner;
 
+import formal_testing.ResourceMeasurement;
 import formal_testing.enums.Language;
 import formal_testing.ProblemData;
 import formal_testing.Util;
@@ -28,6 +29,18 @@ public abstract class Runner implements AutoCloseable {
     final List<String> coverageClaims;
 
     final String TIME = "/usr/bin/time";
+
+    ResourceMeasurement totalResourceMeasurement = new ResourceMeasurement(0, 0, 0, 0, "total tool execution time");
+
+    public String totalResourceReport() {
+        return totalResourceMeasurement.toString();
+    }
+
+    void inspectResourceConsumption(List<String> log) {
+        log.stream().filter(ResourceMeasurement::isMeasurement).forEach(line -> {
+            totalResourceMeasurement = totalResourceMeasurement.add(new ResourceMeasurement(line));
+        });
+    }
 
     Runner(ProblemData data, int timeout, String dirName, String modelCode, List<CoveragePoint> coveragePoints,
            int claimSteps,
