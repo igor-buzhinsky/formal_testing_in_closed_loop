@@ -47,12 +47,6 @@ public class Run extends MainArgs {
             usage = "if measureCoverage is on, measure controller code coverage")
     private boolean controllerCodeCoverage;
 
-    @Option(name = "--dynamic", handler = BooleanOptionHandler.class, usage = "enable NuSMV -dynamic")
-    private boolean dynamic;
-
-    @Option(name = "--coi", handler = BooleanOptionHandler.class, usage = "enable NuSMV -coi")
-    private boolean coi;
-
     public static void main(String[] args) throws IOException {
         new Run().run(args);
     }
@@ -72,7 +66,7 @@ public class Run extends MainArgs {
         }
         if (verify) {
             System.out.println("Running verification for test suite " + filename + "...");
-            verifyAll(code, 0, verbose, dynamic, coi);
+            verifyAll(code, 0, verbose);
         }
         if (measureCoverage) {
             System.out.println("\nMeasuring coverage of test suite " + filename + "...");

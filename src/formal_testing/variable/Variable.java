@@ -44,8 +44,8 @@ public abstract class Variable<T extends Value> {
         return values().stream().map(Value::toString).collect(Collectors.toList());
     }
 
-    public String initialValue() {
-        return initialValue.toString();
+    public T initialValue() {
+        return initialValue;
     }
 
     private String indexPart() {
@@ -67,9 +67,9 @@ public abstract class Variable<T extends Value> {
         if (isArrayPart && arrayIndex > 0) {
             return "";
         } else if (isArrayPart && arrayIndex == 0) {
-            return type + " " + name + "[" + arrayLength + "] = " + initialValue() + ";";
+            return type + " " + name + "[" + arrayLength + "] = " + initialValue.toString() + ";";
         } else {
-            return type + " " + name + " = " + initialValue() + ";";
+            return type + " " + name + " = " + initialValue.toString() + ";";
         }
     }
 

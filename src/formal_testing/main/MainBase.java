@@ -19,6 +19,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,7 +38,13 @@ abstract class MainBase {
     private String nuSMVMode = NuSMVMode.BMC.toString();
 
     @Option(name = "--panO", usage = "optimization level to compile pan, default = 2", metaVar = "<number>")
-    int panO = 2;
+    private int panO = 2;
+
+    @Option(name = "--dynamic", handler = BooleanOptionHandler.class, usage = "enable NuSMV -dynamic")
+    private boolean dynamic;
+
+    @Option(name = "--coi", handler = BooleanOptionHandler.class, usage = "enable NuSMV -coi")
+    private boolean coi;
 
     ProblemData data;
 
@@ -427,13 +434,15 @@ abstract class MainBase {
             throw new RuntimeException("Unsupported NuSMV mode " + nuSMVMode);
         }
         Settings.PAN_OPTIMIZATION_LEVEL = panO;
+        Settings.NUSMV_DYNAMIC = dynamic;
+        Settings.NUSMV_COI = coi;
     }
 
-    void verifyAll(String code, int timeout, boolean verbose, boolean dynamic, boolean coi)
+    void verifyAll(String code, int timeout, boolean verbose)
             throws IOException {
         try (final Runner runner = Runner.create(data, code, timeout)) {
             if (runner instanceof NuSMVRunner) {
-                final List<String> result = ((NuSMVRunner) runner).verifyAll(!verbose, dynamic, coi);
+                final List<String> result = ((NuSMVRunner) runner).verifyAll(!verbose);
                 result.stream().filter(s -> verbose || s.startsWith("-- specification ")).forEach(System.out::println);
             } else {
                 for (String prop : propsFromCode(code)) {

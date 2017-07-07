@@ -33,8 +33,7 @@ public class NuSMVRunner extends Runner {
         }
     }
 
-    private int run(List<String> result, boolean disableCounterexamples, int stepsLimit, boolean dynamic, boolean coi)
-            throws IOException {
+    private int run(List<String> result, boolean disableCounterexamples, int stepsLimit) throws IOException {
         final List<String> command = new ArrayList<>();
         command.addAll(Arrays.asList("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT,
                 Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
@@ -44,10 +43,10 @@ public class NuSMVRunner extends Runner {
         if (disableCounterexamples) {
             command.add("-dcx");
         }
-        if (dynamic) {
+        if (Settings.NUSMV_DYNAMIC) {
             command.add("-dynamic");
         }
-        if (coi) {
+        if (Settings.NUSMV_COI) {
             command.add("-coi");
         }
         command.add(MODEL_FILENAME);
@@ -61,10 +60,10 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    public List<String> verifyAll(boolean disableCounterexamples, boolean dynamic, boolean coi) throws IOException {
+    public List<String> verifyAll(boolean disableCounterexamples) throws IOException {
         final List<String> result = new ArrayList<>();
         writeModel(null);
-        final int retCode = run(result, disableCounterexamples, -1, dynamic, coi);
+        final int retCode = run(result, disableCounterexamples, -1);
         if (retCode == 124) {
             result.add("*** TIMEOUT ***");
         }
@@ -76,7 +75,7 @@ public class NuSMVRunner extends Runner {
         final RunnerResult result = new RunnerResult();
         writeModel(property);
         final List<String> log = new ArrayList<>();
-        final int retCode = run(log, disableCounterexample, stepsLimit, false, false);
+        final int retCode = run(log, disableCounterexample, stepsLimit);
         final String trailRegexp = "    " + trailRegexp();
         if (retCode == 124) {
             log.add("*** " + property + " : TIMEOUT ***");
@@ -100,7 +99,7 @@ public class NuSMVRunner extends Runner {
                         if (testCase.length() == stepsLimit + 1) {
                             break;
                         } else if (testCase.length() > 0) {
-                            testCase.padMissing();
+                            testCase.padMissing(data.conf);
                         }
                         testCase.newElement();
                     } else if (line.matches(trailRegexp)) {
@@ -110,7 +109,7 @@ public class NuSMVRunner extends Runner {
                 }
             }
             if (testCase != null && !disableCounterexample) {
-                testCase.padMissing();
+                testCase.padMissing(data.conf);
                 if (loopPosition != null) {
                     testCase.loopFromPosition(loopPosition, stepsLimit + 1);
                 }

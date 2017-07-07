@@ -10,4 +10,6 @@ public class Settings {
     public static Language LANGUAGE;
     public static NuSMVMode NUSMV_MODE;
     public static int PAN_OPTIMIZATION_LEVEL;
+    public static boolean NUSMV_DYNAMIC;
+    public static boolean NUSMV_COI;
 }

@@ -74,10 +74,13 @@ public class TestCase implements Serializable {
         return values.hashCode();
     }
 
-    public void padMissing() {
-        for (List<Value> list : values.values()) {
+    public void padMissing(Configuration conf) {
+        for (Map.Entry<String, List<Value>> entry : values.entrySet()) {
+            final List<Value> list = entry.getValue();
             while (list.size() < length) {
-                list.add(list.get(list.size() - 1));
+                final Value padValue = list.isEmpty()
+                        ? conf.byName(entry.getKey()).initialValue() : list.get(list.size() - 1);
+                list.add(padValue);
             }
         }
     }

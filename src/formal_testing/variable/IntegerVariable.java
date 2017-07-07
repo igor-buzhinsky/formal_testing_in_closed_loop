@@ -12,8 +12,8 @@ public class IntegerVariable extends Variable<IntegerValue> {
     private final int min;
     private final int max;
 
-    public IntegerVariable(String name, IntegerValue initialValue, int min, int max,
-                           boolean isArrayPart, int arrayLength, int arrayIndex) {
+    public IntegerVariable(String name, IntegerValue initialValue, int min, int max, boolean isArrayPart,
+                           int arrayLength, int arrayIndex) {
         super(name, initialValue, isArrayPart, arrayLength, arrayIndex);
         this.min = min;
         this.max = max;

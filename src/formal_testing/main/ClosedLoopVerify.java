@@ -15,12 +15,6 @@ public class ClosedLoopVerify extends MainArgs {
     @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")
     private boolean verbose;
 
-    @Option(name = "--dynamic", handler = BooleanOptionHandler.class, usage = "enable NuSMV -dynamic")
-    private boolean dynamic;
-
-    @Option(name = "--coi", handler = BooleanOptionHandler.class, usage = "enable NuSMV -coi")
-    private boolean coi;
-
     public static void main(String[] args) throws IOException {
         new ClosedLoopVerify().run(args);
     }
@@ -29,6 +23,6 @@ public class ClosedLoopVerify extends MainArgs {
     protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
         final String code = modelCode(false, true, true, null, null, false, false, null);
-        verifyAll(code, timeout, verbose, dynamic, coi);
+        verifyAll(code, timeout, verbose);
     }
 }
