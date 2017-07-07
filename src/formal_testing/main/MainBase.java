@@ -428,10 +428,10 @@ abstract class MainBase {
         }
     }
 
-    void verifyAll(String code, int timeout, boolean verbose) throws IOException {
+    void verifyAll(String code, int timeout, boolean verbose, boolean dynamic, boolean coi) throws IOException {
         try (final Runner runner = Runner.create(data, code, timeout)) {
             if (runner instanceof NuSMVRunner) {
-                final List<String> result = ((NuSMVRunner) runner).verifyAll(!verbose);
+                final List<String> result = ((NuSMVRunner) runner).verifyAll(!verbose, dynamic, coi);
                 result.stream().filter(s -> verbose || s.startsWith("-- specification ")).forEach(System.out::println);
             } else {
                 for (String prop : propsFromCode(code)) {

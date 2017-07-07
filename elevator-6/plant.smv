@@ -15,7 +15,7 @@ ASSIGN
     next(door_closed[0]) := next(door_state[0]) = d_closed;
     next(door_closed[1]) := next(door_state[1]) = d_closed;
     next(door_closed[2]) := next(door_state[2]) = d_closed;
-    next(door_closed[3]) := next(door_state[3]) = d_closed;    
+    next(door_closed[3]) := next(door_state[3]) = d_closed;
     next(door_closed[4]) := next(door_state[4]) = d_closed;
     next(door_closed[5]) := next(door_state[5]) = d_closed;
     next(door_open[0]) := next(door_state[0]) = d_open;

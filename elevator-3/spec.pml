@@ -19,13 +19,13 @@ ltl floor0 { X( [] (on_floor[0] <-> (elevator_pos == 0)) ) }
 ltl floor1 { X( [] (on_floor[1] <-> (elevator_pos == 2)) ) }
 ltl floor2 { X( [] (on_floor[2] <-> (elevator_pos == 4)) ) }
 
-ltl door0_open { X( !<>[](open[0] && !door_open[0]) ) }
-ltl door1_open { X( !<>[](open[1] && !door_open[1]) ) }
-ltl door2_open { X( !<>[](open[2] && !door_open[2]) ) }
+ltl door0_open { X( []<>!(open[0] && !door_open[0]) ) }
+ltl door1_open { X( []<>!(open[1] && !door_open[1]) ) }
+ltl door2_open { X( []<>!(open[2] && !door_open[2]) ) }
 
-ltl door0_close { X( !<>[](!open[0] && !door_closed[0]) ) }
-ltl door1_close { X( !<>[](!open[1] && !door_closed[1]) ) }
-ltl door2_close { X( !<>[](!open[2] && !door_closed[2]) ) }
+ltl door0_close { X( []<>!(!open[0] && !door_closed[0]) ) }
+ltl door1_close { X( []<>!(!open[1] && !door_closed[1]) ) }
+ltl door2_close { X( []<>!(!open[2] && !door_closed[2]) ) }
 
 // open-loop
 ltl phi06 { X( []!(up && down) ) }

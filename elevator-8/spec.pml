@@ -54,23 +54,23 @@ ltl floor5 { X( [] (on_floor[5] <-> (elevator_pos == 10)) ) }
 ltl floor6 { X( [] (on_floor[6] <-> (elevator_pos == 12)) ) }
 ltl floor7 { X( [] (on_floor[7] <-> (elevator_pos == 14)) ) }
 
-ltl door0_open { X( !<>[](open[0] && !door_open[0]) ) }
-ltl door1_open { X( !<>[](open[1] && !door_open[1]) ) }
-ltl door2_open { X( !<>[](open[2] && !door_open[2]) ) }
-ltl door3_open { X( !<>[](open[3] && !door_open[3]) ) }
-ltl door4_open { X( !<>[](open[4] && !door_open[4]) ) }
-ltl door5_open { X( !<>[](open[5] && !door_open[5]) ) }
-ltl door6_open { X( !<>[](open[6] && !door_open[6]) ) }
-ltl door7_open { X( !<>[](open[7] && !door_open[7]) ) }
+ltl door0_open { X( []<>!(open[0] && !door_open[0]) ) }
+ltl door1_open { X( []<>!(open[1] && !door_open[1]) ) }
+ltl door2_open { X( []<>!(open[2] && !door_open[2]) ) }
+ltl door3_open { X( []<>!(open[3] && !door_open[3]) ) }
+ltl door4_open { X( []<>!(open[4] && !door_open[4]) ) }
+ltl door5_open { X( []<>!(open[5] && !door_open[5]) ) }
+ltl door6_open { X( []<>!(open[6] && !door_open[6]) ) }
+ltl door7_open { X( []<>!(open[7] && !door_open[7]) ) }
 
-ltl door0_close { X( !<>[](!open[0] && !door_closed[0]) ) }
-ltl door1_close { X( !<>[](!open[1] && !door_closed[1]) ) }
-ltl door2_close { X( !<>[](!open[2] && !door_closed[2]) ) }
-ltl door3_close { X( !<>[](!open[3] && !door_closed[3]) ) }
-ltl door4_close { X( !<>[](!open[4] && !door_closed[4]) ) }
-ltl door5_close { X( !<>[](!open[5] && !door_closed[5]) ) }
-ltl door6_close { X( !<>[](!open[6] && !door_closed[6]) ) }
-ltl door7_close { X( !<>[](!open[7] && !door_closed[7]) ) }
+ltl door0_close { X( []<>!(!open[0] && !door_closed[0]) ) }
+ltl door1_close { X( []<>!(!open[1] && !door_closed[1]) ) }
+ltl door2_close { X( []<>!(!open[2] && !door_closed[2]) ) }
+ltl door3_close { X( []<>!(!open[3] && !door_closed[3]) ) }
+ltl door4_close { X( []<>!(!open[4] && !door_closed[4]) ) }
+ltl door5_close { X( []<>!(!open[5] && !door_closed[5]) ) }
+ltl door6_close { X( []<>!(!open[6] && !door_closed[6]) ) }
+ltl door7_close { X( []<>!(!open[7] && !door_closed[7]) ) }
 
 // open-loop
 ltl phi06 { X( []!(up && down) ) }

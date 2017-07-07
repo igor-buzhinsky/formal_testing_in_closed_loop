@@ -7,25 +7,25 @@ ASSIGN
     next(up) := case
             !is_requested | need_stop: FALSE;
             next(on_floor[0]) & (call1 | call2 | call3 | call4): TRUE;
-            next(on_floor[1]) & (call2 | call3 | call4)        : TRUE;
-            next(on_floor[2]) & (call3 | call4)                : TRUE;
-            next(on_floor[3]) & (call4)                        : TRUE;
+            next(on_floor[1]) & (call2 | call3 | call4): TRUE;
+            next(on_floor[2]) & (call3 | call4): TRUE;
+            next(on_floor[3]) & (call4): TRUE;
             next(on_floor[4]) & (call0 | call1 | call2 | call3): FALSE;
-            next(on_floor[3]) & (call0 | call1 | call2)        : FALSE;
-            next(on_floor[2]) & (call0 | call1)                : FALSE;
-            next(on_floor[1]) & (call0)                        : FALSE;
+            next(on_floor[3]) & (call0 | call1 | call2): FALSE;
+            next(on_floor[2]) & (call0 | call1): FALSE;
+            next(on_floor[1]) & (call0): FALSE;
             TRUE: up;
         esac;
     next(down) := case
             !is_requested | need_stop: FALSE;
             next(on_floor[0]) & (call1 | call2 | call3 | call4): FALSE;
-            next(on_floor[1]) & (call2 | call3 | call4)        : FALSE;
-            next(on_floor[2]) & (call3 | call4)                : FALSE;
-            next(on_floor[3]) & (call4)                        : FALSE;
+            next(on_floor[1]) & (call2 | call3 | call4): FALSE;
+            next(on_floor[2]) & (call3 | call4): FALSE;
+            next(on_floor[3]) & (call4): FALSE;
             next(on_floor[4]) & (call0 | call1 | call2 | call3): TRUE;
-            next(on_floor[3]) & (call0 | call1 | call2)        : TRUE;
-            next(on_floor[2]) & (call0 | call1)                : TRUE;
-            next(on_floor[1]) & (call0)                        : TRUE;
+            next(on_floor[3]) & (call0 | call1 | call2): TRUE;
+            next(on_floor[2]) & (call0 | call1): TRUE;
+            next(on_floor[1]) & (call0): TRUE;
             TRUE: down;
         esac;
 DEFINE
@@ -36,9 +36,4 @@ DEFINE
     call4 := next(button[4]) | next(call[4]);
     is_requested := call0 | call1 | call2 | call3 | call4;
     on_some_floor := next(on_floor[0]) | next(on_floor[1]) | next(on_floor[2]) | next(on_floor[3]) | next(on_floor[4]);
-    need_stop := !next(door_closed[0]) | next(on_floor[0]) & call0
-               | !next(door_closed[1]) | next(on_floor[1]) & call1
-               | !next(door_closed[2]) | next(on_floor[2]) & call2
-               | !next(door_closed[3]) | next(on_floor[3]) & call3
-               | !next(door_closed[4]) | next(on_floor[4]) & call4
-               ;
+    need_stop := !next(door_closed[0]) | next(on_floor[0]) & call0 | !next(door_closed[1]) | next(on_floor[1]) & call1 | !next(door_closed[2]) | next(on_floor[2]) & call2 | !next(door_closed[3]) | next(on_floor[3]) & call3 | !next(door_closed[4]) | next(on_floor[4]) & call4;
