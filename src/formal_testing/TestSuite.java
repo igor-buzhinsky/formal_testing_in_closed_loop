@@ -95,6 +95,26 @@ public class TestSuite implements Serializable {
         return String.join(" union ", stringIntervals);
     }
 
+    public static String expressWithIntervalsSPIN(Collection<Integer> values, String varName) {
+        final List<Pair<Integer, Integer>> intervals = intervals(values);
+        final List<String> stringIntervals = new ArrayList<>();
+        final Set<Integer> separate = new TreeSet<>();
+        for (Pair<Integer, Integer> interval : intervals) {
+            if (interval.getLeft() + 1 >= interval.getRight()) {
+                separate.add(interval.getLeft());
+                separate.add(interval.getRight());
+            } else {
+                stringIntervals.add(varName + " >= " + interval.getLeft() + " && " + varName + " <= "
+                        + interval.getRight());
+            }
+        }
+        if (!separate.isEmpty()) {
+            stringIntervals.addAll(separate.stream().map(value -> varName + " == " + value)
+                    .collect(Collectors.toList()));
+        }
+        return String.join(" || ", stringIntervals);
+    }
+
     private String nuSMVBody() {
         final StringBuilder sb = new StringBuilder();
         final List<TestCase> list = new ArrayList<>(testCases);
@@ -143,16 +163,7 @@ public class TestSuite implements Serializable {
             sb.append("    esac;\n");
         }
         sb.append("    next(_test_step) := (_test_step + 1) mod (case\n");
-        final Map<Integer, Set<Integer>> lengthBuckets = new TreeMap<>();
-        for (int i = 0; i < list.size(); i++) {
-            final int length = list.get(i).length();
-            Set<Integer> valueSet = lengthBuckets.get(length);
-            if (valueSet == null) {
-                valueSet = new TreeSet<>();
-                lengthBuckets.put(length, valueSet);
-            }
-            valueSet.add(i);
-        }
+        final Map<Integer, Set<Integer>> lengthBuckets = lengthBuckets(list);
         final List<Integer> allLengths = new ArrayList<>(lengthBuckets.keySet());
         for (Map.Entry<Integer, Set<Integer>> e : lengthBuckets.entrySet()) {
             final int length = e.getKey();
@@ -183,33 +194,52 @@ public class TestSuite implements Serializable {
             sb.append(":: else -> ;\n").append("fi\n");
         }
 
-        sb.append("d_step {\n").append("    if\n");
+        sb.append("if\n");
         for (int i = 0; i < list.size(); i++) {
             final TestCase tc = list.get(i);
             for (int j = 0; j < tc.length(); j++) {
-                sb.append("    :: ").append(trivial() ? "" : ("_test_index == " + i + " && "))
-                        .append("_test_step == ").append(j).append(" -> ");
+                sb.append(":: ").append(trivial() ? "" : ("_test_index == " + i + " && "))
+                        .append("_test_step == ").append(j).append(" -> d_step { ");
                 for (String varName : tc.values().keySet()) {
                     sb.append(varName).append(" = ").append(tc.values().get(varName).get(j)).append("; ");
                 }
-                sb.append("\n");
+                sb.append("}\n");
             }
         }
-        sb.append("    fi\n");
-
+        sb.append("fi\n");
+        sb.append("d_step {\n");
         if (trivial()) {
             sb.append("    _test_step = (_test_step + 1) % ").append(list.get(0).length()).append(";\n");
         } else {
             sb.append("    if\n");
-            for (int i = 0; i < list.size(); i++) {
-                sb.append("    :: _test_index == ").append(i).append(" -> _test_step = ")
-                        .append("(_test_step + 1) % ").append(list.get(i).length()).append(";\n");
+            final Map<Integer, Set<Integer>> lengthBuckets = lengthBuckets(list);
+            final List<Integer> allLengths = new ArrayList<>(lengthBuckets.keySet());
+            for (Map.Entry<Integer, Set<Integer>> e : lengthBuckets.entrySet()) {
+                final int length = e.getKey();
+                final String condition = length == allLengths.get(allLengths.size() - 1) ? "else"
+                        : expressWithIntervalsSPIN(e.getValue(), "_test_index");
+                sb.append("    :: ").append(condition).append(" -> _test_step = (_test_step + 1) % ")
+                        .append(e.getKey()).append(";\n");
             }
             sb.append("    fi\n");
         }
         sb.append(addOracle ? "    _test_passed = (_test_step == 0 -> true : _test_passed);\n" : "")
                 .append("}\n");
         return sb.toString();
+    }
+
+    private Map<Integer, Set<Integer>> lengthBuckets(List<TestCase> list) {
+        final Map<Integer, Set<Integer>> lengthBuckets = new TreeMap<>();
+        for (int i = 0; i < list.size(); i++) {
+            final int length = list.get(i).length();
+            Set<Integer> valueSet = lengthBuckets.get(length);
+            if (valueSet == null) {
+                valueSet = new TreeSet<>();
+                lengthBuckets.put(length, valueSet);
+            }
+            valueSet.add(i);
+        }
+        return lengthBuckets;
     }
 
     public void print(String filename) throws IOException {

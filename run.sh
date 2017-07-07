@@ -22,7 +22,7 @@ maxlen=15
 finite="--checkFiniteCoverage"
 #finite=
 
-floors=3
+floors=6
 dir=elevator-$floors
 # Synthesize tests
 call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite

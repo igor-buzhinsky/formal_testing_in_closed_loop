@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public abstract class MainBase {
+abstract class MainBase {
     @Option(name = "--language", aliases = { "-l" }, usage = "PROMELA, NUSMV, NUXMV", metaVar = "<language>",
             required = true)
     private String language;

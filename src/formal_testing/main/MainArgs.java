@@ -6,7 +6,7 @@ package formal_testing.main;
 
 import org.kohsuke.args4j.Argument;
 
-public abstract class MainArgs extends MainBase{
+abstract class MainArgs extends MainBase{
     @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
     String configurationFilename;
 
