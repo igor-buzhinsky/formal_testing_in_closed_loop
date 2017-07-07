@@ -43,6 +43,10 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
     private boolean controllerCodeCoverage;
 
+    @Option(name = "--lengthExponent", usage = "test length will grow as 2^lengthExponent "
+            + "(but will at least increment by one each time), default = 1.4", metaVar = "<real>")
+    private double lengthExponent = 1.4;
+
     public static void main(String[] args) throws IOException {
         new SynthesizeCoverageTests().run(args);
     }
@@ -56,8 +60,22 @@ public class SynthesizeCoverageTests extends MainArgs {
 
         System.out.println("Coverage test synthesis...");
 
+        lengthExponent = Math.max(lengthExponent, 1.05);
         final TestSuite testSuite = new TestSuite(true);
-        for (int len = 1; len <= maxLength; len++) {
+        int lastLen = 0;
+        for (int step = 0; ; step++) {
+            int len = (int) Math.round(Math.floor(Math.pow(lengthExponent, step)));
+            if (len == lastLen) {
+                continue;
+            } else if (len > maxLength && lastLen < maxLength) {
+                len = maxLength;
+            } else if (len > maxLength) {
+                break;
+            }
+            if (info.allCovered()) {
+                break;
+            }
+
             System.out.println("  Test synthesis for length " + len + "...");
             System.out.println("  Covered points: " + info.coveredPoints + " / " + info.totalPoints
                     + ", test synthesis for length " + len + "...");
@@ -94,9 +112,7 @@ public class SynthesizeCoverageTests extends MainArgs {
                     );
                 }
             }
-            if (info.allCovered()) {
-                break;
-            }
+            lastLen = len;
         }
 
         System.out.println(testSuite);
