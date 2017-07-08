@@ -23,11 +23,12 @@ call_nusmv() {
 }
 
 print_test_suite() {
-    java -jar jars/print-test-suite.jar --input "$1" -l PROMELA
-    java -jar jars/print-test-suite.jar --input "$1" -l NUSMV
+    call_spin print-test-suite --input "$1"
+    call_nusmv print-test-suite --input "$1"
 }
 
 print_log() {
+    #cat log
     cat log | grep ">>>"
     cat log | grep "Covered points: "
     cat log | grep "Exception"
@@ -84,7 +85,7 @@ comparison() {
     print_log
     print_test_suite test.bin > /dev/null
     # Run tests
-    call_spin run --input test.bin --verify --output out.pml $finite > log
+    call_spin run --input test.bin --verify --output out.pml $finite --panO 0 > log
     print_log
     # Run verification
     call_nusmv closed-loop-verify --verbose --dynamic --coi > log
@@ -107,7 +108,7 @@ maxlen=100
 finite="--checkFiniteCoverage"
 #finite=
 
-bmc_verification 15 25
-#comparison 15
+#bmc_verification 15 30
+comparison 15
 #check_nusmv 5
 #check_spin 3

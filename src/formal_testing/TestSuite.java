@@ -2,7 +2,6 @@ package formal_testing;
 
 import formal_testing.enums.Language;
 import formal_testing.value.Value;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
 import java.util.*;
@@ -58,64 +57,6 @@ public class TestSuite implements Serializable {
                 ";\nASSIGN\n    init(_test_step) := -1;\n    init(_test_index) := -1;";
     }
 
-    private static List<Pair<Integer, Integer>> intervals(Collection<Integer> values) {
-        final List<Pair<Integer, Integer>> intervals = new ArrayList<>();
-        int min = -1;
-        int max = -1;
-        for (int value : values) {
-            if (min == -1) {
-                min = max = value;
-            } else if (value == max + 1) {
-                max = value;
-            } else if (value <= max) {
-                throw new AssertionError("Input set must contain increasing values.");
-            } else {
-                intervals.add(Pair.of(min, max));
-                min = max = value;
-            }
-        }
-        intervals.add(Pair.of(min, max));
-        return intervals;
-    }
-
-    private static String expressWithIntervalsNuSMV(Collection<Integer> values) {
-        final List<Pair<Integer, Integer>> intervals = intervals(values);
-        final List<String> stringIntervals = new ArrayList<>();
-        final Set<Integer> separate = new TreeSet<>();
-        for (Pair<Integer, Integer> interval : intervals) {
-            if (interval.getLeft() + 1 >= interval.getRight()) {
-                separate.add(interval.getLeft());
-                separate.add(interval.getRight());
-            } else {
-                stringIntervals.add(interval.getLeft() + ".." + interval.getRight());
-            }
-        }
-        if (!separate.isEmpty()) {
-            stringIntervals.add(separate.toString().replace("[", "{").replace("]", "}"));
-        }
-        return String.join(" union ", stringIntervals);
-    }
-
-    public static String expressWithIntervalsSPIN(Collection<Integer> values, String varName) {
-        final List<Pair<Integer, Integer>> intervals = intervals(values);
-        final List<String> stringIntervals = new ArrayList<>();
-        final Set<Integer> separate = new TreeSet<>();
-        for (Pair<Integer, Integer> interval : intervals) {
-            if (interval.getLeft() + 1 >= interval.getRight()) {
-                separate.add(interval.getLeft());
-                separate.add(interval.getRight());
-            } else {
-                stringIntervals.add(varName + " >= " + interval.getLeft() + " && " + varName + " <= "
-                        + interval.getRight());
-            }
-        }
-        if (!separate.isEmpty()) {
-            stringIntervals.addAll(separate.stream().map(value -> varName + " == " + value)
-                    .collect(Collectors.toList()));
-        }
-        return String.join(" || ", stringIntervals);
-    }
-
     private String nuSMVBody() {
         final StringBuilder sb = new StringBuilder();
         final List<TestCase> list = new ArrayList<>(testCases);
@@ -158,7 +99,7 @@ public class TestSuite implements Serializable {
                         : String.join("\n            | ", bucket.entrySet().stream()
                         .map(e -> (trivial() ? "" : ("next(_test_index) = " + e.getKey() + " & "))
                                 + "next(_test_step) in "
-                                + expressWithIntervalsNuSMV(e.getValue())).collect(Collectors.toList()));
+                                + Util.expressWithIntervalsNuSMV(e.getValue())).collect(Collectors.toList()));
                 sb.append("        ").append(condition).append(": ").append(value).append(";\n");
             }
             sb.append("    esac;\n");
@@ -169,7 +110,7 @@ public class TestSuite implements Serializable {
         for (Map.Entry<Integer, Set<Integer>> e : lengthBuckets.entrySet()) {
             final int length = e.getKey();
             final String condition = length == allLengths.get(allLengths.size() - 1)
-                ? "TRUE" : ("next(_test_index) in " + expressWithIntervalsNuSMV(e.getValue()));
+                ? "TRUE" : ("next(_test_index) in " + Util.expressWithIntervalsNuSMV(e.getValue()));
             sb.append("        ").append(condition).append(": ").append(e.getKey()).append(";\n");
         }
 
@@ -198,10 +139,10 @@ public class TestSuite implements Serializable {
         sb.append("if\n");
         for (int i = 0; i < list.size(); i++) {
             final TestCase tc = list.get(i);
-            sb.append(":: ").append("_test_index == ").append(i).append(" ->\n    if\n");
+
+            final Map<String, Set<Integer>> buckets = new TreeMap<>();
             for (int j = 0; j < tc.length(); j++) {
                 final List<String> updates = new ArrayList<>();
-                sb.append("    :: _test_step == ").append(j).append(" -> ");
                 for (String varName : tc.values().keySet()) {
                     final List<Value> values = tc.values().get(varName);
                     final String initialValue = conf.byName(varName).initialValue().toString();
@@ -215,12 +156,30 @@ public class TestSuite implements Serializable {
                 }
                 final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
                         : updates.size() == 1 ? updates.get(0) : ";";
-                sb.append(strUpdates).append("\n");
+                Set<Integer> steps = buckets.get(strUpdates);
+                if (steps == null) {
+                    steps = new TreeSet<>();
+                    buckets.put(strUpdates, steps);
+                }
+                steps.add(j);
+            }
+
+            final List<String> conditions = new ArrayList<>();
+            final List<String> actions = new ArrayList<>();
+            for (Map.Entry<String, Set<Integer>> entry : buckets.entrySet()) {
+                final String updates = entry.getKey();
+                final Set<Integer> steps = entry.getValue();
+                conditions.add(Util.expressWithIntervalsSPIN(steps, "_test_step"));
+                actions.add(updates);
+            }
+            conditions.set(conditions.size() - 1, "else");
+            sb.append(":: ").append(trivial() ? "else" : ("test_index == " + i)).append(" ->\n    if\n");
+            for (int j = 0; j < conditions.size(); j++) {
+                sb.append("    :: ").append(conditions.get(j)).append(" -> ").append(actions.get(j)).append("\n");
             }
             sb.append("    fi\n");
         }
-        sb.append("fi\n");
-        sb.append("d_step {\n");
+        sb.append("fi\nd_step {\n");
         if (trivial()) {
             sb.append("    _test_step = (_test_step + 1) % ").append(list.get(0).length()).append(";\n");
         } else {
@@ -230,7 +189,7 @@ public class TestSuite implements Serializable {
             for (Map.Entry<Integer, Set<Integer>> e : lengthBuckets.entrySet()) {
                 final int length = e.getKey();
                 final String condition = length == allLengths.get(allLengths.size() - 1) ? "else"
-                        : expressWithIntervalsSPIN(e.getValue(), "_test_index");
+                        : Util.expressWithIntervalsSPIN(e.getValue(), "_test_index");
                 sb.append("    :: ").append(condition).append(" -> _test_step = (_test_step + 1) % ")
                         .append(e.getKey()).append(";\n");
             }

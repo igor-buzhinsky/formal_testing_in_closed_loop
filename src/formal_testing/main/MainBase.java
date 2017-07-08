@@ -105,7 +105,7 @@ abstract class MainBase {
 
     private List<String> nuSMVPropsFromCode(String code) {
         return Arrays.stream(code.split("\n"))
-                .filter(s -> s.matches("(LTLSTEP|CTLSPEC|SPEC|PSLSPEC) .*"))
+                .filter(s -> s.matches("(LTLSPEC|CTLSPEC|SPEC|PSLSPEC) .*"))
                 .collect(Collectors.toList());
     }
 
@@ -214,19 +214,6 @@ abstract class MainBase {
                 : nuSMVModelCode(testing, spec, testHeader, testBody);
     }
 
-    private <T> List<T> merge(List<List<T>> list) {
-        final List<T> merged = new ArrayList<>();
-        list.forEach(merged::addAll);
-        return merged;
-    }
-
-    private String argList(List<List<Variable<?>>> variables) {
-        final List<Variable<?>> allVars = merge(variables);
-        final Set<String> indicesRemoved = allVars.stream().map(v -> v.name)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        return "(" + String.join(", ", indicesRemoved) + ")";
-    }
-
     private final BooleanVariable testingVar = new BooleanVariable("_test_passed", BooleanValue.FALSE);
     private final Variable<?> testIndexVar = new IntegerVariable("_test_index", new IntegerValue(0), 0, 1, false, 1, 0);
     private final Variable<?> testStepVar = new IntegerVariable("_test_step", new IntegerValue(0), 0, 1, false, 1, 0);
@@ -239,7 +226,7 @@ abstract class MainBase {
             code.append(data.header).append("\n");
         }
 
-        final String nondetArgList = argList(Arrays.asList(data.conf.nondetVars,
+        final String nondetArgList = Util.argList(Arrays.asList(data.conf.nondetVars,
                 testBody != null ? Arrays.asList(testIndexVar, testStepVar) : Collections.emptyList(),
                 testing ? Collections.singletonList(testingVar) : Collections.emptyList()));
         code.append("MODULE _NONDET_VAR_SELECTION").append(nondetArgList).append("\n");
@@ -248,11 +235,11 @@ abstract class MainBase {
         }
         code.append("\n");
 
-        code.append("MODULE _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+        code.append("MODULE _PLANT").append(Util.argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
                 data.conf.plantInternalVars, data.conf.outputVars))).append("\n")
                 .append(Util.indent(data.plantModel)).append("\n\n");
 
-        code.append("MODULE _CONTROLLER").append(argList(Arrays.asList(data.conf.inputVars,
+        code.append("MODULE _CONTROLLER").append(Util.argList(Arrays.asList(data.conf.inputVars,
                 data.conf.controllerInternalVars, data.conf.outputVars))).append("\n")
                 .append(Util.indent(data.controllerModel)).append("\n\n");
 
@@ -263,16 +250,16 @@ abstract class MainBase {
             code.append(varFormat(testingVar.toNusmvString(), "    "));
         }
         code.append("    _nondet_var_selection: _NONDET_VAR_SELECTION").append(nondetArgList).append(";\n");
-        code.append("    _plant: _PLANT").append(argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+        code.append("    _plant: _PLANT").append(Util.argList(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
                 data.conf.plantInternalVars, data.conf.outputVars))).append(";\n");
-        code.append("    _controller: _CONTROLLER").append(argList(Arrays.asList(data.conf.inputVars,
+        code.append("    _controller: _CONTROLLER").append(Util.argList(Arrays.asList(data.conf.inputVars,
                 data.conf.controllerInternalVars, data.conf.outputVars))).append(";\n");
         if (testHeader != null) {
             code.append(testHeader).append("\n");
         }
 
         code.append("ASSIGN\n");
-        for (Variable<?> var : merge(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
+        for (Variable<?> var : Util.merge(Arrays.asList(data.conf.inputVars, data.conf.nondetVars,
                 data.conf.controllerInternalVars, data.conf.plantInternalVars, data.conf.outputVars,
                 testing ?  Collections.singletonList(testingVar) : Collections.emptyList()))) {
             code.append("    init(").append(var.indexedName()).append(") := ")
@@ -296,7 +283,7 @@ abstract class MainBase {
 
         final Set<String> mtypeValues = new LinkedHashSet<>();
 
-        merge(Arrays.asList(data.conf.inputVars, data.conf.outputVars, data.conf.nondetVars,
+        Util.merge(Arrays.asList(data.conf.inputVars, data.conf.outputVars, data.conf.nondetVars,
                 data.conf.plantInternalVars, data.conf.controllerInternalVars)).stream()
                 .filter(v -> v instanceof SetVariable).forEach(v -> mtypeValues.addAll(v.stringValues()));
 
