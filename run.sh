@@ -1,5 +1,10 @@
 #!/bin/bash
 
+set_floors() {
+    floors=$1
+    dir=elevator-$floors
+}
+
 call_spin() {
     local name="$1"
     echo " >>> $name"
@@ -16,48 +21,81 @@ call_nusmv() {
     echo
 }
 
+print_test_suite() {
+    java -jar jars/print-test-suite.jar --input "$1" -l PROMELA
+    java -jar jars/print-test-suite.jar --input "$1" -l NUSMV
+}
+
+print_log() {
+    cat log | grep ">>>"
+    cat log | grep "Covered points: "
+    cat log | grep "Exception"
+    cat log | grep " = \\(true\\|false\\) \\*\\*\\*"
+    cat log | grep " specification " | sed 's/.* specification //g'
+}
+
+check_spin() {
+    set_floors "$1"
+    echo
+    echo ">>> RUN spin $floors"
+
+    for minimize in "" "--minimize"; do
+        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --lengthExponent 1 > log
+        print_log
+        call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
+        print_log
+    done
+
+    call_spin closed-loop-verify --verbose > log
+    print_log
+    call_spin generate-random --number 10 --length 10 --output test.bin $seed > log
+    print_log
+    call_spin run --input test.bin --verify --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
+    print_log
+}
+
+check_nusmv() {
+    set_floors "$1"
+    echo
+    echo ">>> RUN nusmv $floors"
+
+    for minimize in "" "--minimize"; do
+        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite > log
+        print_log
+        call_nusmv run --input test.bin --measureCoverage --includeInternal $finite > log
+        print_log
+    done
+
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    print_log
+    call_nusmv generate-random --number 10 --length 10 --output test.bin $seed > log
+    print_log
+    call_nusmv run --input test.bin --verify --measureCoverage --includeInternal --dynamic --coi $finite > log
+    print_log
+}
+
+comparison() {
+    set_floors "$1"
+    echo
+    echo ">>> RUN comparison $floors"
+    # Synthesize tests
+    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $finite > log
+    print_log
+    print_test_suite test.bin > /dev/null
+    # Run tests
+    call_spin run --input test.bin --verify --output out.pml $finite > log
+    print_log
+    # Run verification
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    print_log
+}
+
 seed="--seed 200"
 maxlen=100
 
 finite="--checkFiniteCoverage"
 #finite=
 
-#floors=13
-#dir=elevator-$floors
-#call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite --coi
-#call_nusmv run --input test1.bin --measureCoverage --includeInternal $finite
-dexit
-
-floors=13
-dir=elevator-$floors
-# Synthesize tests
-call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $finite
-java -jar jars/print-test-suite.jar --input test1.bin -l PROMELA
-java -jar jars/print-test-suite.jar --input test1.bin -l NUSMV
-# Run tests
-call_spin run --input test1.bin --output out.pml --verify
-# Run verification
-call_nusmv closed-loop-verify --verbose --dynamic --coi
-
-exit
-
-
-for language in nusmv spin; do
-    for floors in 3 4 5; do
-        echo ">>> RUN $language $floors"
-        dir=elevator-$#floors
-
-        for minimize in "" "--minimize"; do
-            call_$language synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $minimize $finite
-
-            call_$language run --input test1.bin --measureCoverage --includeInternal $finite
-        done
-
-        call_$language closed-loop-verify --verbose 
-        call_$language generate-random --number 10 --length 10 --output test2.bin $seed
-        call_$language run --input test2.bin --verify --measureCoverage --includeInternal $finite
-    done
-done
-
-#call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test1.bin $minimize --plantCodeCoverage --controllerCodeCoverage 
-
+comparison 15
+#check_nusmv 5
+#check_spin 3

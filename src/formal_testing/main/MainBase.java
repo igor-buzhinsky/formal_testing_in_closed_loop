@@ -448,10 +448,9 @@ abstract class MainBase {
                 for (String prop : propsFromCode(code)) {
                     final RunnerResult result = runner.verify(prop, Integer.MAX_VALUE, !verbose);
                     System.out.println(result.measurement());
+                    System.out.println("*** " + prop + " = " + result.outcome() + " ***");
                     if (verbose) {
                         result.log().forEach(System.out::println);
-                    } else {
-                        System.out.println("*** " + prop + " = " + result.outcome() + " ***");
                     }
                 }
             }
