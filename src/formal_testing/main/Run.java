@@ -66,7 +66,7 @@ public class Run extends MainArgs {
         }
         if (verify) {
             System.out.println("Running verification for test suite " + filename + "...");
-            verifyAll(code, 0, verbose);
+            verifyAll(code, 0, verbose, null);
         }
         if (measureCoverage) {
             System.out.println("\nMeasuring coverage of test suite " + filename + "...");

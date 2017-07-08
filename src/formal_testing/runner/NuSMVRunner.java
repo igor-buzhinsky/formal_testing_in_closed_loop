@@ -43,7 +43,6 @@ public class NuSMVRunner extends Runner {
         try (PrintWriter pw = new PrintWriter(process.getOutputStream())) {
             pw.println("read_model\n" + "flatten_hierarchy\n" + "encode_variables\n" + "build_boolean_model\n" +
                     "bmc_setup\n" + "go_bmc\n" + "check_ltlspec_bmc_onepb -n 0 -l X -k " + steps + "\n" + "quit\n");
-            pw.flush();
         }
         try (final BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -53,13 +52,19 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private int run(List<String> result, boolean disableCounterexamples, int stepsLimit) throws IOException {
+    private int run(List<String> result, boolean disableCounterexamples, Integer stepsLimit, Integer verificationBMCK)
+            throws IOException {
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
                 ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
-        if (Settings.NUSMV_MODE == NuSMVMode.BMC && stepsLimit >= 0) {
+        if (verificationBMCK != null) {
+            // for ordinary verification
+            command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(verificationBMCK)));
+        } else if (Settings.NUSMV_MODE == NuSMVMode.BMC && stepsLimit != null) {
             if (!disableCounterexamples) {
+                // for test case synthesis
                 return runBatchBMC(result, stepsLimit);
             } else {
+                // for checking coverage
                 command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
             }
         }
@@ -83,10 +88,10 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    public List<String> verifyAll(boolean disableCounterexamples) throws IOException {
+    public List<String> verifyAll(boolean disableCounterexamples, Integer verificationBMCK) throws IOException {
         final List<String> result = new ArrayList<>();
         writeModel(null);
-        final int retCode = run(result, disableCounterexamples, -1);
+        final int retCode = run(result, disableCounterexamples, null, verificationBMCK);
         if (retCode == 124) {
             result.add("*** TIMEOUT ***");
         }
@@ -98,7 +103,7 @@ public class NuSMVRunner extends Runner {
         final RunnerResult result = new RunnerResult();
         writeModel(property);
         final List<String> log = new ArrayList<>();
-        final int retCode = run(log, disableCounterexample, stepsLimit);
+        final int retCode = run(log, disableCounterexample, stepsLimit, null);
         final String trailRegexp = "    " + trailRegexp();
         if (retCode == 124) {
             log.add("*** " + property + " : TIMEOUT ***");

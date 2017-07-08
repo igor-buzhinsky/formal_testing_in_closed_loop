@@ -13,11 +13,12 @@ call_spin() {
     echo
 }
 
+nusmv_spec_file=spec.smv
 call_nusmv() {
     local name="$1"
     echo " >>> $name"
     shift
-    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/spec.smv" -l NUSMV --nusmv_mode BMC $@ 2>&1
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" -l NUSMV --nusmv_mode BMC $@ 2>&1
     echo
 }
 
@@ -90,12 +91,23 @@ comparison() {
     print_log
 }
 
+bmc_verification() {
+    set_floors "$1"
+    echo
+    echo ">>> RUN bmc_verification $floors"
+    nusmv_spec_file=spec-ltl.smv
+    call_nusmv closed-loop-verify --verification_bmc_k "$2" --coi #> log
+    #print_log
+    nusmv_spec_file=spec.smv
+}
+
 seed="--seed 200"
 maxlen=100
 
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 15
+bmc_verification 15 25
+#comparison 15
 #check_nusmv 5
 #check_spin 3

@@ -15,6 +15,10 @@ public class ClosedLoopVerify extends MainArgs {
     @Option(name = "--verbose", handler = BooleanOptionHandler.class, usage = "verbose output")
     private boolean verbose;
 
+    @Option(name = "--verification_bmc_k",
+            usage = "if on, NuSMV LTL verification will be performed using BMC with given k", metaVar = "<k>")
+    private Integer verificationBMCK;
+
     public static void main(String[] args) throws IOException {
         new ClosedLoopVerify().run(args);
     }
@@ -23,6 +27,6 @@ public class ClosedLoopVerify extends MainArgs {
     protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
         final String code = modelCode(false, true, true, null, null, false, false, null);
-        verifyAll(code, timeout, verbose);
+        verifyAll(code, timeout, verbose, verificationBMCK);
     }
 }
