@@ -173,7 +173,7 @@ public class TestSuite implements Serializable {
                 actions.add(updates);
             }
             conditions.set(conditions.size() - 1, "else");
-            sb.append(":: ").append(trivial() ? "else" : ("test_index == " + i)).append(" ->\n    if\n");
+            sb.append(":: ").append(trivial() ? "else" : ("_test_index == " + i)).append(" ->\n    if\n");
             for (int j = 0; j < conditions.size(); j++) {
                 sb.append("    :: ").append(conditions.get(j)).append(" -> ").append(actions.get(j)).append("\n");
             }
