@@ -364,8 +364,8 @@ abstract class MainBase {
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
 
-        final String code = modelCode(false, false, false, tc.header(false), tc.body(false), plantCodeCoverage,
-                controllerCodeCoverage, null);
+        final String code = modelCode(false, false, false, tc.header(false), tc.body(false, data.conf),
+                plantCodeCoverage, controllerCodeCoverage, null);
 
         int newCovered = 0;
         final boolean negate = true;

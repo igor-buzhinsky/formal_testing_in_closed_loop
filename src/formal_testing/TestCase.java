@@ -57,8 +57,8 @@ public class TestCase implements Serializable {
         }
     }
 
-    public String body(boolean addOracle) {
-        return new TestSuite(addOracle, this).body();
+    public String body(boolean addOracle, Configuration conf) {
+        return new TestSuite(addOracle, this).body(conf);
     }
 
     @Override

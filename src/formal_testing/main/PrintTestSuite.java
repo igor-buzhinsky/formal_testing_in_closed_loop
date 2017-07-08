@@ -11,7 +11,7 @@ import java.io.PrintWriter;
 /**
  * Created by buzhinsky on 6/28/17.
  */
-public class PrintTestSuite extends MainBase {
+public class PrintTestSuite extends MainArgs {
     @Option(name = "--input", usage = "input filename", metaVar = "<filename>", required = true)
     private String filename;
 
@@ -42,7 +42,7 @@ public class PrintTestSuite extends MainBase {
             pw.println(ts.header());
         }
         try (PrintWriter pw = new PrintWriter(outputBody)) {
-            pw.println(ts.body());
+            pw.println(ts.body(data.conf));
         }
     }
 }

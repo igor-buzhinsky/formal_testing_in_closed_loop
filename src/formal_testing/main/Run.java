@@ -56,7 +56,7 @@ public class Run extends MainArgs {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final TestSuite ts = TestSuite.read(filename);
-        final String code = modelCode(true, false, true, ts.header(), ts.body(), false, false, null);
+        final String code = modelCode(true, false, true, ts.header(), ts.body(data.conf), false, false, null);
 
         if (outputFilename != null) {
             System.out.println("Writing formal model to " + outputFilename + "...");

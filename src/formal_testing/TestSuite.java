@@ -1,6 +1,7 @@
 package formal_testing;
 
 import formal_testing.enums.Language;
+import formal_testing.value.Value;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
@@ -44,8 +45,8 @@ public class TestSuite implements Serializable {
         return Settings.LANGUAGE == Language.PROMELA ? promelaHeader() : nuSMVHeader();
     }
 
-    public String body() {
-        return Settings.LANGUAGE == Language.PROMELA ? promelaBody() : nuSMVBody();
+    public String body(Configuration conf) {
+        return Settings.LANGUAGE == Language.PROMELA ? promelaBody(conf) : nuSMVBody();
     }
 
     private String promelaHeader() {
@@ -181,30 +182,42 @@ public class TestSuite implements Serializable {
         return sb.toString();
     }
 
-    private String promelaBody() {
+    private String promelaBody(Configuration conf) {
         // looping scenario
         final StringBuilder sb = new StringBuilder();
         final List<TestCase> list = new ArrayList<>(testCases);
 
         if (!trivial()) {
-            sb.append("if\n");
+            sb.append("if\n:: _test_index == -1 ->\n    if\n");
             for (int i = 0; i < list.size(); i++) {
-                sb.append(":: _test_index == -1 -> _test_index = ").append(i).append(";\n");
+                sb.append("    :: _test_index = ").append(i).append(";\n");
             }
-            sb.append(":: else -> ;\n").append("fi\n");
+            sb.append("    fi\n:: else -> ;\n").append("fi\n");
         }
 
         sb.append("if\n");
         for (int i = 0; i < list.size(); i++) {
             final TestCase tc = list.get(i);
+            sb.append(":: ").append("_test_index == ").append(i).append(" ->\n    if\n");
             for (int j = 0; j < tc.length(); j++) {
-                sb.append(":: ").append(trivial() ? "" : ("_test_index == " + i + " && "))
-                        .append("_test_step == ").append(j).append(" -> d_step { ");
+                final List<String> updates = new ArrayList<>();
+                sb.append("    :: _test_step == ").append(j).append(" -> ");
                 for (String varName : tc.values().keySet()) {
-                    sb.append(varName).append(" = ").append(tc.values().get(varName).get(j)).append("; ");
+                    final List<Value> values = tc.values().get(varName);
+                    final String initialValue = conf.byName(varName).initialValue().toString();
+                    final String lastValue = values.get(tc.length() - 1).toString();
+                    final String value = values.get(j).toString();
+                    final boolean omitInitial = j == 0 && value.equals(initialValue) && value.equals(lastValue);
+                    final boolean omitUsual = j > 0 && value.equals(values.get(j - 1).toString());
+                    if (!omitInitial && !omitUsual) {
+                        updates.add(varName + " = " + value + "; ");
+                    }
                 }
-                sb.append("}\n");
+                final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
+                        : updates.size() == 1 ? updates.get(0) : ";";
+                sb.append(strUpdates).append("\n");
             }
+            sb.append("    fi\n");
         }
         sb.append("fi\n");
         sb.append("d_step {\n");
