@@ -42,4 +42,11 @@ public class SetVariable extends Variable<SetValue> {
     public List<SetValue> values() {
         return Collections.unmodifiableList(values);
     }
+
+    @Override
+    public SetValue valueFromBits(List<Boolean> bits) {
+        final int requiredLength = (int) Math.round(Math.ceil(Math.log(values.size()) / Math.log(2)));
+        return values.get(intFromBits(requiredLength, bits));
+        // FIXME conversion may be different
+    }
 }

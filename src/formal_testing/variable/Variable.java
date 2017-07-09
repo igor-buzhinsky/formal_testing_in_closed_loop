@@ -82,4 +82,20 @@ public abstract class Variable<T extends Value> {
             return name + ": " + type + ";";
         }
     }
+
+    public abstract T valueFromBits(List<Boolean> bits);
+
+    int intFromBits(int requiredLength, List<Boolean> bits) {
+        if (bits.size() != 1) {
+            throw new RuntimeException("Invalid number of bits! Expected: " + requiredLength
+                    + ", given: " + bits.size());
+        }
+        int index = 0;
+        for (int i = 0; i < bits.size(); i++) {
+            if (bits.get(i)) {
+                index |= 1 << (bits.size() - i - 1);
+            }
+        }
+        return index;
+    }
 }
