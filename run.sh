@@ -32,8 +32,8 @@ print_log() {
     cat log | grep ">>>"
     cat log | grep "Covered points: "
     cat log | grep "Exception"
-    cat log | grep " = \\(true\\|false\\) \\*\\*\\*"
-    cat log | grep " specification " | sed 's/.* specification //g'
+    cat log | grep " = \\(true\\|false\\) \\*\\*\\*" | grep -v "pos" | grep -v "door" | grep -v "floor" | grep -v "test_passed"
+    cat log | grep " specification " | sed 's/.* specification //g' | grep -v "is true"
 }
 
 check_spin() {
@@ -76,6 +76,16 @@ check_nusmv() {
     print_log
 }
 
+bmc_verification() {
+    set_floors "$1"
+    echo
+    echo ">>> RUN bmc_verification $floors $2"
+    nusmv_spec_file=spec-ltl.smv
+    call_nusmv closed-loop-verify --verification_bmc_k "$2" --coi > log
+    print_log
+    nusmv_spec_file=spec.smv
+}
+
 comparison() {
     set_floors "$1"
     echo
@@ -90,17 +100,10 @@ comparison() {
     # Run verification
     call_nusmv closed-loop-verify --verbose --dynamic --coi > log
     print_log
+    bmc_verification $floors $floors
+    bmc_verification $floors $((floors * 2))
 }
 
-bmc_verification() {
-    set_floors "$1"
-    echo
-    echo ">>> RUN bmc_verification $floors"
-    nusmv_spec_file=spec-ltl.smv
-    call_nusmv closed-loop-verify --verification_bmc_k "$2" --coi #> log
-    #print_log
-    nusmv_spec_file=spec.smv
-}
 
 seed="--seed 200"
 maxlen=100
@@ -108,7 +111,7 @@ maxlen=100
 finite="--checkFiniteCoverage"
 #finite=
 
+#comparison 16
 #bmc_verification 15 30
-comparison 15
 #check_nusmv 5
-#check_spin 3
+check_spin 3

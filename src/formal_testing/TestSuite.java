@@ -70,24 +70,7 @@ public class TestSuite implements Serializable {
 
         for (String varName : list.get(0).values().keySet()) {
             sb.append("    next(").append(varName).append(") := case\n");
-            final Map<String, Map<Integer, Set<Integer>>> buckets = new TreeMap<>();
-            for (int i = 0; i < list.size(); i++) {
-                final TestCase tc = list.get(i);
-                for (int j = 0; j < tc.length(); j++) {
-                    final String value = tc.values().get(varName).get(j).toString();
-                    Map<Integer, Set<Integer>> bucket = buckets.get(value);
-                    if (bucket == null) {
-                        bucket = new TreeMap<>();
-                        buckets.put(value, bucket);
-                    }
-                    Set<Integer> valueSet = bucket.get(i);
-                    if (valueSet == null) {
-                        valueSet = new TreeSet<>();
-                        bucket.put(i, valueSet);
-                    }
-                    valueSet.add(j);
-                }
-            }
+            final Map<String, Map<Integer, Set<Integer>>> buckets = valueBuckets(list, varName);
             final List<String> allValues = new ArrayList<>(buckets.keySet());
             for (Map.Entry<String, Map<Integer, Set<Integer>>> entry : buckets.entrySet()) {
                 final String value = entry.getKey();
@@ -123,6 +106,8 @@ public class TestSuite implements Serializable {
         return sb.toString();
     }
 
+    private static final boolean ALTERNATIVE_PROMELA_UPDATES = true;
+
     private String promelaBody(Configuration conf) {
         // looping scenario
         final StringBuilder sb = new StringBuilder();
@@ -136,50 +121,73 @@ public class TestSuite implements Serializable {
             sb.append("    fi\n:: else -> ;\n").append("fi\n");
         }
 
-        sb.append("if\n");
-        for (int i = 0; i < list.size(); i++) {
-            final TestCase tc = list.get(i);
-
-            final Map<String, Set<Integer>> buckets = new TreeMap<>();
-            for (int j = 0; j < tc.length(); j++) {
-                final List<String> updates = new ArrayList<>();
-                for (String varName : tc.values().keySet()) {
-                    final List<Value> values = tc.values().get(varName);
-                    final String initialValue = conf.byName(varName).initialValue().toString();
-                    final String lastValue = values.get(tc.length() - 1).toString();
-                    final String value = values.get(j).toString();
-                    final boolean omitInitial = j == 0 && value.equals(initialValue) && value.equals(lastValue);
-                    final boolean omitUsual = j > 0 && value.equals(values.get(j - 1).toString());
-                    if (!omitInitial && !omitUsual) {
-                        updates.add(varName + " = " + value + "; ");
+        if (ALTERNATIVE_PROMELA_UPDATES) {
+            for (String varName : list.get(0).values().keySet()) {
+                sb.append("if\n");
+                final Map<String, Map<Integer, Set<Integer>>> buckets = valueBuckets(list, varName);
+                final List<String> allValues = new ArrayList<>(buckets.keySet());
+                for (Map.Entry<String, Map<Integer, Set<Integer>>> entry : buckets.entrySet()) {
+                    final String value = entry.getKey();
+                    final Map<Integer, Set<Integer>> bucket = entry.getValue();
+                    if (bucket.isEmpty()) {
+                        continue;
                     }
+                    final String condition = value.equals(allValues.get(allValues.size() - 1)) ? "else"
+                            : String.join(" || ", bucket.entrySet().stream()
+                            .map(e -> (trivial() ? "" : ("_test_index == " + e.getKey() + " && "))
+                                    + Util.expressWithIntervalsSPIN(e.getValue(), "_test_step")).collect(Collectors.toList()));
+                    sb.append(":: ").append(condition).append(" -> ").append(varName).append(" = ").append(value)
+                            .append(";\n");
                 }
-                final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
-                        : updates.size() == 1 ? updates.get(0) : ";";
-                Set<Integer> steps = buckets.get(strUpdates);
-                if (steps == null) {
-                    steps = new TreeSet<>();
-                    buckets.put(strUpdates, steps);
-                }
-                steps.add(j);
+                sb.append("fi\n");
             }
+        } else {
+            sb.append("if\n");
+            for (int i = 0; i < list.size(); i++) {
+                final TestCase tc = list.get(i);
 
-            final List<String> conditions = new ArrayList<>();
-            final List<String> actions = new ArrayList<>();
-            for (Map.Entry<String, Set<Integer>> entry : buckets.entrySet()) {
-                final String updates = entry.getKey();
-                final Set<Integer> steps = entry.getValue();
-                conditions.add(Util.expressWithIntervalsSPIN(steps, "_test_step"));
-                actions.add(updates);
+                final Map<String, Set<Integer>> buckets = new TreeMap<>();
+                for (int j = 0; j < tc.length(); j++) {
+                    final List<String> updates = new ArrayList<>();
+                    for (String varName : tc.values().keySet()) {
+                        final List<Value> values = tc.values().get(varName);
+                        final String initialValue = conf.byName(varName).initialValue().toString();
+                        final String lastValue = values.get(tc.length() - 1).toString();
+                        final String value = values.get(j).toString();
+                        final boolean omitInitial = j == 0 && value.equals(initialValue) && value.equals(lastValue);
+                        final boolean omitUsual = j > 0 && value.equals(values.get(j - 1).toString());
+                        if (!omitInitial && !omitUsual) {
+                            updates.add(varName + " = " + value + "; ");
+                        }
+                    }
+                    final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
+                            : updates.size() == 1 ? updates.get(0) : ";";
+                    Set<Integer> steps = buckets.get(strUpdates);
+                    if (steps == null) {
+                        steps = new TreeSet<>();
+                        buckets.put(strUpdates, steps);
+                    }
+                    steps.add(j);
+                }
+
+                final List<String> conditions = new ArrayList<>();
+                final List<String> actions = new ArrayList<>();
+                for (Map.Entry<String, Set<Integer>> entry : buckets.entrySet()) {
+                    final String updates = entry.getKey();
+                    final Set<Integer> steps = entry.getValue();
+                    conditions.add(Util.expressWithIntervalsSPIN(steps, "_test_step"));
+                    actions.add(updates);
+                }
+                conditions.set(conditions.size() - 1, "else");
+                sb.append(":: ").append(trivial() ? "else" : ("_test_index == " + i)).append(" ->\n    if\n");
+                for (int j = 0; j < conditions.size(); j++) {
+                    sb.append("    :: ").append(conditions.get(j)).append(" -> ").append(actions.get(j)).append("\n");
+                }
+                sb.append("    fi\n");
             }
-            conditions.set(conditions.size() - 1, "else");
-            sb.append(":: ").append(trivial() ? "else" : ("_test_index == " + i)).append(" ->\n    if\n");
-            for (int j = 0; j < conditions.size(); j++) {
-                sb.append("    :: ").append(conditions.get(j)).append(" -> ").append(actions.get(j)).append("\n");
-            }
-            sb.append("    fi\n");
+            sb.append("fi\n");
         }
-        sb.append("fi\nd_step {\n");
+        sb.append("d_step {\n");
         if (trivial()) {
             sb.append("    _test_step = (_test_step + 1) % ").append(list.get(0).length()).append(";\n");
         } else {
@@ -198,6 +206,28 @@ public class TestSuite implements Serializable {
         sb.append(addOracle ? "    _test_passed = (_test_step == 0 -> 1 : _test_passed);\n" : "")
                 .append("}\n");
         return sb.toString();
+    }
+
+    private Map<String, Map<Integer, Set<Integer>>> valueBuckets(List<TestCase> list, String varName) {
+        final Map<String, Map<Integer, Set<Integer>>> buckets = new TreeMap<>();
+        for (int i = 0; i < list.size(); i++) {
+            final TestCase tc = list.get(i);
+            for (int j = 0; j < tc.length(); j++) {
+                final String value = tc.values().get(varName).get(j).toString();
+                Map<Integer, Set<Integer>> bucket = buckets.get(value);
+                if (bucket == null) {
+                    bucket = new TreeMap<>();
+                    buckets.put(value, bucket);
+                }
+                Set<Integer> valueSet = bucket.get(i);
+                if (valueSet == null) {
+                    valueSet = new TreeSet<>();
+                    bucket.put(i, valueSet);
+                }
+                valueSet.add(j);
+            }
+        }
+        return buckets;
     }
 
     private Map<Integer, Set<Integer>> lengthBuckets(List<TestCase> list) {
