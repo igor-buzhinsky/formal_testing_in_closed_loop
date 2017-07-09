@@ -11,7 +11,11 @@ import java.util.stream.Collectors;
  */
 public class Util {
     public static String indent(String str) {
-        return String.join("\n", Arrays.stream(str.split("\n")).map(s -> "    " + s).collect(Collectors.toList()));
+        return indent(str, "    ");
+    }
+
+    static String indent(String str, String indent) {
+        return String.join("\n", Arrays.stream(str.split("\n")).map(s -> indent + s).collect(Collectors.toList()));
     }
 
     public static <T> List<T> merge(List<List<T>> list) {

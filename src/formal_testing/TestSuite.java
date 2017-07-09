@@ -135,16 +135,17 @@ public class TestSuite implements Serializable {
                     final String condition = value.equals(allValues.get(allValues.size() - 1)) ? "else"
                             : String.join(" || ", bucket.entrySet().stream()
                             .map(e -> (trivial() ? "" : ("_test_index == " + e.getKey() + " && ("))
-                                    + Util.expressWithIntervalsSPIN(e.getValue(), "_test_step") + ")").collect(Collectors.toList()));
+                                    + Util.expressWithIntervalsSPIN(e.getValue(), "_test_step") + ")")
+                            .collect(Collectors.toList()));
                     sb.append(":: ").append(condition).append(" -> ").append(varName).append(" = ").append(value)
                             .append(";\n");
                 }
                 sb.append("fi\n");
             }
         } else {
-            sb.append("if\n");
-            for (int i = 0; i < list.size(); i++) {
-                final TestCase tc = list.get(i);
+            final List<String> strTests = new ArrayList<>();
+            for (TestCase tc : list) {
+                final StringBuilder testBuilder = new StringBuilder();
 
                 final Map<String, Set<Integer>> buckets = new TreeMap<>();
                 for (int j = 0; j < tc.length(); j++) {
@@ -179,13 +180,15 @@ public class TestSuite implements Serializable {
                     actions.add(updates);
                 }
                 conditions.set(conditions.size() - 1, "else");
-                sb.append(":: ").append(trivial() ? "else" : ("_test_index == " + i)).append(" ->\n    if\n");
+                testBuilder.append("if\n");
                 for (int j = 0; j < conditions.size(); j++) {
-                    sb.append("    :: ").append(conditions.get(j)).append(" -> ").append(actions.get(j)).append("\n");
+                    testBuilder.append(":: ").append(conditions.get(j)).append(" -> ").append(actions.get(j))
+                            .append("\n");
                 }
-                sb.append("    fi\n");
+                testBuilder.append("fi\n");
+                strTests.add(testBuilder.toString());
             }
-            sb.append("fi\n");
+            logarithmicTestIndexChoice(sb, strTests);
         }
         /*sb.append("d_step {\n");
         if (trivial()) {
@@ -225,6 +228,25 @@ public class TestSuite implements Serializable {
         sb.append(addOracle ? "    now._test_passed |= now._test_step == 0;\n" : "")
                 .append("}\n");
         return sb.toString();
+    }
+
+    private void logarithmicTestIndexChoice(StringBuilder sb, List<String> innerParts) {
+        logarithmicTestIndexChoice(sb, innerParts, 0, innerParts.size(), 0);
+    }
+
+    private void logarithmicTestIndexChoice(StringBuilder sb, List<String> innerParts, int start, int end, int depth) {
+        final String indent = String.join("", Collections.nCopies(depth, "    "));
+        if (end - start == 1) {
+            sb.append(Util.indent(innerParts.get(start), indent)).append("\n");
+        } else {
+            final int mid = (end + start) / 2;
+            sb.append(indent).append("if\n");
+            sb.append(indent).append(":: ").append("_test_index < ").append(mid).append(" ->\n");
+            logarithmicTestIndexChoice(sb, innerParts, start, mid, depth + 1);
+            sb.append(indent).append(":: else ->\n");
+            logarithmicTestIndexChoice(sb, innerParts, mid, end, depth + 1);
+            sb.append(indent).append("fi\n");
+        }
     }
 
     private Map<String, Map<Integer, Set<Integer>>> valueBuckets(List<TestCase> list, String varName) {
