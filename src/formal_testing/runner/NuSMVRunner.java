@@ -42,7 +42,7 @@ public class NuSMVRunner extends Runner {
         process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
         try (PrintWriter pw = new PrintWriter(process.getOutputStream())) {
             pw.println("read_model\n" + "flatten_hierarchy\n" + "encode_variables\n" + "build_boolean_model\n" +
-                    "bmc_setup\n" + "go_bmc\n" + "check_ltlspec_bmc_onepb -n 0 -l X -k " + steps + "\n" + "quit\n");
+                    "bmc_setup\n" + "go_bmc\n" + "check_ltlspec_bmc_onepb -o out.dimacs -n 0 -l X -k " + steps + "\n" + "quit\n");
         }
         try (final BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {

@@ -111,7 +111,7 @@ maxlen=100
 finite="--checkFiniteCoverage"
 #finite=
 
-#comparison 16
+comparison 16
 #bmc_verification 15 30
 #check_nusmv 5
-check_spin 3
+#check_spin 3

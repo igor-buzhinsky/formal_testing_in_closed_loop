@@ -106,7 +106,7 @@ public class TestSuite implements Serializable {
         return sb.toString();
     }
 
-    private static final boolean ALTERNATIVE_PROMELA_UPDATES = true;
+    private static final boolean ALTERNATIVE_PROMELA_UPDATES = false;
 
     private String promelaBody(Configuration conf) {
         // looping scenario
@@ -134,8 +134,8 @@ public class TestSuite implements Serializable {
                     }
                     final String condition = value.equals(allValues.get(allValues.size() - 1)) ? "else"
                             : String.join(" || ", bucket.entrySet().stream()
-                            .map(e -> (trivial() ? "" : ("_test_index == " + e.getKey() + " && "))
-                                    + Util.expressWithIntervalsSPIN(e.getValue(), "_test_step")).collect(Collectors.toList()));
+                            .map(e -> (trivial() ? "" : ("_test_index == " + e.getKey() + " && ("))
+                                    + Util.expressWithIntervalsSPIN(e.getValue(), "_test_step") + ")").collect(Collectors.toList()));
                     sb.append(":: ").append(condition).append(" -> ").append(varName).append(" = ").append(value)
                             .append(";\n");
                 }
@@ -187,7 +187,7 @@ public class TestSuite implements Serializable {
             }
             sb.append("fi\n");
         }
-        sb.append("d_step {\n");
+        /*sb.append("d_step {\n");
         if (trivial()) {
             sb.append("    _test_step = (_test_step + 1) % ").append(list.get(0).length()).append(";\n");
         } else {
@@ -204,6 +204,25 @@ public class TestSuite implements Serializable {
             sb.append("    fi\n");
         }
         sb.append(addOracle ? "    _test_passed = (_test_step == 0 -> 1 : _test_passed);\n" : "")
+                .append("}\n");*/
+        sb.append("c_code {\n");
+        sb.append("    now._test_step++;\n");
+        if (trivial()) {
+            sb.append("    now._test_step %= ").append(list.get(0).length()).append(";\n");
+        } else {
+            sb.append("    switch (now._test_index) {\n");
+            final Map<Integer, Set<Integer>> lengthBuckets = lengthBuckets(list);
+            for (Map.Entry<Integer, Set<Integer>> e : lengthBuckets.entrySet()) {
+                sb.append("        ");
+                final int length = e.getKey();
+                for (int index : e.getValue()) {
+                    sb.append("case ").append(index).append(": ");
+                }
+                sb.append("now._test_step %= ").append(length).append("; break;\n");
+            }
+            sb.append("    }\n");
+        }
+        sb.append(addOracle ? "    now._test_passed |= now._test_step == 0;\n" : "")
                 .append("}\n");
         return sb.toString();
     }
