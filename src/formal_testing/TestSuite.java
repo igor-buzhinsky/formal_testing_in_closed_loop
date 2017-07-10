@@ -107,6 +107,7 @@ public class TestSuite implements Serializable {
     }
 
     private static final boolean ALTERNATIVE_PROMELA_UPDATES = false;
+    private static final boolean LOGARITHMIC_LENGTH_EXPANSION_IN_PROMELA = false;
 
     private String promelaBody(Configuration conf) {
         // looping scenario
@@ -147,48 +148,70 @@ public class TestSuite implements Serializable {
             for (TestCase tc : list) {
                 final StringBuilder testBuilder = new StringBuilder();
 
-                final Map<String, Set<Integer>> buckets = new TreeMap<>();
-                for (int j = 0; j < tc.length(); j++) {
-                    final List<String> updates = new ArrayList<>();
-                    for (String varName : tc.values().keySet()) {
-                        final List<Value> values = tc.values().get(varName);
-                        final String initialValue = conf.byName(varName).initialValue().toString();
-                        final String lastValue = values.get(tc.length() - 1).toString();
-                        final String value = values.get(j).toString();
-                        final boolean omitInitial = j == 0 && value.equals(initialValue) && value.equals(lastValue);
-                        final boolean omitUsual = j > 0 && value.equals(values.get(j - 1).toString());
-                        if (!omitInitial && !omitUsual) {
-                            updates.add(varName + " = " + value + "; ");
+                if (LOGARITHMIC_LENGTH_EXPANSION_IN_PROMELA) {
+                    final List<String> parts = new ArrayList<>();
+                    for (int j = 0; j < tc.length(); j++) {
+                        final List<String> updates = new ArrayList<>();
+                        for (String varName : tc.values().keySet()) {
+                            final List<Value> values = tc.values().get(varName);
+                            final String initialValue = conf.byName(varName).initialValue().toString();
+                            final String lastValue = values.get(tc.length() - 1).toString();
+                            final String value = values.get(j).toString();
+                            final boolean omitInitial = j == 0 && value.equals(initialValue) && value.equals(lastValue);
+                            final boolean omitUsual = j > 0 && value.equals(values.get(j - 1).toString());
+                            if (!omitInitial && !omitUsual) {
+                                updates.add(varName + " = " + value + "; ");
+                            }
                         }
+                        final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
+                                : updates.size() == 1 ? updates.get(0) : ";";
+                        parts.add(strUpdates);
                     }
-                    final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
-                            : updates.size() == 1 ? updates.get(0) : ";";
-                    Set<Integer> steps = buckets.get(strUpdates);
-                    if (steps == null) {
-                        steps = new TreeSet<>();
-                        buckets.put(strUpdates, steps);
+                    logarithmicValueChoice(testBuilder, parts, "_test_step");
+                } else {
+                    final Map<String, Set<Integer>> buckets = new TreeMap<>();
+                    for (int j = 0; j < tc.length(); j++) {
+                        final List<String> updates = new ArrayList<>();
+                        for (String varName : tc.values().keySet()) {
+                            final List<Value> values = tc.values().get(varName);
+                            final String initialValue = conf.byName(varName).initialValue().toString();
+                            final String lastValue = values.get(tc.length() - 1).toString();
+                            final String value = values.get(j).toString();
+                            final boolean omitInitial = j == 0 && value.equals(initialValue) && value.equals(lastValue);
+                            final boolean omitUsual = j > 0 && value.equals(values.get(j - 1).toString());
+                            if (!omitInitial && !omitUsual) {
+                                updates.add(varName + " = " + value + "; ");
+                            }
+                        }
+                        final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
+                                : updates.size() == 1 ? updates.get(0) : ";";
+                        Set<Integer> steps = buckets.get(strUpdates);
+                        if (steps == null) {
+                            steps = new TreeSet<>();
+                            buckets.put(strUpdates, steps);
+                        }
+                        steps.add(j);
                     }
-                    steps.add(j);
-                }
 
-                final List<String> conditions = new ArrayList<>();
-                final List<String> actions = new ArrayList<>();
-                for (Map.Entry<String, Set<Integer>> entry : buckets.entrySet()) {
-                    final String updates = entry.getKey();
-                    final Set<Integer> steps = entry.getValue();
-                    conditions.add(Util.expressWithIntervalsSPIN(steps, "_test_step"));
-                    actions.add(updates);
+                    final List<String> conditions = new ArrayList<>();
+                    final List<String> actions = new ArrayList<>();
+                    for (Map.Entry<String, Set<Integer>> entry : buckets.entrySet()) {
+                        final String updates = entry.getKey();
+                        final Set<Integer> steps = entry.getValue();
+                        conditions.add(Util.expressWithIntervalsSPIN(steps, "_test_step"));
+                        actions.add(updates);
+                    }
+                    conditions.set(conditions.size() - 1, "else");
+                    testBuilder.append("if\n");
+                    for (int j = 0; j < conditions.size(); j++) {
+                        testBuilder.append(":: ").append(conditions.get(j)).append(" -> ").append(actions.get(j))
+                                .append("\n");
+                    }
+                    testBuilder.append("fi\n");
                 }
-                conditions.set(conditions.size() - 1, "else");
-                testBuilder.append("if\n");
-                for (int j = 0; j < conditions.size(); j++) {
-                    testBuilder.append(":: ").append(conditions.get(j)).append(" -> ").append(actions.get(j))
-                            .append("\n");
-                }
-                testBuilder.append("fi\n");
                 strTests.add(testBuilder.toString());
             }
-            logarithmicTestIndexChoice(sb, strTests);
+            logarithmicValueChoice(sb, strTests, "_test_index");
         }
         /*sb.append("d_step {\n");
         if (trivial()) {
@@ -230,21 +253,22 @@ public class TestSuite implements Serializable {
         return sb.toString();
     }
 
-    private void logarithmicTestIndexChoice(StringBuilder sb, List<String> innerParts) {
-        logarithmicTestIndexChoice(sb, innerParts, 0, innerParts.size(), 0);
+    private void logarithmicValueChoice(StringBuilder sb, List<String> innerParts, String varName) {
+        logarithmicValueChoice(sb, innerParts, varName, 0, innerParts.size(), 0);
     }
 
-    private void logarithmicTestIndexChoice(StringBuilder sb, List<String> innerParts, int start, int end, int depth) {
+    private void logarithmicValueChoice(StringBuilder sb, List<String> innerParts, String varName, int start, int end,
+                                        int depth) {
         final String indent = String.join("", Collections.nCopies(depth, "    "));
         if (end - start == 1) {
             sb.append(Util.indent(innerParts.get(start), indent)).append("\n");
         } else {
             final int mid = (end + start) / 2;
             sb.append(indent).append("if\n");
-            sb.append(indent).append(":: ").append("_test_index < ").append(mid).append(" ->\n");
-            logarithmicTestIndexChoice(sb, innerParts, start, mid, depth + 1);
+            sb.append(indent).append(":: ").append(varName).append(" < ").append(mid).append(" ->\n");
+            logarithmicValueChoice(sb, innerParts, varName, start, mid, depth + 1);
             sb.append(indent).append(":: else ->\n");
-            logarithmicTestIndexChoice(sb, innerParts, mid, end, depth + 1);
+            logarithmicValueChoice(sb, innerParts, varName, mid, end, depth + 1);
             sb.append(indent).append("fi\n");
         }
     }

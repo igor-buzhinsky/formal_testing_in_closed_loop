@@ -91,9 +91,9 @@ comparison() {
     echo
     echo ">>> RUN comparison $floors"
     # Synthesize tests
-    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $finite > log
-    print_log
-    print_test_suite test.bin > /dev/null
+    #call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $finite > log
+    #print_log
+    #print_test_suite test.bin > /dev/null
     # Run tests
     call_spin run --input test.bin --verify --output out.pml $finite --panO 0 > log
     print_log
@@ -111,7 +111,7 @@ maxlen=100
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 20
+comparison 16
 #bmc_verification 15 30
 #check_nusmv 3
 #check_spin 3
