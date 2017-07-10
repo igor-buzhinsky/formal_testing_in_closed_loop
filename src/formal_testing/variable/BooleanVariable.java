@@ -42,12 +42,4 @@ public class BooleanVariable extends Variable<BooleanValue> {
     public List<BooleanValue> values() {
         return Arrays.asList(BooleanValue.FALSE, BooleanValue.TRUE);
     }
-
-    @Override
-    public BooleanValue valueFromBits(List<Boolean> bits) {
-        if (bits.size() != 1) {
-            throw new RuntimeException("Invalid number of bits! Expected: 1, given: " + bits.size());
-        }
-        return bits.get(0) ? BooleanValue.TRUE : BooleanValue.FALSE;
-    }
 }

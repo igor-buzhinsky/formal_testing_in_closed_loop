@@ -7,13 +7,12 @@ import formal_testing.TestCase;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.enums.Language;
 import formal_testing.enums.NuSMVMode;
-import formal_testing.value.Value;
-import formal_testing.variable.Variable;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by buzhinsky on 6/30/17.
@@ -35,111 +34,6 @@ public class NuSMVRunner extends Runner {
                 pw.println(property);
             }
         }
-    }
-
-    private static class VarMapping {
-        final int cnfVarIndex;
-        final int time;
-        final String indexedVarName;
-        final int bitIndex;
-        Boolean value;
-
-        VarMapping(String line) {
-            final String[] tokens = line.split(" +");
-            cnfVarIndex = Integer.parseInt(tokens[3]);
-            time = Integer.parseInt(tokens[6].replace(",", ""));
-            final String name = tokens[9];
-            final String[] moreTokens = name.split("\\.");
-            indexedVarName = moreTokens[0];
-            bitIndex = moreTokens.length == 2 ? Integer.parseInt(moreTokens[1]) : 0;
-        }
-
-        @Override
-        public String toString() {
-            return cnfVarIndex + " -> @" + time + " " + indexedVarName + "." + bitIndex + " = " + value;
-        }
-    }
-
-    private int counterexampleFromBMC(List<String> result, int k) throws IOException {
-        final String filename = k + ".dimacs";
-        final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
-                ResourceMeasurement.FORMAT, "cryptominisat4", filename));
-        process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
-
-        final List<String> ansLines = new ArrayList<>();
-
-        try (final BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            reader.lines().filter(line -> !line.isEmpty() && line.charAt(0) == 'v').forEach(ansLines::add);
-        }
-        if (ansLines.isEmpty()) {
-            result.add("-- no counterexample found with bound " + k);
-        } else {
-            final List<VarMapping> mappings = new ArrayList<>();
-            try (final BufferedReader reader = new BufferedReader(new FileReader(dirName + "/" + filename))) {
-                reader.lines().filter(line -> !line.isEmpty() && line.startsWith("c CNF variable"))
-                        .forEach(line -> mappings.add(new VarMapping(line)));
-            }
-            final Map<Integer, VarMapping> cnfVarToMapping = new HashMap<>();
-            mappings.forEach(m -> cnfVarToMapping.put(m.cnfVarIndex, m));
-            for (String line : ansLines) {
-                final String[] tokens = line.split(" +");
-                for (int i = 1; i < tokens.length; i++) {
-                    final String token = tokens[i];
-                    final boolean on = !token.contains("-");
-                    final int cnfIndex = Integer.parseInt(token.replace("-", ""));
-                    if (cnfVarToMapping.containsKey(cnfIndex)) {
-                        cnfVarToMapping.get(cnfIndex).value = on;
-                    }
-                }
-            }
-            //System.out.println(cnfVarToMapping);
-
-            // from the largest to the smallest
-            final Map<Pair<Integer, String>, List<Boolean>> bits = new HashMap<>();
-            for (VarMapping m : mappings) {
-                final Pair<Integer, String> p = Pair.of(m.time, m.indexedVarName);
-                List<Boolean> list = bits.get(p);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    bits.put(p, list);
-                }
-                while (list.size() <= m.bitIndex) {
-                    list.add(null);
-                }
-                list.set(m.bitIndex, m.value);
-            }
-            //System.out.println(bits);
-
-            result.add("-- specification  is false");
-
-            for (int i = 0; i <= k; i++) {
-                result.add("  -> State: 0." + i + " <-");
-                for (Variable<?> var : data.conf.nondetVars) {
-                    final List<Boolean> bitList = bits.get(Pair.of(i, var.indexedName()));
-                    final Value value = var.valueFromBits(bitList);
-                    result.add("    " + var.indexedName() + " = " + value);
-                }
-            }
-        }
-
-        inspectResourceConsumption(result);
-        return waitFor();
-    }
-
-    private int runBatchBMC_alternative_slow(List<String> result, int steps) throws IOException {
-        final String language = Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv";
-        final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
-                ResourceMeasurement.FORMAT, language, "-df", "-cpp", "-int"));
-        command.add(MODEL_FILENAME);
-
-        process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
-        try (PrintWriter pw = new PrintWriter(process.getOutputStream())) {
-            pw.println("read_model\n" + "flatten_hierarchy\n" + "encode_variables\n" + "build_boolean_model\n" +
-                    "bmc_setup\n" + "go_bmc\n" + "gen_ltlspec_bmc -o @k -n 0 -l X -k " + steps + "\n" + "quit\n");
-        }
-        waitFor();
-        return counterexampleFromBMC(result, steps);
     }
 
     private int runBatchBMC(List<String> result, int steps) throws IOException {

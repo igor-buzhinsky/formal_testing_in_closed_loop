@@ -53,11 +53,4 @@ public class IntegerVariable extends Variable<IntegerValue> {
         }
         return values;
     }
-
-    @Override
-    public IntegerValue valueFromBits(List<Boolean> bits) {
-        final int requiredLength = (int) Math.round(Math.ceil(Math.log(max - min + 1) / Math.log(2)));
-        return new IntegerValue(min + intFromBits(requiredLength, bits));
-        // FIXME conversion may be different
-    }
 }

@@ -98,10 +98,10 @@ comparison() {
     call_spin run --input test.bin --verify --output out.pml $finite --panO 0 > log
     print_log
     # Run verification
-    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
-    print_log
     bmc_verification $floors $floors
     bmc_verification $floors $((floors * 2))
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    print_log
 }
 
 
@@ -111,7 +111,7 @@ maxlen=100
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 3
+comparison 20
 #bmc_verification 15 30
 #check_nusmv 3
 #check_spin 3
