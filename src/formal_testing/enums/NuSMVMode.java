@@ -4,7 +4,11 @@ package formal_testing.enums;
  * Created by buzhinsky on 7/6/17.
  */
 public enum NuSMVMode {
-    LTL("X", "F", "LTLSPEC"), BMC("X", "F", "LTLSPEC"), CTL("AX", "AF", "CTLSPEC");
+    LINEAR_BMC("X", "F", "LTLSPEC"),
+    EXPONENTIAL_BMC("X", "F", "LTLSPEC"),
+    INVARSPEC_BMC("next", null, "INVARSPEC"),
+    FINITE_CTL("AX", "AF", "CTLSPEC"),
+    INFINITE_CTL("AX", "AF", "CTLSPEC");
 
     public final String xOperator;
     public final String fOperator;

@@ -22,9 +22,9 @@ public class NuSMVRunner extends Runner {
 
     private static final String MODEL_FILENAME = "model.smv";
 
-    NuSMVRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps, boolean claimNegate,
-                int timeout) throws IOException {
-        super(data, timeout, "nusmvdir." + NUSMV_DIR_INDEX++, modelCode, coveragePoints, claimSteps, claimNegate);
+    NuSMVRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxLength)
+            throws IOException {
+        super(data, "nusmvdir." + NUSMV_DIR_INDEX++, modelCode, coveragePoints, maxLength);
     }
 
     private void writeModel(String property) throws FileNotFoundException {
@@ -36,16 +36,24 @@ public class NuSMVRunner extends Runner {
         }
     }
 
-    private int runBatchBMC(List<String> result, int steps) throws IOException {
+    private int runBatchBMC(List<String> result, int timeout, String solveCommand, boolean coi) throws IOException {
         final String language = Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv";
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
                 ResourceMeasurement.FORMAT, language, "-df", "-cpp", "-int"));
+        if (coi) {
+            command.add("-coi");
+        }
         command.add(MODEL_FILENAME);
-
         process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
         try (PrintWriter pw = new PrintWriter(process.getOutputStream())) {
-            pw.println("read_model\n" + "flatten_hierarchy\n" + "encode_variables\n" + "build_boolean_model\n" +
-                    "bmc_setup\n" + "go_bmc\n" + "check_ltlspec_bmc_onepb -n 0 -l X -k " + steps + "\n" + "quit\n");
+            pw.println("read_model\n"
+                    + "flatten_hierarchy\n"
+                    + "encode_variables\n"
+                    + "build_boolean_model\n"
+                    + "bmc_setup\n"
+                    + "go_bmc\n"
+                    + solveCommand + "\n"
+                    + "quit\n");
         }
         try (final BufferedReader reader = new BufferedReader(
                 new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -55,21 +63,23 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private int run(List<String> result, boolean disableCounterexamples, Integer stepsLimit, Integer verificationBMCK)
-            throws IOException {
+    private int runBMCFixed(List<String> result, int k) throws IOException {
+        return runBatchBMC(result, 0, "check_ltlspec_bmc_onepb -n 0 -l X -k " + k, Settings.NUSMV_COI);
+    }
+
+    private int runBMCIterative(List<String> result, int k) throws IOException {
+        return runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
+    }
+
+    private int runBMCInvarspec(List<String> result, int k) throws IOException {
+        return runBatchBMC(result, 0, "check_invar_bmc -n 0 -a een-sorensson -k " + k, Settings.NUSMV_COI);
+    }
+
+    private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout) throws IOException {
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
                 ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
-        if (verificationBMCK != null) {
-            // for ordinary verification
-            command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(verificationBMCK)));
-        } else if (Settings.NUSMV_MODE == NuSMVMode.BMC && stepsLimit != null) {
-            if (!disableCounterexamples) {
-                // for test case synthesis
-                return runBatchBMC(result, stepsLimit);
-            } else {
-                // for checking coverage
-                command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(stepsLimit)));
-            }
+        if (nusmvBMCK != null) {
+            command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(nusmvBMCK)));
         }
         if (disableCounterexamples) {
             command.add("-dcx");
@@ -91,70 +101,130 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    public List<String> verifyAll(boolean disableCounterexamples, Integer verificationBMCK) throws IOException {
-        final List<String> result = new ArrayList<>();
-        writeModel(null);
-        final int retCode = run(result, disableCounterexamples, null, verificationBMCK);
-        if (retCode == 124) {
-            result.add("*** TIMEOUT ***");
+    private final String notFound = Settings.NUSMV_INVARSPEC
+            ? "-- no proof or counterexample found with bound "
+            : "-- no counterexample found with bound ";
+
+    @Override
+    public RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException {
+        final String trailRegexp = "    " + trailRegexp();
+        final RunnerResult result = new RunnerResult();
+        final String strClaim = claim.ltlProperty(null, true);
+        writeModel(strClaim);
+        final List<String> log = new ArrayList<>();
+
+        if (Settings.NUSMV_MODE == NuSMVMode.LINEAR_BMC) {
+            runBMCIterative(log, maxTestLength);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.INVARSPEC_BMC) {
+            runBMCInvarspec(log, maxTestLength);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.EXPONENTIAL_BMC) {
+            int lastLen = 0;
+            for (int step = 0; ; step++) {
+                int len = (int) Math.round(Math.floor(Math.pow(Settings.NUSMV_LENGTH_EXPONENT, step)));
+                if (len == lastLen) {
+                    continue;
+                } else if (len > maxTestLength && lastLen < maxTestLength) {
+                    len = maxTestLength;
+                } else if (len > maxTestLength) {
+                    break;
+                }
+                // TODO analyze results
+                runBMCFixed(log, len);
+                throw new RuntimeException();
+            }
+        } else if (Settings.NUSMV_MODE == NuSMVMode.FINITE_CTL) {
+            run(log, false, null, 0);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.INFINITE_CTL) {
+            throw new RuntimeException();
+            // TODO new test case representation and synthesis of lasso-shaped test cases
         }
+        TestCase testCase = null;
+        Integer loopPosition = null;
+        int effectiveLength = 1;
+        for (String line : log) {
+            //System.out.println(line);
+            if (line.startsWith(notFound)) {
+                effectiveLength++;
+            }
+            final boolean bmcNoCE = line.startsWith(notFound + maxTestLength);
+            if (line.startsWith("-- specification") | line.startsWith("-- invariant") | bmcNoCE) {
+                if (line.endsWith(" is true") | bmcNoCE) {
+                    result.outcome(strClaim, true);
+                } else if (line.endsWith(" is false")) {
+                    result.outcome(strClaim, false);
+                    testCase = new TestCase(data.conf);
+                    result.set(testCase);
+                }
+            } else if (testCase != null) {
+                if (line.equals("  -- Loop starts here")) {
+                    loopPosition = testCase.length();
+                } else if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
+                    if (testCase.length() == effectiveLength + 1) {
+                        break;
+                    } else if (testCase.length() > 0) {
+                        testCase.padMissing(data.conf);
+                    }
+                    testCase.newElement();
+                } else if (line.matches(trailRegexp)) {
+                    final String[] tokens = line.split("((    )|( = ))");
+                    testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
+                }
+            }
+        }
+        if (testCase != null) {
+            testCase.padMissing(data.conf);
+            if (loopPosition != null) {
+                testCase.loopFromPosition(loopPosition, effectiveLength + 1);
+            }
+            testCase.removeInitial();
+            testCase.validate();
+        }
+
+        result.log(log);
         return result;
     }
 
     @Override
-    public RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample) throws IOException {
+    public RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException {
         final RunnerResult result = new RunnerResult();
-        writeModel(property);
+        final String strClaim = claim.ltlProperty(maxTestLength, false);
+        writeModel(strClaim);
         final List<String> log = new ArrayList<>();
-        final int retCode = run(log, disableCounterexample, stepsLimit, null);
-        final String trailRegexp = "    " + trailRegexp();
-        if (retCode == 124) {
-            log.add("*** " + property + " : TIMEOUT ***");
-        } else {
-            TestCase testCase = null;
-            Integer loopPosition = null;
-            for (String line : log) {
-                //System.out.println(line);
-                final boolean bmcNoCE = line.startsWith("-- no counterexample found with bound ");
-                if (line.startsWith("-- specification") | bmcNoCE) {
-                    if (line.endsWith(" is true") | bmcNoCE) {
-                        result.outcome(true);
-                    } else if (line.endsWith(" is false")) {
-                        result.outcome(false);
-                        testCase = new TestCase(data.conf);
-                        result.set(testCase);
-                    }
-                } else if (testCase != null) {
-                    if (line.equals("  -- Loop starts here")) {
-                        loopPosition = testCase.length();
-                    } else if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
-                        if (testCase.length() == stepsLimit + 1) {
-                            break;
-                        } else if (testCase.length() > 0) {
-                            testCase.padMissing(data.conf);
-                        }
-                        testCase.newElement();
-                    } else if (line.matches(trailRegexp)) {
-                        final String[] tokens = line.split("((    )|( = ))");
-                        testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
-                    }
-                }
-            }
-            if (testCase != null && !disableCounterexample) {
-                testCase.padMissing(data.conf);
-                if (loopPosition != null) {
-                    testCase.loopFromPosition(loopPosition, stepsLimit + 1);
-                }
-                testCase.removeInitial();
-                testCase.validate();
-                if (testCase.length() != stepsLimit) {
-                    throw new RuntimeException("Bad test case length, expected " + stepsLimit + " but in fact "
-                            + testCase.length() + "; log: \n" + String.join("\n", log));
+        run(log, true, null, 0);
+        for (String line : log) {
+            //System.out.println(line);
+            final boolean bmcNoCE = line.startsWith(notFound + maxTestLength);
+            if (line.startsWith("-- specification") | line.startsWith("-- invariant") | bmcNoCE) {
+                if (line.endsWith(" is true") | bmcNoCE) {
+                    result.outcome(strClaim, true);
+                } else if (line.endsWith(" is false")) {
+                    result.outcome(strClaim, false);
                 }
             }
         }
 
         result.log(log);
+        return result;
+    }
+
+    @Override
+    public RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
+            throws IOException {
+        final List<String> log = new ArrayList<>();
+        writeModel(null);
+        final int retCode = run(log, disableCounterexamples, nusmvBMCK, timeout);
+        if (retCode == 124) {
+            log.add("*** TIMEOUT ***");
+        }
+        final RunnerResult result = new RunnerResult();
+        result.log(log);
+        log.stream().filter(line -> line.startsWith("-- ")).forEach(line -> {
+            if (line.endsWith(" is false")) {
+                result.outcome(line.replace("-- ", "").replaceAll(" +is false", ""), false);
+            } else if (line.endsWith(" is true")) {
+                result.outcome(line.replace("-- ", "").replaceAll(" +is true", ""), true);
+            }
+        });
         return result;
     }
 

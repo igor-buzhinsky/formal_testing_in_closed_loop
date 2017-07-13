@@ -1,6 +1,7 @@
 package formal_testing.main;
 
 import formal_testing.ResourceMeasurement;
+import formal_testing.Settings;
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
@@ -10,8 +11,7 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Collections;
 
 /**
  * Created by buzhinsky on 6/28/17.
@@ -43,9 +43,9 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
     private boolean controllerCodeCoverage;
 
-    @Option(name = "--lengthExponent", usage = "test length will grow as 2^lengthExponent "
-            + "(but will at least increment by one each time), default = 1.4", metaVar = "<real>")
-    private double lengthExponent = 1.4;
+    @Option(name = "--lengthExponent", usage = "in the exponential NuSMV mode, test length will grow as 2^lengthExponent," +
+            " default = 1.5", metaVar = "<real>")
+    private Double lengthExponent = 1.5;
 
     public static void main(String[] args) throws IOException {
         new SynthesizeCoverageTests().run(args);
@@ -53,68 +53,43 @@ public class SynthesizeCoverageTests extends MainArgs {
 
     @Override
     protected void launcher() throws IOException {
+        Settings.NUSMV_LENGTH_EXPONENT = lengthExponent;
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
                 valuePairCoverage);
+        final TestSuite testSuite = new TestSuite(true);
 
         System.out.println("Coverage test synthesis...");
 
-        lengthExponent = Math.max(lengthExponent, 1.05);
-        final TestSuite testSuite = new TestSuite(true);
-        int lastLen = 0;
-        for (int step = 0; ; step++) {
-            int len = (int) Math.round(Math.floor(Math.pow(lengthExponent, step)));
-            if (len == lastLen) {
+        for (int i = 0; i < info.coveragePoints.size(); i++) {
+            final CoveragePoint cp = info.coveragePoints.get(i);
+            if (cp.covered()) {
                 continue;
-            } else if (len > maxLength && lastLen < maxLength) {
-                len = maxLength;
-            } else if (len > maxLength) {
-                break;
             }
-            if (info.allCovered()) {
-                break;
-            }
-
-            System.out.println("  Test synthesis for length " + len + "...");
-            System.out.println("  Covered points: " + info.coveredPoints + " / " + info.totalPoints
-                    + ", test synthesis for length " + len + "...");
-
+            System.out.println("Coverage test synthesis for " + cp + "...");
             final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
-            final List<CoveragePoint> uncovered = info.coveragePoints.stream().filter(cp -> !cp.covered())
-                    .collect(Collectors.toList());
-
-            final boolean negate = true;
-            try (final Runner runner = Runner.create(data, code, uncovered, len, negate, 0)) {
+            try (final Runner runner = Runner.create(data, code, Collections.singletonList(cp), maxLength)) {
                 System.out.println("  " + runner.creationReport());
-                for (final CoveragePoint cp : info.coveragePoints) {
-                    if (cp.covered()) {
-                        continue;
+                final RunnerResult result = runner.coverageSynthesis(cp, maxLength);
+                if (result.found()) {
+                    cp.cover();
+                    info.coveredPoints++;
+                    System.out.println("    " + cp);
+                    final TestCase tc = result.testCase();
+                    if (minimize) {
+                        info.coveredPoints += examineTestCase(tc, info.coveragePoints,
+                                checkFiniteCoverage ? tc.length() : null, plantCodeCoverage, controllerCodeCoverage);
                     }
-                    System.out.println("  Test synthesis for " + cp + "...");
-                    final RunnerResult result = runner.verify(cp, len, negate, len, false);
-                    if (result.found()) {
-                        cp.cover();
-                        info.coveredPoints++;
-                        System.out.println("    " + cp);
-                        final TestCase tc = result.testCase();
-                        if (minimize) {
-                            info.coveredPoints += examineTestCase(tc, info.coveragePoints,
-                                    checkFiniteCoverage ? len : -1, plantCodeCoverage, controllerCodeCoverage);
-                        }
-                        System.out.println("    Generated: " + tc);
-                        testSuite.add(tc);
-                    } else {
-                        System.out.println("    " + cp);
-                    }
-                    result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
-                            System.out.println("    " + new ResourceMeasurement(line, "test synthesis"))
-                    );
+                    System.out.println("    Generated: " + tc);
+                    testSuite.add(tc);
+                } else {
+                    System.out.println("    " + cp);
                 }
+                result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
+                        System.out.println("    " + new ResourceMeasurement(line, "test synthesis")));
             }
-            lastLen = len;
         }
-
         System.out.println(testSuite);
         testSuite.print(outputFilename);
         info.report();

@@ -6,7 +6,6 @@ import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
 import formal_testing.enums.Language;
 import formal_testing.enums.NuSMVMode;
-import formal_testing.runner.NuSMVRunner;
 import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
 import formal_testing.value.BooleanValue;
@@ -34,8 +33,8 @@ abstract class MainBase {
             required = true)
     private String language;
 
-    @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode: LTL, CTL, BMC (default)", metaVar = "<mode>")
-    private String nuSMVMode = NuSMVMode.BMC.toString();
+    @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode", metaVar = "<mode>")
+    private String nuSMVMode = NuSMVMode.LINEAR_BMC.toString();
 
     @Option(name = "--panO", usage = "optimization level to compile pan, default = 2", metaVar = "<number>")
     private int panO = 2;
@@ -47,6 +46,23 @@ abstract class MainBase {
     private boolean coi;
 
     ProblemData data;
+
+    private void setup() {
+        try {
+            Settings.LANGUAGE = Language.valueOf(language);
+            System.out.println("Language: " + Settings.LANGUAGE);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Unsupported language " + language);
+        }
+        try {
+            Settings.NUSMV_MODE = NuSMVMode.valueOf(nuSMVMode);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Unsupported NuSMV mode " + nuSMVMode);
+        }
+        Settings.PAN_OPTIMIZATION_LEVEL = panO;
+        Settings.NUSMV_DYNAMIC = dynamic;
+        Settings.NUSMV_COI = coi;
+    }
 
     protected abstract void launcher() throws IOException, InterruptedException;
 
@@ -104,9 +120,7 @@ abstract class MainBase {
     }
 
     private List<String> nuSMVPropsFromCode(String code) {
-        return Arrays.stream(code.split("\n"))
-                .filter(s -> s.matches("(LTLSPEC|CTLSPEC|SPEC|PSLSPEC) .*"))
-                .collect(Collectors.toList());
+        return Arrays.stream(code.split("\n")).filter(s -> s.matches("[A-Z]+SPEC .*")).collect(Collectors.toList());
     }
 
     private String nondetSelectionPromela() {
@@ -342,11 +356,10 @@ abstract class MainBase {
     }
 
     String usualModelCode(CodeCoverageCounter counter, boolean plantCodeCoverage, boolean controllerCodeCoverage) {
-        return modelCode(false, true, false, null, null, plantCodeCoverage,
-                controllerCodeCoverage, counter);
+        return modelCode(false, true, false, null, null, plantCodeCoverage, controllerCodeCoverage, counter);
     }
 
-    int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, int steps, boolean plantCodeCoverage,
+    int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, Integer steps, boolean plantCodeCoverage,
                         boolean controllerCodeCoverage) throws IOException {
         final List<CoveragePoint> uncovered = coveragePoints.stream().filter(cp -> !cp.covered())
                 .collect(Collectors.toList());
@@ -355,15 +368,14 @@ abstract class MainBase {
                 plantCodeCoverage, controllerCodeCoverage, null);
 
         int newCovered = 0;
-        final boolean negate = true;
-        try (final Runner runner = Runner.create(data, code, uncovered, steps, negate, 0)) {
+        try (final Runner runner = Runner.create(data, code, uncovered, steps)) {
             System.out.println(runner.creationReport());
             final String prefix = "    (" + uncovered.size() + ") ";
             System.out.print(prefix);
             for (int i = 0; i < uncovered.size(); i++) {
                 final CoveragePoint cp = uncovered.get(i);
-                final RunnerResult result = runner.verify(cp, steps, negate, steps, true);
-                if (result.found()) {
+                final RunnerResult result = runner.coverageCheck(cp, steps);
+                if (result.outcomes().containsValue(true)) {
                     cp.cover();
                     newCovered++;
                     System.out.print("+");
@@ -408,37 +420,15 @@ abstract class MainBase {
         }
     }
 
-    private void setup() {
-        try {
-            Settings.LANGUAGE = Language.valueOf(language);
-            System.out.println("Language: " + Settings.LANGUAGE);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Unsupported language " + language);
-        }
-        try {
-            Settings.NUSMV_MODE = NuSMVMode.valueOf(nuSMVMode);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Unsupported NuSMV mode " + nuSMVMode);
-        }
-        Settings.PAN_OPTIMIZATION_LEVEL = panO;
-        Settings.NUSMV_DYNAMIC = dynamic;
-        Settings.NUSMV_COI = coi;
-    }
-
     void verifyAll(String code, int timeout, boolean verbose, Integer verificationBMCK) throws IOException {
-        try (final Runner runner = Runner.create(data, code, timeout)) {
-            if (runner instanceof NuSMVRunner) {
-                final List<String> result = ((NuSMVRunner) runner).verifyAll(!verbose, verificationBMCK);
-                result.stream().filter(s -> verbose || s.startsWith("-- specification ")).forEach(System.out::println);
-            } else {
-                for (String prop : propsFromCode(code)) {
-                    final RunnerResult result = runner.verify(prop, Integer.MAX_VALUE, !verbose);
-                    System.out.println(result.measurement());
-                    System.out.println("*** " + prop + " = " + result.outcome() + " ***");
-                    if (verbose) {
-                        result.log().forEach(System.out::println);
-                    }
-                }
+        try (final Runner runner = Runner.create(data, code, Collections.emptyList(), null)) {
+            final RunnerResult result = runner.verification(timeout, false, verificationBMCK);
+            final Map<String, Boolean> outcomes = result.outcomes();
+            for (Map.Entry<String, Boolean> outcome : outcomes.entrySet()) {
+                System.out.println("*** " + outcome.getKey() + " = " + outcome.getValue() + " ***");
+            }
+            if (verbose) {
+                result.log().stream().forEach(System.out::println);
             }
             System.out.println(runner.totalResourceReport());
         }

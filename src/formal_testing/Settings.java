@@ -12,4 +12,6 @@ public class Settings {
     public static int PAN_OPTIMIZATION_LEVEL;
     public static boolean NUSMV_DYNAMIC;
     public static boolean NUSMV_COI;
+    public static double NUSMV_LENGTH_EXPONENT;
+    public final static boolean NUSMV_INVARSPEC = false;
 }

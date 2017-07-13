@@ -1,10 +1,13 @@
 package formal_testing.runner;
 
-import formal_testing.*;
+import formal_testing.ProblemData;
+import formal_testing.ResourceMeasurement;
+import formal_testing.Settings;
 import formal_testing.coverage.CoveragePoint;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -22,9 +25,9 @@ public class SpinRunner extends Runner {
 
     private final ResourceMeasurement creationMeasurement;
 
-    SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps,
-               boolean claimNegate, int timeout) throws IOException {
-        super(data, timeout, "spindir." + SPIN_DIR_INDEX++, modelCode, coveragePoints, claimSteps, claimNegate);
+    SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxLength)
+            throws IOException {
+        super(data, "spindir." + SPIN_DIR_INDEX++, modelCode, coveragePoints, maxLength);
 
         final int parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
         for (int i = 0; i < parts; i++) {
@@ -77,7 +80,7 @@ public class SpinRunner extends Runner {
         totalResourceMeasurement = totalResourceMeasurement.add(measurement);
     }
 
-    @Override
+    /*@Override
     public RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample) throws IOException {
         final RunnerResult result = new RunnerResult();
         final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp() + "\\].*$";
@@ -137,6 +140,25 @@ public class SpinRunner extends Runner {
 
         result.log(log);
         return result;
+    }*/
+
+    @Override
+    public RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
+            throws IOException {
+        // TODO
+        return null;
     }
 
     @Override

@@ -24,22 +24,22 @@ public abstract class CoveragePoint {
 
     public abstract String promelaLtlName();
 
-    public String ltlProperty(int steps, boolean negate) {
+    public String ltlProperty(Integer steps, boolean negate) {
         return Settings.LANGUAGE == Language.PROMELA
                 ? promelaLtlProperty(steps, negate)
                 : nuSMVTemporalProperty(steps, negate);
     }
 
-    private String promelaLtlProperty(int steps, boolean negate) {
-        return steps == -1
+    private String promelaLtlProperty(Integer steps, boolean negate) {
+        return steps == null
                 ? promelaLtlProperty((negate ? "!" : "") + "X(<>(", "))") : promelaLtlProperty((negate ? "!" : "")
                 + String.join("", Collections.nCopies(steps, "X(")), String.join("", Collections.nCopies(steps, ")")));
     }
 
-    private String nuSMVTemporalProperty(int steps, boolean negate) {
+    private String nuSMVTemporalProperty(Integer steps, boolean negate) {
         final String x = Settings.NUSMV_MODE.xOperator;
         final String f = Settings.NUSMV_MODE.fOperator;
-        return steps == -1
+        return steps == null
                 ? nuSMVTemporalProperty((negate ? "!" : "") + x + "(" + f + "(", "))")
                 : nuSMVTemporalProperty(nTimes(steps, x + "(") + (negate ? "!(" : "("), nTimes(steps + 1, ")"));
     }

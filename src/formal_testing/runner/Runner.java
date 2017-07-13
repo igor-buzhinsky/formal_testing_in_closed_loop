@@ -1,10 +1,10 @@
 package formal_testing.runner;
 
+import formal_testing.ProblemData;
 import formal_testing.ResourceMeasurement;
 import formal_testing.Settings;
-import formal_testing.enums.Language;
-import formal_testing.ProblemData;
 import formal_testing.coverage.CoveragePoint;
+import formal_testing.enums.Language;
 import formal_testing.variable.Variable;
 
 import java.io.File;
@@ -12,7 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
  * Created by buzhinsky on 7/3/17.
  */
 public abstract class Runner implements AutoCloseable {
-    final int timeout;
     Process process;
     final String dirName;
 
@@ -37,20 +36,23 @@ public abstract class Runner implements AutoCloseable {
     }
 
     void inspectResourceConsumption(List<String> log) {
-        log.stream().filter(ResourceMeasurement::isMeasurement).forEach(line -> {
-            totalResourceMeasurement = totalResourceMeasurement.add(new ResourceMeasurement(line));
-        });
+        log.stream().filter(ResourceMeasurement::isMeasurement).forEach(
+                line -> totalResourceMeasurement = totalResourceMeasurement.add(new ResourceMeasurement(line)));
     }
 
-    Runner(ProblemData data, int timeout, String dirName, String modelCode, List<CoveragePoint> coveragePoints,
-           int claimSteps,
-           boolean claimNegate) throws IOException {
+    Runner(ProblemData data, String dirName, String modelCode, List<CoveragePoint> coveragePoints, Integer maxLength)
+            throws IOException {
         this.data = data;
-        this.timeout = timeout;
         this.dirName = dirName;
         this.modelCode = modelCode;
-        this.coverageClaims = coveragePoints.stream().map(cp -> cp.ltlProperty(claimSteps, claimNegate))
-                .collect(Collectors.toList());
+        this.coverageClaims = new ArrayList<>();
+        if (maxLength != null) {
+            for (int i = 1; i <= maxLength; i++) {
+                for (CoveragePoint cp : coveragePoints) {
+                    this.coverageClaims.add(cp.ltlProperty(i, true));
+                }
+            }
+        }
         createDir();
     }
 
@@ -89,25 +91,19 @@ public abstract class Runner implements AutoCloseable {
         }
     }
 
-    public static Runner create(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, int claimSteps,
-                                boolean claimNegate, int timeout) throws IOException {
+    public static Runner create(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints,
+                                Integer maxLength) throws IOException {
         return Settings.LANGUAGE == Language.PROMELA
-                ? new SpinRunner(data, modelCode, coveragePoints, claimSteps, claimNegate, timeout)
-                : new NuSMVRunner(data, modelCode, coveragePoints, claimSteps, claimNegate, timeout);
+                ? new SpinRunner(data, modelCode, coveragePoints, maxLength)
+                : new NuSMVRunner(data, modelCode, coveragePoints, maxLength);
     }
 
-    public static Runner create(ProblemData data, String modelCode, int timeout) throws IOException {
-        return create(data, modelCode, Collections.emptyList(), 0, false, timeout);
-    }
+    public abstract RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException;
 
-    public abstract RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample)
+    public abstract RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException;
+
+    public abstract RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException;
-
-    public RunnerResult verify(CoveragePoint point, int steps, boolean negate, int stepsLimit,
-                               boolean disableCounterexample) throws IOException {
-        return verify(Settings.LANGUAGE == Language.PROMELA ? point.promelaLtlName() : point.ltlProperty(steps, negate),
-                stepsLimit, disableCounterexample);
-    }
 
     String trailRegexp() {
         return "(" + String.join("|", data.conf.nondetVars.stream().map(Variable::indexedName)

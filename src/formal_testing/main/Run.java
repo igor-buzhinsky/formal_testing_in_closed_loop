@@ -77,7 +77,7 @@ public class Run extends MainArgs {
                 if (info.allCovered()) {
                     break;
                 }
-                info.coveredPoints += examineTestCase(tc, info.coveragePoints, checkFiniteCoverage ? tc.length() : -1,
+                info.coveredPoints += examineTestCase(tc, info.coveragePoints, checkFiniteCoverage ? tc.length() : null,
                         plantCodeCoverage, controllerCodeCoverage);
             }
 

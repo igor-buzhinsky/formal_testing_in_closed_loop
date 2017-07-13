@@ -3,16 +3,14 @@ package formal_testing.runner;
 import formal_testing.ResourceMeasurement;
 import formal_testing.TestCase;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by buzhinsky on 7/4/17.
  */
 public class RunnerResult {
     private TestCase testCase;
-    private Boolean outcome;
+    private final Map<String, Boolean> outcomes = new LinkedHashMap<>();
     private final List<String> log = new ArrayList<>();
     private ResourceMeasurement measurement = new ResourceMeasurement();
 
@@ -28,6 +26,10 @@ public class RunnerResult {
         return measurement;
     }
 
+    public Map<String, Boolean> outcomes() {
+        return Collections.unmodifiableMap(outcomes);
+    }
+
     public TestCase testCase() {
         if (!found()) {
             throw new RuntimeException("No test case.");
@@ -35,12 +37,8 @@ public class RunnerResult {
         return testCase;
     }
 
-    void outcome(boolean satisfied) {
-        this.outcome = satisfied;
-    }
-
-    public boolean outcome() {
-        return outcome;
+    void outcome(String property, boolean satisfied) {
+        outcomes.put(property, satisfied);
     }
 
     void log(List<String> lines) {
