@@ -33,8 +33,8 @@ abstract class MainBase {
             required = true)
     private String language;
 
-    @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode", metaVar = "<mode>")
-    private String nuSMVMode = NuSMVMode.LINEAR_BMC.toString();
+    @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode, default = BMC", metaVar = "<mode>")
+    private String nuSMVMode = NuSMVMode.BMC.toString();
 
     @Option(name = "--panO", usage = "optimization level to compile pan, default = 2", metaVar = "<number>")
     private int panO = 2;
@@ -44,11 +44,6 @@ abstract class MainBase {
 
     @Option(name = "--coi", handler = BooleanOptionHandler.class, usage = "enable NuSMV -coi")
     private boolean coi;
-
-    @Option(name = "--lengthExponent",
-            usage = "in the exponential NuSMV mode, test length will grow as lengthExponent^step, default = 1.5",
-            metaVar = "<real>")
-    private double lengthExponent = 1.5;
 
     ProblemData data;
 
@@ -67,7 +62,6 @@ abstract class MainBase {
         Settings.PAN_OPTIMIZATION_LEVEL = panO;
         Settings.NUSMV_DYNAMIC = dynamic;
         Settings.NUSMV_COI = coi;
-        Settings.NUSMV_LENGTH_EXPONENT = lengthExponent;
     }
 
     protected abstract void launcher() throws IOException, InterruptedException;

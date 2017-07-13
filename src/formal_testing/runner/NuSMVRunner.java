@@ -63,44 +63,8 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private void runBMCFixed(List<String> result, int k) throws IOException {
-        runBatchBMC(result, 0, "check_ltlspec_bmc_onepb -n 0 -l X -k " + k, Settings.NUSMV_COI);
-    }
-
     private void runBMCIterative(List<String> result, int k) throws IOException {
         runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
-    }
-
-    private void runBMCInvarspec(List<String> result, int k) throws IOException {
-        runBatchBMC(result, 0, "check_invar_bmc -n 0 -a een-sorensson -k " + k, Settings.NUSMV_COI);
-    }
-
-    private void runBMCExp(List<String> result, int k) throws IOException {
-        int lastLen = 0;
-        result.add("-- no counterexample found with bound " + 0);
-        for (int step = 0; ; step++) {
-            int len = (int) Math.round(Math.floor(Math.pow(Settings.NUSMV_LENGTH_EXPONENT, step)));
-            if (len == lastLen) {
-                continue;
-            } else if (len > k && lastLen < k) {
-                len = k;
-            } else if (len > k) {
-                break;
-            }
-            //System.out.println("Length " + len + "...");
-            for (int i = lastLen + 1; i < len; i++) {
-                result.add("-- no counterexample found with bound " + i);
-            }
-            final List<String> log = new ArrayList<>();
-            runBMCFixed(log, len);
-            result.addAll(log);
-            for (String line : log) {
-                if (line.startsWith("-- specification ") && (line.endsWith(" is false") || line.endsWith(" is true"))) {
-                    return;
-                }
-            }
-            lastLen = len;
-        }
     }
 
     private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout) throws IOException {
@@ -129,17 +93,11 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private final String notFound = Settings.NUSMV_MODE == NuSMVMode.INVARSPEC_BMC
-            ? "-- no proof or counterexample found with bound "
-            : "-- no counterexample found with bound ";
+    private final String notFound = "-- no counterexample found with bound ";
 
     private void runProper(List<String> log, Integer maxTestLength) throws IOException {
-        if (Settings.NUSMV_MODE == NuSMVMode.LINEAR_BMC) {
+        if (Settings.NUSMV_MODE == NuSMVMode.BMC) {
             runBMCIterative(log, maxTestLength);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.INVARSPEC_BMC) {
-            runBMCInvarspec(log, maxTestLength);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.EXPONENTIAL_BMC) {
-            runBMCExp(log, maxTestLength);
         } else if (Settings.NUSMV_MODE == NuSMVMode.INFINITE_CTL) {
             run(log, false, null, 0);
             throw new RuntimeException();
@@ -218,7 +176,7 @@ public class NuSMVRunner extends Runner {
         for (String line : log) {
             //System.out.println(line);
             final boolean bmcNoCE = line.startsWith(notFound + maxTestLength);
-            if (line.startsWith("-- specification") | line.startsWith("-- invariant") | bmcNoCE) {
+            if (line.startsWith("-- specification") | bmcNoCE) {
                 if (line.endsWith(" is true") | bmcNoCE) {
                     result.outcome(strClaim, true);
                 } else if (line.endsWith(" is false")) {
