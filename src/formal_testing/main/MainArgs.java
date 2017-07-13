@@ -21,5 +21,4 @@ abstract class MainArgs extends MainBase {
 
     @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
     String specFilename;
-
 }

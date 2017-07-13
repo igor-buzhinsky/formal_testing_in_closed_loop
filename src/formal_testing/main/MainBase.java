@@ -45,6 +45,11 @@ abstract class MainBase {
     @Option(name = "--coi", handler = BooleanOptionHandler.class, usage = "enable NuSMV -coi")
     private boolean coi;
 
+    @Option(name = "--lengthExponent",
+            usage = "in the exponential NuSMV mode, test length will grow as lengthExponent^step, default = 1.5",
+            metaVar = "<real>")
+    private double lengthExponent = 1.5;
+
     ProblemData data;
 
     private void setup() {
@@ -62,6 +67,7 @@ abstract class MainBase {
         Settings.PAN_OPTIMIZATION_LEVEL = panO;
         Settings.NUSMV_DYNAMIC = dynamic;
         Settings.NUSMV_COI = coi;
+        Settings.NUSMV_LENGTH_EXPONENT = lengthExponent;
     }
 
     protected abstract void launcher() throws IOException, InterruptedException;
@@ -375,7 +381,7 @@ abstract class MainBase {
             for (int i = 0; i < uncovered.size(); i++) {
                 final CoveragePoint cp = uncovered.get(i);
                 final RunnerResult result = runner.coverageCheck(cp, steps);
-                if (result.outcomes().containsValue(true)) {
+                if (result.outcomes().containsValue(false)) {
                     cp.cover();
                     newCovered++;
                     System.out.print("+");

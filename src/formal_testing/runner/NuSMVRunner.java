@@ -63,16 +63,43 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private int runBMCFixed(List<String> result, int k) throws IOException {
-        return runBatchBMC(result, 0, "check_ltlspec_bmc_onepb -n 0 -l X -k " + k, Settings.NUSMV_COI);
+    private void runBMCFixed(List<String> result, int k) throws IOException {
+        runBatchBMC(result, 0, "check_ltlspec_bmc_onepb -n 0 -l X -k " + k, Settings.NUSMV_COI);
     }
 
-    private int runBMCIterative(List<String> result, int k) throws IOException {
-        return runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
+    private void runBMCIterative(List<String> result, int k) throws IOException {
+        runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
     }
 
-    private int runBMCInvarspec(List<String> result, int k) throws IOException {
-        return runBatchBMC(result, 0, "check_invar_bmc -n 0 -a een-sorensson -k " + k, Settings.NUSMV_COI);
+    private void runBMCInvarspec(List<String> result, int k) throws IOException {
+        runBatchBMC(result, 0, "check_invar_bmc -n 0 -a een-sorensson -k " + k, Settings.NUSMV_COI);
+    }
+
+    private void runBMCExp(List<String> result, int k) throws IOException {
+        int lastLen = 0;
+        for (int step = 0; ; step++) {
+            int len = (int) Math.round(Math.floor(Math.pow(Settings.NUSMV_LENGTH_EXPONENT, step)));
+            if (len == lastLen) {
+                continue;
+            } else if (len > k && lastLen < k) {
+                len = k;
+            } else if (len > k) {
+                break;
+            }
+            //System.out.println("Length " + len + "...");
+            for (int i = lastLen + 1; i < len; i++) {
+                result.add("-- no counterexample found with bound " + i);
+            }
+            final List<String> log = new ArrayList<>();
+            runBMCFixed(log, len);
+            result.addAll(log);
+            for (String line : log) {
+                if (line.startsWith("-- specification ") && (line.endsWith(" is false") || line.endsWith(" is true"))) {
+                    return;
+                }
+            }
+            lastLen = len;
+        }
     }
 
     private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout) throws IOException {
@@ -101,9 +128,26 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private final String notFound = Settings.NUSMV_INVARSPEC
+    private final String notFound = Settings.NUSMV_MODE == NuSMVMode.INVARSPEC_BMC
             ? "-- no proof or counterexample found with bound "
             : "-- no counterexample found with bound ";
+
+    private void runProper(List<String> log, Integer maxTestLength) throws IOException {
+        if (Settings.NUSMV_MODE == NuSMVMode.LINEAR_BMC) {
+            runBMCIterative(log, maxTestLength);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.INVARSPEC_BMC) {
+            runBMCInvarspec(log, maxTestLength);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.EXPONENTIAL_BMC) {
+            runBMCExp(log, maxTestLength);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.FINITE_CTL) {
+            run(log, false, null, 0);
+        } else if (Settings.NUSMV_MODE == NuSMVMode.INFINITE_CTL) {
+            throw new RuntimeException();
+            // TODO new test case representation and synthesis of lasso-shaped test cases
+        } else {
+            throw new RuntimeException();
+        }
+    }
 
     @Override
     public RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException {
@@ -112,32 +156,7 @@ public class NuSMVRunner extends Runner {
         final String strClaim = claim.ltlProperty(null, true);
         writeModel(strClaim);
         final List<String> log = new ArrayList<>();
-
-        if (Settings.NUSMV_MODE == NuSMVMode.LINEAR_BMC) {
-            runBMCIterative(log, maxTestLength);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.INVARSPEC_BMC) {
-            runBMCInvarspec(log, maxTestLength);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.EXPONENTIAL_BMC) {
-            int lastLen = 0;
-            for (int step = 0; ; step++) {
-                int len = (int) Math.round(Math.floor(Math.pow(Settings.NUSMV_LENGTH_EXPONENT, step)));
-                if (len == lastLen) {
-                    continue;
-                } else if (len > maxTestLength && lastLen < maxTestLength) {
-                    len = maxTestLength;
-                } else if (len > maxTestLength) {
-                    break;
-                }
-                // TODO analyze results
-                runBMCFixed(log, len);
-                throw new RuntimeException();
-            }
-        } else if (Settings.NUSMV_MODE == NuSMVMode.FINITE_CTL) {
-            run(log, false, null, 0);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.INFINITE_CTL) {
-            throw new RuntimeException();
-            // TODO new test case representation and synthesis of lasso-shaped test cases
-        }
+        runProper(log, maxTestLength);
         TestCase testCase = null;
         Integer loopPosition = null;
         int effectiveLength = 1;
@@ -177,6 +196,9 @@ public class NuSMVRunner extends Runner {
                 testCase.loopFromPosition(loopPosition, effectiveLength + 1);
             }
             testCase.removeInitial();
+            if (loopPosition == null) {
+                testCase.loopFromPosition(0, effectiveLength);
+            }
             testCase.validate();
         }
 
@@ -187,10 +209,10 @@ public class NuSMVRunner extends Runner {
     @Override
     public RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException {
         final RunnerResult result = new RunnerResult();
-        final String strClaim = claim.ltlProperty(maxTestLength, false);
+        final String strClaim = claim.ltlProperty(null, true);
         writeModel(strClaim);
         final List<String> log = new ArrayList<>();
-        run(log, true, null, 0);
+        runProper(log, maxTestLength);
         for (String line : log) {
             //System.out.println(line);
             final boolean bmcNoCE = line.startsWith(notFound + maxTestLength);

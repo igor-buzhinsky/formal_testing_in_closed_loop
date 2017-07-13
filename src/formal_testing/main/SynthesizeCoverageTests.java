@@ -43,17 +43,12 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
     private boolean controllerCodeCoverage;
 
-    @Option(name = "--lengthExponent", usage = "in the exponential NuSMV mode, test length will grow as 2^lengthExponent," +
-            " default = 1.5", metaVar = "<real>")
-    private Double lengthExponent = 1.5;
-
     public static void main(String[] args) throws IOException {
         new SynthesizeCoverageTests().run(args);
     }
 
     @Override
     protected void launcher() throws IOException {
-        Settings.NUSMV_LENGTH_EXPONENT = lengthExponent;
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,

@@ -18,7 +18,7 @@ call_nusmv() {
     local name="$1"
     echo " >>> $name"
     shift
-    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" -l NUSMV --nusmv_mode LINEAR_BMC $@ 2>&1
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" -l NUSMV --nusmv_mode EXPONENTIAL_BMC $@ 2>&1
     echo
 }
 
@@ -42,7 +42,7 @@ check_spin() {
     echo ">>> RUN spin $floors"
 
     for minimize in "" "--minimize"; do
-        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --lengthExponent 1 > log
+        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage > log
         print_log
         call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
         print_log
@@ -62,10 +62,9 @@ check_nusmv() {
     echo ">>> RUN nusmv $floors"
 
     for minimize in "" "--minimize"; do
-        :
-        #call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --coi #> log
+        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --coi #> log
         #print_log
-        #call_nusmv run --input test.bin --measureCoverage --includeInternal $finite #> log
+        call_nusmv run --input test.bin --measureCoverage --includeInternal $finite #> log
         #print_log
     done
 
