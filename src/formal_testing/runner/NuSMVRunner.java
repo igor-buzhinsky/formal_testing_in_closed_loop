@@ -77,6 +77,7 @@ public class NuSMVRunner extends Runner {
 
     private void runBMCExp(List<String> result, int k) throws IOException {
         int lastLen = 0;
+        result.add("-- no counterexample found with bound " + 0);
         for (int step = 0; ; step++) {
             int len = (int) Math.round(Math.floor(Math.pow(Settings.NUSMV_LENGTH_EXPONENT, step)));
             if (len == lastLen) {
@@ -139,9 +140,8 @@ public class NuSMVRunner extends Runner {
             runBMCInvarspec(log, maxTestLength);
         } else if (Settings.NUSMV_MODE == NuSMVMode.EXPONENTIAL_BMC) {
             runBMCExp(log, maxTestLength);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.FINITE_CTL) {
-            run(log, false, null, 0);
         } else if (Settings.NUSMV_MODE == NuSMVMode.INFINITE_CTL) {
+            run(log, false, null, 0);
             throw new RuntimeException();
             // TODO new test case representation and synthesis of lasso-shaped test cases
         } else {
@@ -159,7 +159,7 @@ public class NuSMVRunner extends Runner {
         runProper(log, maxTestLength);
         TestCase testCase = null;
         Integer loopPosition = null;
-        int effectiveLength = 1;
+        int effectiveLength = 0;
         for (String line : log) {
             //System.out.println(line);
             if (line.startsWith(notFound)) {
@@ -178,9 +178,7 @@ public class NuSMVRunner extends Runner {
                 if (line.equals("  -- Loop starts here")) {
                     loopPosition = testCase.length();
                 } else if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
-                    if (testCase.length() == effectiveLength + 1) {
-                        break;
-                    } else if (testCase.length() > 0) {
+                    if (testCase.length() > 0) {
                         testCase.padMissing(data.conf);
                     }
                     testCase.newElement();
@@ -191,6 +189,9 @@ public class NuSMVRunner extends Runner {
             }
         }
         if (testCase != null) {
+            if (effectiveLength == 0) {
+                effectiveLength = 1;
+            }
             testCase.padMissing(data.conf);
             if (loopPosition != null) {
                 testCase.loopFromPosition(loopPosition, effectiveLength + 1);
@@ -199,6 +200,7 @@ public class NuSMVRunner extends Runner {
             if (loopPosition == null) {
                 testCase.loopFromPosition(0, effectiveLength);
             }
+            testCase.crop(effectiveLength);
             testCase.validate();
         }
 

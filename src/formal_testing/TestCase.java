@@ -12,11 +12,6 @@ import java.util.*;
 public class TestCase implements Serializable {
     private final Map<String, List<Value>> values = new LinkedHashMap<>();
     private int length = 0;
-    private int maxLength = Integer.MAX_VALUE;
-
-    public void setMaxLength(int maxLength) {
-        this.maxLength = maxLength;
-    }
 
     public int length() {
         return length;
@@ -34,10 +29,17 @@ public class TestCase implements Serializable {
 
     public void addValue(String varName, Value value) {
         final List<Value> varValues = values.get(varName);
-        if (varValues.size() < maxLength) {
-            varValues.add(value);
-            length = Math.max(length, varValues.size());
+        varValues.add(value);
+        length = Math.max(length, varValues.size());
+    }
+
+    public void crop(int maxLength) {
+        for (List<Value> list : values.values()) {
+            while (list.size() > maxLength) {
+                list.remove(list.size() - 1);
+            }
         }
+        length = values.values().stream().mapToInt(List::size).max().getAsInt();
     }
 
     @Override

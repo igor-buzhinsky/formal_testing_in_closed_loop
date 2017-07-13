@@ -7,7 +7,6 @@ public enum NuSMVMode {
     LINEAR_BMC("X", "F", "LTLSPEC"),
     EXPONENTIAL_BMC("X", "F", "LTLSPEC"),
     INVARSPEC_BMC("next", "", "INVARSPEC"),
-    FINITE_CTL("AX", "AF", "CTLSPEC"),
     INFINITE_CTL("AX", "AF", "CTLSPEC");
 
     public final String xOperator;
