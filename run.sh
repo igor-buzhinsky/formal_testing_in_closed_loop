@@ -43,9 +43,10 @@ check_spin() {
     echo ">>> RUN spin $floors"
 
     for minimize in "" "--minimize"; do
-        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 #> log
+        :
+        #call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 #> log
         #print_log
-        call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage #> log
+        #call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage #> log
         #print_log
     done
 

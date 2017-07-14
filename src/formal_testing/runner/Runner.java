@@ -89,11 +89,11 @@ public abstract class Runner implements AutoCloseable {
                 : new NuSMVRunner(data, modelCode, coveragePoints, maxLength);
     }
 
-    public abstract RunnerResult coverageSynthesis(CoveragePoint claim) throws IOException;
+    public abstract RunnerResult synthesize(CoveragePoint claim) throws IOException;
 
-    public abstract RunnerResult coverageCheck(CoveragePoint claim) throws IOException;
+    public abstract RunnerResult checkCoverage(CoveragePoint claim) throws IOException;
 
-    public abstract RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
+    public abstract RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException;
 
     String trailRegexp() {

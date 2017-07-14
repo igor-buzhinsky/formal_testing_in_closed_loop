@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/30/17.
@@ -117,8 +118,20 @@ public class SpinRunner extends Runner {
         return log;
     }
 
+    private void createTraceReader(String suffix) throws IOException {
+        process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
+                MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
+    }
+
+    private String trailPath(String suffix) {
+        return dirName + "/" + MODEL_FILENAME + suffix + ".trail";
+    }
+
     @Override
-    public RunnerResult coverageSynthesis(CoveragePoint claim) throws IOException {
+    public RunnerResult synthesize(CoveragePoint claim) throws IOException {
+        if (maxTestLength == null) {
+            throw new RuntimeException("Unbounded test case synthesis is not supported.");
+        }
         final RunnerResult result = new RunnerResult();
         final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp() + "\\].*$";
         File trailFile = null;
@@ -126,7 +139,7 @@ public class SpinRunner extends Runner {
         final String strClaim = claim.promelaLtlName();
         for (int len = 1; len <= maxTestLength; len++) {
             final String suffix = "." + propertyToPart.get(strClaim + "__" + len);
-            final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
+            final String trailPath = trailPath(suffix);
             try {
                 log.addAll(runPan(suffix, strClaim + "__" + len));
                 //log.forEach(System.out::println);
@@ -136,8 +149,7 @@ public class SpinRunner extends Runner {
                     final TestCase testCase = new TestCase(data.conf);
                     result.set(testCase);
                     // counterexample trace reading
-                    process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
-                            MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
+                    createTraceReader(suffix);
                     try (final BufferedReader reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                         reader.lines().forEach(line -> {
@@ -164,12 +176,20 @@ public class SpinRunner extends Runner {
     }
 
     @Override
-    public RunnerResult coverageCheck(CoveragePoint claim) throws IOException {
+    public RunnerResult checkCoverage(CoveragePoint claim) throws IOException {
         final RunnerResult result = new RunnerResult();
         File trailFile = null;
         final List<String> log = new ArrayList<>();
         final String strClaim = claim.promelaLtlName();
-        for (int len = 1; len <= maxTestLength; len++) {
+        final List<Integer> lens = new ArrayList<>();
+        if (maxTestLength != null) {
+            for (int len = 1; len <= maxTestLength; len++) {
+                lens.add(len);
+            }
+        } else {
+            lens.add(null);
+        }
+        for (Integer len : lens) {
             final String suffix = "." + propertyToPart.get(strClaim + "__" + len);
             final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
             try {
@@ -192,26 +212,35 @@ public class SpinRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
-            throws IOException {
-        final List<String> log = new ArrayList<>();
-        /*writeModel(null);
-        final int retCode = run(log, disableCounterexamples, nusmvBMCK, timeout);
-        if (retCode == 124) {
-            log.add("*** TIMEOUT ***");
-        }*/
+    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK) throws IOException {
         final RunnerResult result = new RunnerResult();
-        result.log(log);
-        /*log.stream().filter(line -> line.startsWith("-- ")).forEach(line -> {
-            if (line.endsWith(" is false")) {
-                result.outcome(line.replace("-- ", "").replaceAll(" +is false", ""), false);
-            } else if (line.endsWith(" is true")) {
-                result.outcome(line.replace("-- ", "").replaceAll(" +is true", ""), true);
+        File trailFile = null;
+        final List<String> log = new ArrayList<>();
+        for (String strClaim : Arrays.stream(modelCode.split("\n")).filter(l -> l.startsWith("ltl "))
+                .map(l -> l.replaceAll("ltl +", "").replaceAll(" .*$", "")).collect(Collectors.toList())) {
+            final String suffix = ".0";
+            final String trailPath = trailPath(suffix);
+            try {
+                log.addAll(runPan(suffix, strClaim));
+                //log.forEach(System.out::println);
+                trailFile = new File(trailPath);
+                if (trailFile.exists()) {
+                    result.outcome(strClaim, false);
+                    createTraceReader(suffix);
+                    try (final BufferedReader reader = new BufferedReader(
+                            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                        reader.lines().forEach(log::add);
+                    }
+                    waitFor();
+                } else {
+                    result.outcome(strClaim, true);
+                }
+            } finally {
+                tryDelete(trailFile, trailPath);
             }
-        });*/
+        }
+        result.log(log);
         return result;
-
-        // TODO
     }
 
     @Override

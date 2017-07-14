@@ -65,7 +65,7 @@ public class SynthesizeCoverageTests extends MainArgs {
             final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
             try (final Runner runner = Runner.create(data, code, Collections.singletonList(cp), maxLength)) {
                 System.out.println("  " + runner.creationReport());
-                final RunnerResult result = runner.coverageSynthesis(cp);
+                final RunnerResult result = runner.synthesize(cp);
                 if (result.found()) {
                     cp.cover();
                     info.coveredPoints++;

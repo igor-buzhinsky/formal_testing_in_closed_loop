@@ -109,7 +109,10 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult coverageSynthesis(CoveragePoint claim) throws IOException {
+    public RunnerResult synthesize(CoveragePoint claim) throws IOException {
+        if (maxTestLength == null) {
+            throw new RuntimeException("Unbounded test case synthesis is not supported.");
+        }
         final String trailRegexp = "    " + trailRegexp();
         final RunnerResult result = new RunnerResult();
         final String strClaim = claim.ltlProperty(null);
@@ -164,7 +167,10 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult coverageCheck(CoveragePoint claim) throws IOException {
+    public RunnerResult checkCoverage(CoveragePoint claim) throws IOException {
+        if (maxTestLength == null) {
+            throw new RuntimeException("Unbounded coverage check is not supported.");
+        }
         final RunnerResult result = new RunnerResult();
         final String strClaim = claim.ltlProperty(null);
         writeModel(strClaim);
@@ -183,7 +189,7 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
+    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException {
         final List<String> log = new ArrayList<>();
         writeModel(null);

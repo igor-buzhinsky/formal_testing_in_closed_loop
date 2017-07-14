@@ -374,7 +374,7 @@ abstract class MainBase {
             System.out.print(prefix);
             for (int i = 0; i < uncovered.size(); i++) {
                 final CoveragePoint cp = uncovered.get(i);
-                final RunnerResult result = runner.coverageCheck(cp);
+                final RunnerResult result = runner.checkCoverage(cp);
                 if (result.outcomes().containsValue(false)) {
                     cp.cover();
                     newCovered++;
@@ -422,9 +422,8 @@ abstract class MainBase {
 
     void verifyAll(String code, int timeout, boolean verbose, Integer verificationBMCK) throws IOException {
         try (final Runner runner = Runner.create(data, code, Collections.emptyList(), null)) {
-            final RunnerResult result = runner.verification(timeout, false, verificationBMCK);
-            final Map<String, Boolean> outcomes = result.outcomes();
-            for (Map.Entry<String, Boolean> outcome : outcomes.entrySet()) {
+            final RunnerResult result = runner.verify(timeout, false, verificationBMCK);
+            for (Map.Entry<String, Boolean> outcome : result.outcomes().entrySet()) {
                 System.out.println("*** " + outcome.getKey() + " = " + outcome.getValue() + " ***");
             }
             if (verbose) {
