@@ -123,15 +123,12 @@ public class NuSMVRunner extends Runner {
             if (line.startsWith(notFound)) {
                 effectiveLength++;
             }
-            final boolean bmcNoCE = line.startsWith(notFound + maxTestLength);
-            if (line.startsWith("-- specification") | line.startsWith("-- invariant") | bmcNoCE) {
-                if (line.endsWith(" is true") | bmcNoCE) {
-                    result.outcome(strClaim, true);
-                } else if (line.endsWith(" is false")) {
-                    result.outcome(strClaim, false);
-                    testCase = new TestCase(data.conf);
-                    result.set(testCase);
-                }
+            if (line.startsWith(notFound + maxTestLength)) {
+                result.outcome(strClaim, true);
+            } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
+                result.outcome(strClaim, false);
+                testCase = new TestCase(data.conf);
+                result.set(testCase);
             } else if (testCase != null) {
                 if (line.equals("  -- Loop starts here")) {
                     loopPosition = testCase.length();
@@ -161,7 +158,6 @@ public class NuSMVRunner extends Runner {
             testCase.crop(effectiveLength);
             testCase.validate();
         }
-
         result.log(log);
         return result;
     }
@@ -175,16 +171,12 @@ public class NuSMVRunner extends Runner {
         runProper(log, maxTestLength);
         for (String line : log) {
             //System.out.println(line);
-            final boolean bmcNoCE = line.startsWith(notFound + maxTestLength);
-            if (line.startsWith("-- specification") | bmcNoCE) {
-                if (line.endsWith(" is true") | bmcNoCE) {
-                    result.outcome(strClaim, true);
-                } else if (line.endsWith(" is false")) {
-                    result.outcome(strClaim, false);
-                }
+            if (line.startsWith(notFound + maxTestLength)) {
+                result.outcome(strClaim, true);
+            } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
+                result.outcome(strClaim, false);
             }
         }
-
         result.log(log);
         return result;
     }

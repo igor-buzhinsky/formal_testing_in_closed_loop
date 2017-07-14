@@ -113,5 +113,5 @@ finite="--checkFiniteCoverage"
 
 #comparison 5
 #bmc_verification 15 30
-check_nusmv 5
+check_nusmv 3
 #check_spin 3
