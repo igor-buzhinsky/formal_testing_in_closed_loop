@@ -1,7 +1,6 @@
 package formal_testing.main;
 
 import formal_testing.ResourceMeasurement;
-import formal_testing.Settings;
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
@@ -66,7 +65,7 @@ public class SynthesizeCoverageTests extends MainArgs {
             final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
             try (final Runner runner = Runner.create(data, code, Collections.singletonList(cp), maxLength)) {
                 System.out.println("  " + runner.creationReport());
-                final RunnerResult result = runner.coverageSynthesis(cp, maxLength);
+                final RunnerResult result = runner.coverageSynthesis(cp);
                 if (result.found()) {
                     cp.cover();
                     info.coveredPoints++;

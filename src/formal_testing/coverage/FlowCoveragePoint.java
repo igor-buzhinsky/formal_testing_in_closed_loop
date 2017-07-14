@@ -16,12 +16,12 @@ public class FlowCoveragePoint extends CoveragePoint {
     }
 
     @Override
-    protected String promelaLtlProperty(String opStart, String opEnd) {
-        return "ltl " + promelaLtlName() + " { " + opStart + " _cover[" + index + "]" + opEnd + " }";
+    protected String promelaLtlProperty(String opStart, String opEnd, Integer steps) {
+        return "ltl " + promelaLtlName() + "__" + steps + " { " + opStart + " _cover[" + index + "]" + opEnd + " }";
     }
 
     @Override
-    protected String nuSMVTemporalProperty(String opStart, String opEnd) {
+    protected String nuSMVTemporalProperty(String opStart, String opEnd, Integer steps) {
         throw new RuntimeException("Flow coverage points and not supported for NuSMV.");
     }
 

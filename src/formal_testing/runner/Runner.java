@@ -12,7 +12,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,10 +21,9 @@ import java.util.stream.Collectors;
 public abstract class Runner implements AutoCloseable {
     Process process;
     final String dirName;
-
     final ProblemData data;
     final String modelCode;
-    final List<String> coverageClaims;
+    final Integer maxTestLength;
 
     final String TIME = "/usr/bin/time";
 
@@ -40,19 +38,12 @@ public abstract class Runner implements AutoCloseable {
                 line -> totalResourceMeasurement = totalResourceMeasurement.add(new ResourceMeasurement(line)));
     }
 
-    Runner(ProblemData data, String dirName, String modelCode, List<CoveragePoint> coveragePoints, Integer maxLength)
+    Runner(ProblemData data, String dirName, String modelCode, Integer maxTestLength)
             throws IOException {
         this.data = data;
         this.dirName = dirName;
         this.modelCode = modelCode;
-        this.coverageClaims = new ArrayList<>();
-        if (maxLength != null) {
-            for (int i = 1; i <= maxLength; i++) {
-                for (CoveragePoint cp : coveragePoints) {
-                    this.coverageClaims.add(cp.ltlProperty(i, true));
-                }
-            }
-        }
+        this.maxTestLength = maxTestLength;
         createDir();
     }
 
@@ -98,9 +89,9 @@ public abstract class Runner implements AutoCloseable {
                 : new NuSMVRunner(data, modelCode, coveragePoints, maxLength);
     }
 
-    public abstract RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException;
+    public abstract RunnerResult coverageSynthesis(CoveragePoint claim) throws IOException;
 
-    public abstract RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException;
+    public abstract RunnerResult coverageCheck(CoveragePoint claim) throws IOException;
 
     public abstract RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException;

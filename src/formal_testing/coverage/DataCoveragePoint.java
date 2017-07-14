@@ -46,12 +46,12 @@ public class DataCoveragePoint extends CoveragePoint {
     }
 
     @Override
-    protected String promelaLtlProperty(String opStart, String opEnd) {
-        return "ltl " + promelaLtlName() + " { " + opStart + conditions() + opEnd + " }";
+    protected String promelaLtlProperty(String opStart, String opEnd, Integer steps) {
+        return "ltl " + promelaLtlName() + "__" + steps + " { " + opStart + conditions() + opEnd + " }";
     }
 
     @Override
-    protected String nuSMVTemporalProperty(String opStart, String opEnd) {
+    protected String nuSMVTemporalProperty(String opStart, String opEnd, Integer steps) {
         return Settings.NUSMV_MODE.specDeclaration + " " + opStart + conditions() + opEnd;
     }
 

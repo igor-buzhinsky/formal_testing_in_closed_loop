@@ -22,9 +22,9 @@ public class NuSMVRunner extends Runner {
 
     private static final String MODEL_FILENAME = "model.smv";
 
-    NuSMVRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxLength)
+    NuSMVRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
             throws IOException {
-        super(data, "nusmvdir." + NUSMV_DIR_INDEX++, modelCode, coveragePoints, maxLength);
+        super(data, "nusmvdir." + NUSMV_DIR_INDEX++, modelCode, maxTestLength);
     }
 
     private void writeModel(String property) throws FileNotFoundException {
@@ -67,7 +67,8 @@ public class NuSMVRunner extends Runner {
         runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
     }
 
-    private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout) throws IOException {
+    private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout)
+            throws IOException {
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
                 ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
         if (nusmvBMCK != null) {
@@ -93,7 +94,7 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private final String notFound = "-- no counterexample found with bound ";
+    private final static String NOT_FOUND = "-- no counterexample found with bound ";
 
     private void runProper(List<String> log, Integer maxTestLength) throws IOException {
         if (Settings.NUSMV_MODE == NuSMVMode.BMC) {
@@ -108,10 +109,10 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException {
+    public RunnerResult coverageSynthesis(CoveragePoint claim) throws IOException {
         final String trailRegexp = "    " + trailRegexp();
         final RunnerResult result = new RunnerResult();
-        final String strClaim = claim.ltlProperty(null, true);
+        final String strClaim = claim.ltlProperty(null);
         writeModel(strClaim);
         final List<String> log = new ArrayList<>();
         runProper(log, maxTestLength);
@@ -120,10 +121,10 @@ public class NuSMVRunner extends Runner {
         int effectiveLength = 0;
         for (String line : log) {
             //System.out.println(line);
-            if (line.startsWith(notFound)) {
+            if (line.startsWith(NOT_FOUND)) {
                 effectiveLength++;
             }
-            if (line.startsWith(notFound + maxTestLength)) {
+            if (line.startsWith(NOT_FOUND + maxTestLength)) {
                 result.outcome(strClaim, true);
             } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
                 result.outcome(strClaim, false);
@@ -163,15 +164,15 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException {
+    public RunnerResult coverageCheck(CoveragePoint claim) throws IOException {
         final RunnerResult result = new RunnerResult();
-        final String strClaim = claim.ltlProperty(null, true);
+        final String strClaim = claim.ltlProperty(null);
         writeModel(strClaim);
         final List<String> log = new ArrayList<>();
         runProper(log, maxTestLength);
         for (String line : log) {
             //System.out.println(line);
-            if (line.startsWith(notFound + maxTestLength)) {
+            if (line.startsWith(NOT_FOUND + maxTestLength)) {
                 result.outcome(strClaim, true);
             } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
                 result.outcome(strClaim, false);

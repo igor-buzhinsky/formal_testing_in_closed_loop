@@ -374,7 +374,7 @@ abstract class MainBase {
             System.out.print(prefix);
             for (int i = 0; i < uncovered.size(); i++) {
                 final CoveragePoint cp = uncovered.get(i);
-                final RunnerResult result = runner.coverageCheck(cp, steps);
+                final RunnerResult result = runner.coverageCheck(cp);
                 if (result.outcomes().containsValue(false)) {
                     cp.cover();
                     newCovered++;

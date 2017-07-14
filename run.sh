@@ -3,6 +3,7 @@
 set_floors() {
     floors=$1
     dir=elevator-$floors
+    maxlen=$((floors * 4))
 }
 
 call_spin() {
@@ -42,18 +43,18 @@ check_spin() {
     echo ">>> RUN spin $floors"
 
     for minimize in "" "--minimize"; do
-        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage > log
-        print_log
-        call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
-        print_log
+        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 #> log
+        #print_log
+        call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage #> log
+        #print_log
     done
 
-    call_spin closed-loop-verify --verbose > log
-    print_log
-    call_spin generate-random --number 10 --length 10 --output test.bin $seed > log
-    print_log
-    call_spin run --input test.bin --verify --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
-    print_log
+    call_spin closed-loop-verify --verbose #> log
+    #print_log
+    call_spin generate-random --number 10 --length 10 --output test.bin $seed #> log
+    #print_log
+    call_spin run --input test.bin --verify --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage #> log
+    #print_log
 }
 
 check_nusmv() {
@@ -104,14 +105,12 @@ comparison() {
     print_log
 }
 
-
 seed="--seed 200"
-maxlen=100
 
 finite="--checkFiniteCoverage"
 #finite=
 
 #comparison 5
 #bmc_verification 15 30
-check_nusmv 3
-#check_spin 3
+#check_nusmv 3
+check_spin 3

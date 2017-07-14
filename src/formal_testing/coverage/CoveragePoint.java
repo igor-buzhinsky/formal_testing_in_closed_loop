@@ -19,29 +19,30 @@ public abstract class CoveragePoint {
         covered = true;
     }
 
-    protected abstract String promelaLtlProperty(String opStart, String opEnd);
-    protected abstract String nuSMVTemporalProperty(String opStart, String opEnd);
+    protected abstract String promelaLtlProperty(String opStart, String opEnd, Integer steps);
+    protected abstract String nuSMVTemporalProperty(String opStart, String opEnd, Integer steps);
 
     public abstract String promelaLtlName();
 
-    public String ltlProperty(Integer steps, boolean negate) {
+    public String ltlProperty(Integer steps) {
         return Settings.LANGUAGE == Language.PROMELA
-                ? promelaLtlProperty(steps, negate)
-                : nuSMVTemporalProperty(steps, negate);
+                ? promelaLtlProperty(steps)
+                : nuSMVTemporalProperty(steps);
     }
 
-    private String promelaLtlProperty(Integer steps, boolean negate) {
+    private String promelaLtlProperty(Integer steps) {
         return steps == null
-                ? promelaLtlProperty((negate ? "!" : "") + "X(<>(", "))") : promelaLtlProperty((negate ? "!" : "")
-                + String.join("", Collections.nCopies(steps, "X(")), String.join("", Collections.nCopies(steps, ")")));
+                ? promelaLtlProperty("!X(<>(", "))", steps) : promelaLtlProperty("!"
+                + String.join("", Collections.nCopies(steps, "X(")), String.join("", Collections.nCopies(steps, ")")),
+                steps);
     }
 
-    private String nuSMVTemporalProperty(Integer steps, boolean negate) {
+    private String nuSMVTemporalProperty(Integer steps) {
         final String x = Settings.NUSMV_MODE.xOperator;
         final String f = Settings.NUSMV_MODE.fOperator;
         return steps == null
-                ? nuSMVTemporalProperty((negate ? "!" : "") + x + "(" + f + "(", "))")
-                : nuSMVTemporalProperty(nTimes(steps, x + "(") + (negate ? "!(" : "("), nTimes(steps + 1, ")"));
+                ? nuSMVTemporalProperty("!" + x + "(" + f + "(", "))", steps)
+                : nuSMVTemporalProperty(nTimes(steps, x + "(") + "!(", nTimes(steps + 1, ")"), steps);
     }
 
     private String nTimes(int times, String str) {

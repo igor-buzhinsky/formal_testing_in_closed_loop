@@ -3,11 +3,12 @@ package formal_testing.runner;
 import formal_testing.ProblemData;
 import formal_testing.ResourceMeasurement;
 import formal_testing.Settings;
+import formal_testing.TestCase;
 import formal_testing.coverage.CoveragePoint;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -25,9 +26,21 @@ public class SpinRunner extends Runner {
 
     private final ResourceMeasurement creationMeasurement;
 
-    SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxLength)
+    private final List<Pair<String, String>> coverageClaims = new ArrayList<>();
+
+    SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
             throws IOException {
-        super(data, "spindir." + SPIN_DIR_INDEX++, modelCode, coveragePoints, maxLength);
+        super(data, "spindir." + SPIN_DIR_INDEX++, modelCode, maxTestLength);
+
+        for (CoveragePoint cp : coveragePoints) {
+            if (maxTestLength != null) {
+                for (int i = 1; i <= maxTestLength; i++) {
+                    coverageClaims.add(Pair.of(cp.ltlProperty(i), cp.promelaLtlName() + "__" + i));
+                }
+            } else {
+                coverageClaims.add(Pair.of(cp.ltlProperty(null), cp.promelaLtlName() + "__null"));
+            }
+        }
 
         final int parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
         for (int i = 0; i < parts; i++) {
@@ -36,8 +49,8 @@ public class SpinRunner extends Runner {
                 final int start = coverageClaims.size() / parts * i;
                 final int end = coverageClaims.size() / parts * (i + 1);
                 for (int j = start; j < end; j++) {
-                    pw.println(coverageClaims.get(j));
-                    propertyToPart.put(coveragePoints.get(j).promelaLtlName(), i);
+                    pw.println(coverageClaims.get(j).getLeft());
+                    propertyToPart.put(coverageClaims.get(j).getRight(), i);
                 }
             }
         }
@@ -80,39 +93,51 @@ public class SpinRunner extends Runner {
         totalResourceMeasurement = totalResourceMeasurement.add(measurement);
     }
 
-    /*@Override
-    public RunnerResult verify(String property, int stepsLimit, boolean disableCounterexample) throws IOException {
+    private static void tryDelete(File file, String filename) {
+        if (file != null && file.exists()) {
+            try {
+                Files.delete(Paths.get(filename));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private List<String> runPan(String suffix, String strClaim) throws IOException {
+        final List<String> log = new ArrayList<>();
+        process = new ProcessBuilder("timeout", 0 + "s", TIME, "-f", ResourceMeasurement.FORMAT,
+                "./pan" + suffix, "-a", "-N", strClaim, "-m5000000")
+                .redirectErrorStream(true).directory(new File(dirName)).start();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+            reader.lines().forEach(log::add);
+        }
+        inspectResourceConsumption(log);
+        waitFor();
+        return log;
+    }
+
+    @Override
+    public RunnerResult coverageSynthesis(CoveragePoint claim) throws IOException {
         final RunnerResult result = new RunnerResult();
         final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp() + "\\].*$";
-
-        final int part = (propertyToPart.containsKey(property) ? propertyToPart.get(property) : 0);
-        final String suffix = "." + part;
-        final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
-        final List<String> log = new ArrayList<>();
         File trailFile = null;
-        try {
-            process = new ProcessBuilder("timeout", timeout + "s", TIME, "-f", ResourceMeasurement.FORMAT,
-                    "./pan" + suffix, "-a", "-N", property, "-m5000000")
-                    .redirectErrorStream(true).directory(new File(dirName)).start();
-            try (final BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                reader.lines().forEach(log::add);
-            }
-            inspectResourceConsumption(log);
-            final int retCode = waitFor();
-            trailFile = new File(trailPath);
-            if (retCode == 124) {
-                log.add("*** " + property + " : TIMEOUT ***");
-            } else if (trailFile.exists()) {
-                result.outcome(false);
-                final TestCase testCase = new TestCase(data.conf);
-                result.set(testCase);
-                if (!disableCounterexample) {
-                    testCase.setMaxLength(stepsLimit);
+        final List<String> log = new ArrayList<>();
+        final String strClaim = claim.promelaLtlName();
+        for (int len = 1; len <= maxTestLength; len++) {
+            final String suffix = "." + propertyToPart.get(strClaim + "__" + len);
+            final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
+            try {
+                log.addAll(runPan(suffix, strClaim + "__" + len));
+                //log.forEach(System.out::println);
+                trailFile = new File(trailPath);
+                if (trailFile.exists()) {
+                    result.outcome(strClaim, false);
+                    final TestCase testCase = new TestCase(data.conf);
+                    result.set(testCase);
                     // counterexample trace reading
                     process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
                             MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
-
                     try (final BufferedReader reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                         reader.lines().forEach(line -> {
@@ -123,42 +148,70 @@ public class SpinRunner extends Runner {
                             }
                         });
                     }
+                    testCase.crop(len);
                     waitFor();
+                    break;
                 }
-            } else {
-                result.outcome(true);
-            }
-        } finally {
-            if (trailFile != null && trailFile.exists()) {
-                try {
-                    Files.delete(Paths.get(trailPath));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            } finally {
+                tryDelete(trailFile, trailPath);
             }
         }
-
+        if (!result.found()) {
+            result.outcome(strClaim, true);
+        }
         result.log(log);
         return result;
-    }*/
-
-    @Override
-    public RunnerResult coverageSynthesis(CoveragePoint claim, Integer maxTestLength) throws IOException {
-        // TODO
-        return null;
     }
 
     @Override
-    public RunnerResult coverageCheck(CoveragePoint claim, Integer maxTestLength) throws IOException {
-        // TODO
-        return null;
+    public RunnerResult coverageCheck(CoveragePoint claim) throws IOException {
+        final RunnerResult result = new RunnerResult();
+        File trailFile = null;
+        final List<String> log = new ArrayList<>();
+        final String strClaim = claim.promelaLtlName();
+        for (int len = 1; len <= maxTestLength; len++) {
+            final String suffix = "." + propertyToPart.get(strClaim + "__" + len);
+            final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
+            try {
+                log.addAll(runPan(suffix, strClaim + "__" + len));
+                //log.forEach(System.out::println);
+                trailFile = new File(trailPath);
+                if (trailFile.exists()) {
+                    result.outcome(strClaim, false);
+                    break;
+                }
+            } finally {
+                tryDelete(trailFile, trailPath);
+            }
+        }
+        if (result.outcomes().isEmpty()) {
+            result.outcome(strClaim, true);
+        }
+        result.log(log);
+        return result;
     }
 
     @Override
     public RunnerResult verification(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException {
+        final List<String> log = new ArrayList<>();
+        /*writeModel(null);
+        final int retCode = run(log, disableCounterexamples, nusmvBMCK, timeout);
+        if (retCode == 124) {
+            log.add("*** TIMEOUT ***");
+        }*/
+        final RunnerResult result = new RunnerResult();
+        result.log(log);
+        /*log.stream().filter(line -> line.startsWith("-- ")).forEach(line -> {
+            if (line.endsWith(" is false")) {
+                result.outcome(line.replace("-- ", "").replaceAll(" +is false", ""), false);
+            } else if (line.endsWith(" is true")) {
+                result.outcome(line.replace("-- ", "").replaceAll(" +is true", ""), true);
+            }
+        });*/
+        return result;
+
         // TODO
-        return null;
     }
 
     @Override
