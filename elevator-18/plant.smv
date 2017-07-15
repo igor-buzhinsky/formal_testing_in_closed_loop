@@ -1,23 +1,23 @@
 ASSIGN
     next(elevator_pos) := elevator_pos3;
-    next(on_floor[0]) := next(elevator_pos) = 2 * 0;
-    next(on_floor[1]) := next(elevator_pos) = 2 * 1;
-    next(on_floor[2]) := next(elevator_pos) = 2 * 2;
-    next(on_floor[3]) := next(elevator_pos) = 2 * 3;
-    next(on_floor[4]) := next(elevator_pos) = 2 * 4;
-    next(on_floor[5]) := next(elevator_pos) = 2 * 5;
-    next(on_floor[6]) := next(elevator_pos) = 2 * 6;
-    next(on_floor[7]) := next(elevator_pos) = 2 * 7;
-    next(on_floor[8]) := next(elevator_pos) = 2 * 8;
-    next(on_floor[9]) := next(elevator_pos) = 2 * 9;
-    next(on_floor[10]) := next(elevator_pos) = 2 * 10;
-    next(on_floor[11]) := next(elevator_pos) = 2 * 11;
-    next(on_floor[12]) := next(elevator_pos) = 2 * 12;
-    next(on_floor[13]) := next(elevator_pos) = 2 * 13;
-    next(on_floor[14]) := next(elevator_pos) = 2 * 14;
-    next(on_floor[15]) := next(elevator_pos) = 2 * 15;
-    next(on_floor[16]) := next(elevator_pos) = 2 * 16;
-    next(on_floor[17]) := next(elevator_pos) = 2 * 17;
+    next(on_floor[0]) := next(elevator_pos) = 3 * 0;
+    next(on_floor[1]) := next(elevator_pos) = 3 * 1;
+    next(on_floor[2]) := next(elevator_pos) = 3 * 2;
+    next(on_floor[3]) := next(elevator_pos) = 3 * 3;
+    next(on_floor[4]) := next(elevator_pos) = 3 * 4;
+    next(on_floor[5]) := next(elevator_pos) = 3 * 5;
+    next(on_floor[6]) := next(elevator_pos) = 3 * 6;
+    next(on_floor[7]) := next(elevator_pos) = 3 * 7;
+    next(on_floor[8]) := next(elevator_pos) = 3 * 8;
+    next(on_floor[9]) := next(elevator_pos) = 3 * 9;
+    next(on_floor[10]) := next(elevator_pos) = 3 * 10;
+    next(on_floor[11]) := next(elevator_pos) = 3 * 11;
+    next(on_floor[12]) := next(elevator_pos) = 3 * 12;
+    next(on_floor[13]) := next(elevator_pos) = 3 * 13;
+    next(on_floor[14]) := next(elevator_pos) = 3 * 14;
+    next(on_floor[15]) := next(elevator_pos) = 3 * 15;
+    next(on_floor[16]) := next(elevator_pos) = 3 * 16;
+    next(on_floor[17]) := next(elevator_pos) = 3 * 17;
     next(door_state[0]) := open[0] ? (door_state[0] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[0] in { d_open, d_opening } ? d_closing : d_closed);
     next(door_state[1]) := open[1] ? (door_state[1] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[1] in { d_open, d_opening } ? d_closing : d_closed);
     next(door_state[2]) := open[2] ? (door_state[2] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[2] in { d_open, d_opening } ? d_closing : d_closed);
@@ -110,5 +110,5 @@ ASSIGN
     next(call[17]) := (next(on_floor[17]) & next(door_open[17])) ? FALSE : next(user_cabin_button[17]) ? TRUE : call[17];
 DEFINE
     elevator_pos1 := elevator_pos + (up ? 1 : 0) - (down ? 1 : 0);
-    elevator_pos2 := elevator_pos1 > 2 * (FLOORS - 1) ? 2 * (FLOORS - 1) : elevator_pos1;
+    elevator_pos2 := elevator_pos1 > 3 * (FLOORS - 1) ? 3 * (FLOORS - 1) : elevator_pos1;
     elevator_pos3 := elevator_pos2 < 0 ? 0 : elevator_pos2;

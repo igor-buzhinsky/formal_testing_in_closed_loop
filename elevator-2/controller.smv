@@ -1,0 +1,21 @@
+ASSIGN
+    next(open[0]) := open[0] & !next(door_open[0]) | next(on_floor[0]) & call0;
+    next(open[1]) := open[1] & !next(door_open[1]) | next(on_floor[1]) & call1;
+    next(up) := case
+            !is_requested | need_stop: FALSE;
+            next(on_floor[0]) & (call1): TRUE;
+            next(on_floor[1]) & (call0): FALSE;
+            TRUE: up;
+        esac;
+    next(down) := case
+            !is_requested | need_stop: FALSE;
+            next(on_floor[0]) & (call1): FALSE;
+            next(on_floor[1]) & (call0): TRUE;
+            TRUE: down;
+        esac;
+DEFINE
+    call0 := next(button[0]) | next(call[0]);
+    call1 := next(button[1]) | next(call[1]);
+    is_requested := call0 | call1;
+    on_some_floor := next(on_floor[0]) | next(on_floor[1]);
+    need_stop := !next(door_closed[0]) | next(on_floor[0]) & call0 | !next(door_closed[1]) | next(on_floor[1]) & call1;

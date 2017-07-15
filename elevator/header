@@ -1,1 +1,2 @@
 #define FLOORS __1
+#define POS_PER_FLOOR __2

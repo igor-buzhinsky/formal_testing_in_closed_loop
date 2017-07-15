@@ -3,7 +3,7 @@
 set_floors() {
     floors=$1
     dir=elevator-$floors
-    maxlen=$((floors * 4))
+    maxlen=$((floors * 6 + 10))
 }
 
 call_spin() {
@@ -109,6 +109,6 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 6
-#check_nusmv 3
-#check_spin 3
+#comparison 6
+#check_nusmv 2
+check_spin 2

@@ -1,7 +1,6 @@
 // plant
-ltl pos0_1 { X( []((elevator_pos == 0) && down && !up -> X(elevator_pos == 0)) ) }
+ltl pos0_1 { X( []((elevator_pos == 0) && !(!down && up) -> X(elevator_pos == 0)) ) }
 ltl pos0_2 { X( []((elevator_pos == 0) && !down && up -> X(elevator_pos == 1)) ) }
-ltl pos0_3 { X( []((elevator_pos == 0) && (down == up) -> X(elevator_pos == 0)) ) }
 ltl pos1_1 { X( []((elevator_pos == 1) && down && !up -> X(elevator_pos == 0)) ) }
 ltl pos1_2 { X( []((elevator_pos == 1) && !down && up -> X(elevator_pos == 2)) ) }
 ltl pos1_3 { X( []((elevator_pos == 1) && (down == up) -> X(elevator_pos == 1)) ) }
@@ -60,20 +59,49 @@ ltl pos19_1 { X( []((elevator_pos == 19) && down && !up -> X(elevator_pos == 18)
 ltl pos19_2 { X( []((elevator_pos == 19) && !down && up -> X(elevator_pos == 20)) ) }
 ltl pos19_3 { X( []((elevator_pos == 19) && (down == up) -> X(elevator_pos == 19)) ) }
 ltl pos20_1 { X( []((elevator_pos == 20) && down && !up -> X(elevator_pos == 19)) ) }
-ltl pos20_2 { X( []((elevator_pos == 20) && !down && up -> X(elevator_pos == 20)) ) }
+ltl pos20_2 { X( []((elevator_pos == 20) && !down && up -> X(elevator_pos == 21)) ) }
 ltl pos20_3 { X( []((elevator_pos == 20) && (down == up) -> X(elevator_pos == 20)) ) }
+ltl pos21_1 { X( []((elevator_pos == 21) && down && !up -> X(elevator_pos == 20)) ) }
+ltl pos21_2 { X( []((elevator_pos == 21) && !down && up -> X(elevator_pos == 22)) ) }
+ltl pos21_3 { X( []((elevator_pos == 21) && (down == up) -> X(elevator_pos == 21)) ) }
+ltl pos22_1 { X( []((elevator_pos == 22) && down && !up -> X(elevator_pos == 21)) ) }
+ltl pos22_2 { X( []((elevator_pos == 22) && !down && up -> X(elevator_pos == 23)) ) }
+ltl pos22_3 { X( []((elevator_pos == 22) && (down == up) -> X(elevator_pos == 22)) ) }
+ltl pos23_1 { X( []((elevator_pos == 23) && down && !up -> X(elevator_pos == 22)) ) }
+ltl pos23_2 { X( []((elevator_pos == 23) && !down && up -> X(elevator_pos == 24)) ) }
+ltl pos23_3 { X( []((elevator_pos == 23) && (down == up) -> X(elevator_pos == 23)) ) }
+ltl pos24_1 { X( []((elevator_pos == 24) && down && !up -> X(elevator_pos == 23)) ) }
+ltl pos24_2 { X( []((elevator_pos == 24) && !down && up -> X(elevator_pos == 25)) ) }
+ltl pos24_3 { X( []((elevator_pos == 24) && (down == up) -> X(elevator_pos == 24)) ) }
+ltl pos25_1 { X( []((elevator_pos == 25) && down && !up -> X(elevator_pos == 24)) ) }
+ltl pos25_2 { X( []((elevator_pos == 25) && !down && up -> X(elevator_pos == 26)) ) }
+ltl pos25_3 { X( []((elevator_pos == 25) && (down == up) -> X(elevator_pos == 25)) ) }
+ltl pos26_1 { X( []((elevator_pos == 26) && down && !up -> X(elevator_pos == 25)) ) }
+ltl pos26_2 { X( []((elevator_pos == 26) && !down && up -> X(elevator_pos == 27)) ) }
+ltl pos26_3 { X( []((elevator_pos == 26) && (down == up) -> X(elevator_pos == 26)) ) }
+ltl pos27_1 { X( []((elevator_pos == 27) && down && !up -> X(elevator_pos == 26)) ) }
+ltl pos27_2 { X( []((elevator_pos == 27) && !down && up -> X(elevator_pos == 28)) ) }
+ltl pos27_3 { X( []((elevator_pos == 27) && (down == up) -> X(elevator_pos == 27)) ) }
+ltl pos28_1 { X( []((elevator_pos == 28) && down && !up -> X(elevator_pos == 27)) ) }
+ltl pos28_2 { X( []((elevator_pos == 28) && !down && up -> X(elevator_pos == 29)) ) }
+ltl pos28_3 { X( []((elevator_pos == 28) && (down == up) -> X(elevator_pos == 28)) ) }
+ltl pos29_1 { X( []((elevator_pos == 29) && down && !up -> X(elevator_pos == 28)) ) }
+ltl pos29_2 { X( []((elevator_pos == 29) && !down && up -> X(elevator_pos == 30)) ) }
+ltl pos29_3 { X( []((elevator_pos == 29) && (down == up) -> X(elevator_pos == 29)) ) }
+ltl pos30_1 { X( []((elevator_pos == 30) && down && !up -> X(elevator_pos == 29)) ) }
+ltl pos30_2 { X( []((elevator_pos == 30) && !(down && !up) -> X(elevator_pos == 30)) ) }
 
 ltl floor0 { X( [] (on_floor[0] <-> (elevator_pos == 0)) ) }
-ltl floor1 { X( [] (on_floor[1] <-> (elevator_pos == 2)) ) }
-ltl floor2 { X( [] (on_floor[2] <-> (elevator_pos == 4)) ) }
-ltl floor3 { X( [] (on_floor[3] <-> (elevator_pos == 6)) ) }
-ltl floor4 { X( [] (on_floor[4] <-> (elevator_pos == 8)) ) }
-ltl floor5 { X( [] (on_floor[5] <-> (elevator_pos == 10)) ) }
-ltl floor6 { X( [] (on_floor[6] <-> (elevator_pos == 12)) ) }
-ltl floor7 { X( [] (on_floor[7] <-> (elevator_pos == 14)) ) }
-ltl floor8 { X( [] (on_floor[8] <-> (elevator_pos == 16)) ) }
-ltl floor9 { X( [] (on_floor[9] <-> (elevator_pos == 18)) ) }
-ltl floor10 { X( [] (on_floor[10] <-> (elevator_pos == 20)) ) }
+ltl floor1 { X( [] (on_floor[1] <-> (elevator_pos == 3)) ) }
+ltl floor2 { X( [] (on_floor[2] <-> (elevator_pos == 6)) ) }
+ltl floor3 { X( [] (on_floor[3] <-> (elevator_pos == 9)) ) }
+ltl floor4 { X( [] (on_floor[4] <-> (elevator_pos == 12)) ) }
+ltl floor5 { X( [] (on_floor[5] <-> (elevator_pos == 15)) ) }
+ltl floor6 { X( [] (on_floor[6] <-> (elevator_pos == 18)) ) }
+ltl floor7 { X( [] (on_floor[7] <-> (elevator_pos == 21)) ) }
+ltl floor8 { X( [] (on_floor[8] <-> (elevator_pos == 24)) ) }
+ltl floor9 { X( [] (on_floor[9] <-> (elevator_pos == 27)) ) }
+ltl floor10 { X( [] (on_floor[10] <-> (elevator_pos == 30)) ) }
 
 ltl door0_open { X( []<>!(open[0] && !door_open[0]) ) }
 ltl door1_open { X( []<>!(open[1] && !door_open[1]) ) }
