@@ -189,8 +189,7 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
-            throws IOException {
+    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK) throws IOException {
         final List<String> log = new ArrayList<>();
         writeModel(null);
         final int retCode = run(log, disableCounterexamples, nusmvBMCK, timeout);
@@ -206,7 +205,7 @@ public class NuSMVRunner extends Runner {
                 result.outcome(line.replace("-- ", "").replaceAll(" +is true", ""), true);
             }
         });
-        return result;
+        return result; // FIXME something
     }
 
     @Override

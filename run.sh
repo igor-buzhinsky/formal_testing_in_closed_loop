@@ -29,12 +29,11 @@ print_test_suite() {
 }
 
 print_log() {
-    cat log
-    #cat log | grep ">>>"
-    #cat log | grep "Covered points: "
-    #cat log | grep "Exception"
-    #cat log | grep " = \\(true\\|false\\) \\*\\*\\*" | grep -v "pos" | grep -v "door" | grep -v "floor" | grep -v "test_passed"
-    #cat log | grep " specification " | sed 's/.* specification //g' | grep -v "is true"
+    #cat log
+    cat log | grep ">>> "
+    cat log | grep "Covered points: "
+    cat log | grep "Exception"
+    cat log | grep " = \\(true\\|false\\) \\*\\*\\*"
 }
 
 check_spin() {
@@ -43,19 +42,18 @@ check_spin() {
     echo ">>> RUN spin $floors"
 
     for minimize in "" "--minimize"; do
-        :
-        #call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 #> log
-        #print_log
-        #call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage #> log
-        #print_log
+        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 > log
+        print_log
+        call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
+        print_log
     done
 
-    call_spin closed-loop-verify --verbose #> log
-    #print_log
-    call_spin generate-random --number 10 --length 10 --output test.bin $seed #> log
-    #print_log
-    call_spin run --input test.bin --verify --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage #> log
-    #print_log
+    call_spin closed-loop-verify --verbose > log
+    print_log
+    call_spin generate-random --number 10 --length 10 --output test.bin $seed > log
+    print_log
+    call_spin run --input test.bin --verify --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
+    print_log
 }
 
 check_nusmv() {
@@ -64,18 +62,18 @@ check_nusmv() {
     echo ">>> RUN nusmv $floors"
 
     for minimize in "" "--minimize"; do
-        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --coi #> log
-        #print_log
-        call_nusmv run --input test.bin --measureCoverage --includeInternal $finite #> log
-        #print_log
+        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --coi > log
+        print_log
+        call_nusmv run --input test.bin --measureCoverage --includeInternal $finite > log
+        print_log
     done
 
-    call_nusmv closed-loop-verify --verbose --dynamic --coi #> log
-    #print_log
-    call_nusmv generate-random --number 10 --length 10 --output test.bin $seed #> log
-    #print_log
-    call_nusmv run --input test.bin --verify --measureCoverage --includeInternal --dynamic --coi $finite #> log
-    #print_log
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    print_log
+    call_nusmv generate-random --number 10 --length 10 --output test.bin $seed > log
+    print_log
+    call_nusmv run --input test.bin --verify --measureCoverage --includeInternal --dynamic --coi $finite > log
+    print_log
 }
 
 bmc_verification() {
@@ -93,7 +91,7 @@ comparison() {
     echo
     echo ">>> RUN comparison $floors"
     # Synthesize tests
-    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $finite > log
+    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $finite --coi > log
     print_log
     print_test_suite test.bin > /dev/null
     # Run tests
@@ -111,7 +109,6 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-#comparison 5
-#bmc_verification 15 30
+comparison 16
 #check_nusmv 3
-check_spin 3
+#check_spin 3

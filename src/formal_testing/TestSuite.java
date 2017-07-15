@@ -19,6 +19,13 @@ public class TestSuite implements Serializable {
         Arrays.stream(testCases).forEach(this.testCases::add);
     }
 
+    public void lengthReorder() {
+        final ArrayList<TestCase> ordered = new ArrayList<>(testCases);
+        Collections.sort(ordered, (o1, o2) -> o1.length() - o2.length());
+        testCases.clear();
+        testCases.addAll(ordered);
+    }
+
     public Collection<TestCase> testCases() {
         return Collections.unmodifiableSet(testCases);
     }
@@ -310,6 +317,7 @@ public class TestSuite implements Serializable {
     }
 
     public void print(String filename) throws IOException {
+        lengthReorder();
         try (final ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
             out.writeObject(this);
         }

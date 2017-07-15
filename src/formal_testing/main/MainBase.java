@@ -420,9 +420,9 @@ abstract class MainBase {
         }
     }
 
-    void verifyAll(String code, int timeout, boolean verbose, Integer verificationBMCK) throws IOException {
+    void verifyAll(String code, int timeout, boolean verbose, Integer nusmvBMCK) throws IOException {
         try (final Runner runner = Runner.create(data, code, Collections.emptyList(), null)) {
-            final RunnerResult result = runner.verify(timeout, false, verificationBMCK);
+            final RunnerResult result = runner.verify(timeout, false, nusmvBMCK);
             for (Map.Entry<String, Boolean> outcome : result.outcomes().entrySet()) {
                 System.out.println("*** " + outcome.getKey() + " = " + outcome.getValue() + " ***");
             }
