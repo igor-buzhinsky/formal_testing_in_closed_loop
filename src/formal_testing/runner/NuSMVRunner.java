@@ -6,7 +6,6 @@ import formal_testing.Settings;
 import formal_testing.TestCase;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.enums.Language;
-import formal_testing.enums.NuSMVMode;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -96,18 +95,6 @@ public class NuSMVRunner extends Runner {
 
     private final static String NOT_FOUND = "-- no counterexample found with bound ";
 
-    private void runProper(List<String> log, Integer maxTestLength) throws IOException {
-        if (Settings.NUSMV_MODE == NuSMVMode.BMC) {
-            runBMCIterative(log, maxTestLength);
-        } else if (Settings.NUSMV_MODE == NuSMVMode.INFINITE_CTL) {
-            run(log, false, null, 0);
-            throw new RuntimeException();
-            // TODO new test case representation and synthesis of lasso-shaped test cases
-        } else {
-            throw new RuntimeException();
-        }
-    }
-
     @Override
     public RunnerResult synthesize(CoveragePoint claim) throws IOException {
         if (maxTestLength == null) {
@@ -118,7 +105,7 @@ public class NuSMVRunner extends Runner {
         final String strClaim = claim.ltlProperty(null);
         writeModel(strClaim);
         final List<String> log = new ArrayList<>();
-        runProper(log, maxTestLength);
+        runBMCIterative(log, maxTestLength);
         TestCase testCase = null;
         Integer loopPosition = null;
         int effectiveLength = 0;
@@ -175,7 +162,7 @@ public class NuSMVRunner extends Runner {
         final String strClaim = claim.ltlProperty(null);
         writeModel(strClaim);
         final List<String> log = new ArrayList<>();
-        runProper(log, maxTestLength);
+        runBMCIterative(log, maxTestLength);
         for (String line : log) {
             //System.out.println(line);
             if (line.startsWith(NOT_FOUND + maxTestLength)) {

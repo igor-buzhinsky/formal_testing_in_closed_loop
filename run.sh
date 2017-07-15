@@ -19,7 +19,7 @@ call_nusmv() {
     local name="$1"
     echo " >>> $name"
     shift
-    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" -l NUSMV --nusmv_mode BMC $@ 2>&1
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" -l NUSMV $@ 2>&1
     echo
 }
 
@@ -109,6 +109,6 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 16
+comparison 6
 #check_nusmv 3
 #check_spin 3

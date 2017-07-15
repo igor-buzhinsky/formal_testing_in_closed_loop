@@ -38,11 +38,9 @@ public abstract class CoveragePoint {
     }
 
     private String nuSMVTemporalProperty(Integer steps) {
-        final String x = Settings.NUSMV_MODE.xOperator;
-        final String f = Settings.NUSMV_MODE.fOperator;
         return steps == null
-                ? nuSMVTemporalProperty("!" + x + "(" + f + "(", "))", steps)
-                : nuSMVTemporalProperty(nTimes(steps, x + "(") + "!(", nTimes(steps + 1, ")"), steps);
+                ? nuSMVTemporalProperty("X G !(", ")", steps)
+                : nuSMVTemporalProperty(nTimes(steps, "X ") + "!(", ")", steps);
     }
 
     private String nTimes(int times, String str) {

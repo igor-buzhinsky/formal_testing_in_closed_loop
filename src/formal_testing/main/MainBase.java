@@ -5,7 +5,6 @@ import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
 import formal_testing.enums.Language;
-import formal_testing.enums.NuSMVMode;
 import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
 import formal_testing.value.BooleanValue;
@@ -33,9 +32,6 @@ abstract class MainBase {
             required = true)
     private String language;
 
-    @Option(name = "--nusmv_mode", usage = "NuSMV/nuXmv mode, default = BMC", metaVar = "<mode>")
-    private String nuSMVMode = NuSMVMode.BMC.toString();
-
     @Option(name = "--panO", usage = "optimization level to compile pan, default = 2", metaVar = "<number>")
     private int panO = 2;
 
@@ -53,11 +49,6 @@ abstract class MainBase {
             System.out.println("Language: " + Settings.LANGUAGE);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Unsupported language " + language);
-        }
-        try {
-            Settings.NUSMV_MODE = NuSMVMode.valueOf(nuSMVMode);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Unsupported NuSMV mode " + nuSMVMode);
         }
         Settings.PAN_OPTIMIZATION_LEVEL = panO;
         Settings.NUSMV_DYNAMIC = dynamic;
