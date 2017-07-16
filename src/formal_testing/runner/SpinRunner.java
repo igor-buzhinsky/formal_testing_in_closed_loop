@@ -5,6 +5,7 @@ import formal_testing.ResourceMeasurement;
 import formal_testing.Settings;
 import formal_testing.TestCase;
 import formal_testing.coverage.CoveragePoint;
+import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
@@ -126,6 +127,24 @@ public class SpinRunner extends Runner {
         return dirName + "/" + MODEL_FILENAME + suffix + ".trail";
     }
 
+    private TestCase reconstructSpinTrace(List<String> lines) {
+        final TestCase tc = new TestCase(data.conf, true);
+        for (String line : lines) {
+            if (line.equals("  -> New State <-") || line.equals("#processes: 1")) {
+                tc.newElement();
+            } else if (line.matches("^[\t ]+\\w+(\\[[0-9]+\\])? = \\w+$")) {
+                final String[] tokens = line.split(" = ");
+                final String varName = tokens[0].trim();
+                //System.out.println(varName);
+                final Variable<?> var = data.conf.byName(varName);
+                if (var != null) {
+                    tc.addValue(varName, var.readValue(tokens[1].trim()));
+                }
+            }
+        }
+        return tc;
+    }
+
     @Override
     public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
             throws IOException {
@@ -151,18 +170,24 @@ public class SpinRunner extends Runner {
                     result.set(testCase);
                     // counterexample trace reading
                     createTraceReader(suffix);
+                    final List<String> counterexample = new ArrayList<>();
                     try (final BufferedReader reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                        reader.lines().forEach(line -> {
-                            inspectResourceConsumption(Collections.singletonList(line));
-                            if (line.matches(trailRegexp)) {
-                                final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                                testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
-                            }
-                        });
+                        reader.lines().forEach(counterexample::add);
+                    }
+                    for (String line : counterexample) {
+                        inspectResourceConsumption(Collections.singletonList(line));
+                        if (line.matches(trailRegexp)) {
+                            final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
+                            testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
+                        }
                     }
                     testCase.crop(len);
                     waitFor();
+                    if (minimize) {
+                        CoveragePoint.checkCovered(otherCps, reconstructSpinTrace(counterexample))
+                                .forEach(result::cover);
+                    }
                     break;
                 }
             } finally {

@@ -35,10 +35,11 @@ print_log() {
 
 check_spin() {
     set_floors "$1"
+    
     echo
     echo ">>> RUN spin $floors"
 
-    for minimize in "" "--minimize"; do
+    for minimize in "--minimize" ""; do
         call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 > log
         print_log
         call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
@@ -58,7 +59,7 @@ check_nusmv() {
     echo
     echo ">>> RUN nusmv $floors"
 
-    for minimize in "" "--minimize"; do
+    for minimize in "--minimize" ""; do
         call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --coi > log
         print_log
         call_nusmv run --input test.bin --measureCoverage --includeInternal $finite > log
@@ -85,7 +86,7 @@ bmc_verification() {
 
 comparison() {
     set_floors "$1"
-    
+
     echo
     echo ">>> comparison-no-minimization $floors"
     call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-large.bin $finite --coi > log
@@ -113,6 +114,7 @@ comparison() {
     # Run verification
     bmc_verification $floors $floors
     bmc_verification $floors $((floors * 2))
+    bmc_verification $floors $((floors * 3))
     call_nusmv closed-loop-verify --verbose --dynamic --coi > log
     print_log
 }
@@ -122,6 +124,6 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 3
+#comparison 5
 #check_nusmv 2
-#check_spin 2
+check_spin 2

@@ -28,6 +28,7 @@ public class TestCase implements Serializable {
             for (int j = 0; j < vars.size(); j++) {
                 final String varName = vars.get(j).indexedName();
                 final Value value = values.get(j);
+                //System.out.println(this);
                 if (!this.values.get(varName).get(i).toString().equals(value.toString())) {
                     continue l;
                 }
