@@ -19,7 +19,7 @@ public class TestSuite implements Serializable {
         Arrays.stream(testCases).forEach(this.testCases::add);
     }
 
-    public void lengthReorder() {
+    private void lengthReorder() {
         final ArrayList<TestCase> ordered = new ArrayList<>(testCases);
         Collections.sort(ordered, (o1, o2) -> o1.length() - o2.length());
         testCases.clear();

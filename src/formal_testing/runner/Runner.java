@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -89,21 +90,23 @@ public abstract class Runner implements AutoCloseable {
                 : new NuSMVRunner(data, modelCode, coveragePoints, maxLength);
     }
 
-    public abstract RunnerResult synthesize(CoveragePoint claim) throws IOException;
+    public abstract RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
+            throws IOException;
 
-    public abstract RunnerResult checkCoverage(CoveragePoint claim) throws IOException;
+    public abstract RunnerResult checkCoverage(CoveragePoint cp) throws IOException;
 
     public abstract RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException;
 
-    String trailRegexp() {
-        return "(" + String.join("|", data.conf.nondetVars.stream().map(Variable::indexedName)
+    String trailRegexp(boolean allVars) {
+        return "(" + String.join("|", (allVars ? data.conf.allVariables() : data.conf.nondetVars).stream()
+                .map(Variable::indexedName)
                 .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ") = [\\w]+";
     }
 
     @Override
     public void close() throws IOException {
-        //delete(new File(dirName));
+        delete(new File(dirName));
     }
 
     public abstract String creationReport();

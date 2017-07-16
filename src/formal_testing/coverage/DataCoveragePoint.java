@@ -1,6 +1,8 @@
 package formal_testing.coverage;
 
 import formal_testing.Settings;
+import formal_testing.TestCase;
+import formal_testing.value.Value;
 import formal_testing.variable.Variable;
 
 import java.util.Arrays;
@@ -12,14 +14,14 @@ import java.util.List;
  */
 public class DataCoveragePoint extends CoveragePoint {
     private final List<Variable> vars;
-    private final List<String> values;
+    private final List<Value> values;
 
-    public DataCoveragePoint(Variable var, String value) {
+    public DataCoveragePoint(Variable var, Value value) {
         this.vars = Collections.singletonList(var);
         this.values = Collections.singletonList(value);
     }
 
-    public DataCoveragePoint(Variable var1, String value1, Variable var2, String value2) {
+    public DataCoveragePoint(Variable var1, Value value1, Variable var2, Value value2) {
         this.vars = Arrays.asList(var1, var2);
         this.values = Arrays.asList(value1, value2);
     }
@@ -43,6 +45,11 @@ public class DataCoveragePoint extends CoveragePoint {
     @Override
     public String promelaLtlName() {
         return "covered_" + nameParts();
+    }
+
+    @Override
+    public boolean isCoveredBy(TestCase tc) {
+        return tc.contains(vars, values);
     }
 
     @Override

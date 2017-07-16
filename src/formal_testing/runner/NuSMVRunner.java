@@ -11,6 +11,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -62,8 +63,8 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private void runBMCIterative(List<String> result, int k) throws IOException {
-        runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
+    private void runBMCIterative(List<String> result, int k, boolean disableCoi) throws IOException {
+        runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI & !disableCoi);
     }
 
     private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout)
@@ -96,16 +97,17 @@ public class NuSMVRunner extends Runner {
     private final static String NOT_FOUND = "-- no counterexample found with bound ";
 
     @Override
-    public RunnerResult synthesize(CoveragePoint claim) throws IOException {
+    public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
+            throws IOException {
         if (maxTestLength == null) {
             throw new RuntimeException("Unbounded test case synthesis is not supported.");
         }
-        final String trailRegexp = "    " + trailRegexp();
+        final String trailRegexp = "    " + trailRegexp(minimize);
         final RunnerResult result = new RunnerResult();
-        final String strClaim = claim.ltlProperty(null);
-        writeModel(strClaim);
+        final String neverClaim = cp.ltlProperty(null);
+        writeModel(neverClaim);
         final List<String> log = new ArrayList<>();
-        runBMCIterative(log, maxTestLength);
+        runBMCIterative(log, maxTestLength, minimize);
         TestCase testCase = null;
         Integer loopPosition = null;
         int effectiveLength = 0;
@@ -115,11 +117,12 @@ public class NuSMVRunner extends Runner {
                 effectiveLength++;
             }
             if (line.startsWith(NOT_FOUND + maxTestLength)) {
-                result.outcome(strClaim, true);
+                result.outcome(neverClaim, true);
             } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
-                result.outcome(strClaim, false);
-                testCase = new TestCase(data.conf, false);
+                result.outcome(neverClaim, false);
+                testCase = new TestCase(data.conf, minimize);
                 result.set(testCase);
+                result.cover(cp);
             } else if (testCase != null) {
                 if (line.equals("  -- Loop starts here")) {
                     loopPosition = testCase.length();
@@ -147,28 +150,34 @@ public class NuSMVRunner extends Runner {
                 testCase.loopFromPosition(0, effectiveLength);
             }
             testCase.crop(effectiveLength);
+            if (minimize) {
+                CoveragePoint.checkCovered(otherCps, testCase).forEach(result::cover);
+            }
             testCase.validate();
+            if (minimize) {
+                result.set(testCase.reduceToNondetVars(data.conf));
+            }
         }
         result.log(log);
         return result;
     }
 
     @Override
-    public RunnerResult checkCoverage(CoveragePoint claim) throws IOException {
+    public RunnerResult checkCoverage(CoveragePoint cp) throws IOException {
         if (maxTestLength == null) {
             throw new RuntimeException("Unbounded coverage check is not supported.");
         }
         final RunnerResult result = new RunnerResult();
-        final String strClaim = claim.ltlProperty(null);
-        writeModel(strClaim);
+        final String neverClaim = cp.ltlProperty(null);
+        writeModel(neverClaim);
         final List<String> log = new ArrayList<>();
-        runBMCIterative(log, maxTestLength);
+        runBMCIterative(log, maxTestLength, false);
         for (String line : log) {
             //System.out.println(line);
             if (line.startsWith(NOT_FOUND + maxTestLength)) {
-                result.outcome(strClaim, true);
+                result.outcome(neverClaim, true);
             } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
-                result.outcome(strClaim, false);
+                result.outcome(neverClaim, false);
             }
         }
         result.log(log);
@@ -187,12 +196,12 @@ public class NuSMVRunner extends Runner {
         result.log(log);
         log.stream().filter(line -> line.startsWith("-- ")).forEach(line -> {
             if (line.endsWith(" is false")) {
-                result.outcome(line.replace("-- ", "").replaceAll(" +is false", ""), false);
+                result.outcome(line.replace("-- specification ", "").replaceAll(" +is false", ""), false);
             } else if (line.endsWith(" is true")) {
-                result.outcome(line.replace("-- ", "").replaceAll(" +is true", ""), true);
+                result.outcome(line.replace("-- specification ", "").replaceAll(" +is true", ""), true);
             }
         });
-        return result; // FIXME something
+        return result;
     }
 
     @Override

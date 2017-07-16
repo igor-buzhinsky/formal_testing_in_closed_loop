@@ -9,6 +9,7 @@ import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
 import formal_testing.value.BooleanValue;
 import formal_testing.value.IntegerValue;
+import formal_testing.value.Value;
 import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.IntegerVariable;
 import formal_testing.variable.SetVariable;
@@ -143,8 +144,8 @@ abstract class MainBase {
                 final Variable<?> varI = variables.get(i);
                 for (int j = i + 1; j < variables.size(); j++) {
                     final Variable<?> varJ = variables.get(j);
-                    for (String valueI : varI.stringValues()) {
-                        for (String valueJ : varJ.stringValues()) {
+                    for (Value valueI : varI.values()) {
+                        for (Value valueJ : varJ.values()) {
                             result.add(new DataCoveragePoint(varI, valueI, varJ, valueJ));
                         }
                     }
@@ -152,7 +153,7 @@ abstract class MainBase {
             }
         } else {
             for (Variable<?> var : variables) {
-                result.addAll(var.stringValues().stream().map(value -> new DataCoveragePoint(var, value))
+                result.addAll(var.values().stream().map(value -> new DataCoveragePoint(var, value))
                         .collect(Collectors.toList()));
             }
         }

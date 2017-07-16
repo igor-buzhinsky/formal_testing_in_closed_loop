@@ -127,24 +127,26 @@ public class SpinRunner extends Runner {
     }
 
     @Override
-    public RunnerResult synthesize(CoveragePoint claim) throws IOException {
+    public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
+            throws IOException {
         if (maxTestLength == null) {
             throw new RuntimeException("Unbounded test case synthesis is not supported.");
         }
         final RunnerResult result = new RunnerResult();
-        final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp() + "\\].*$";
+        final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp(false) + "\\].*$";
         File trailFile = null;
         final List<String> log = new ArrayList<>();
-        final String strClaim = claim.promelaLtlName();
+        final String neverClaim = cp.promelaLtlName();
         for (int len = 1; len <= maxTestLength; len++) {
-            final String suffix = "." + propertyToPart.get(strClaim + "__" + len);
+            final String suffix = "." + propertyToPart.get(neverClaim + "__" + len);
             final String trailPath = trailPath(suffix);
             try {
-                log.addAll(runPan(suffix, strClaim + "__" + len));
+                log.addAll(runPan(suffix, neverClaim + "__" + len));
                 //log.forEach(System.out::println);
                 trailFile = new File(trailPath);
                 if (trailFile.exists()) {
-                    result.outcome(strClaim, false);
+                    result.outcome(neverClaim, false);
+                    result.cover(cp);
                     final TestCase testCase = new TestCase(data.conf, false);
                     result.set(testCase);
                     // counterexample trace reading
@@ -168,18 +170,18 @@ public class SpinRunner extends Runner {
             }
         }
         if (!result.found()) {
-            result.outcome(strClaim, true);
+            result.outcome(neverClaim, true);
         }
         result.log(log);
         return result;
     }
 
     @Override
-    public RunnerResult checkCoverage(CoveragePoint claim) throws IOException {
+    public RunnerResult checkCoverage(CoveragePoint cp) throws IOException {
         final RunnerResult result = new RunnerResult();
         File trailFile = null;
         final List<String> log = new ArrayList<>();
-        final String strClaim = claim.promelaLtlName();
+        final String neverClaim = cp.promelaLtlName();
         final List<Integer> lens = new ArrayList<>();
         if (maxTestLength != null) {
             for (int len = 1; len <= maxTestLength; len++) {
@@ -189,14 +191,14 @@ public class SpinRunner extends Runner {
             lens.add(null);
         }
         for (Integer len : lens) {
-            final String suffix = "." + propertyToPart.get(strClaim + "__" + len);
+            final String suffix = "." + propertyToPart.get(neverClaim + "__" + len);
             final String trailPath = dirName + "/" + MODEL_FILENAME + suffix + ".trail";
             try {
-                log.addAll(runPan(suffix, strClaim + "__" + len));
+                log.addAll(runPan(suffix, neverClaim + "__" + len));
                 //log.forEach(System.out::println);
                 trailFile = new File(trailPath);
                 if (trailFile.exists()) {
-                    result.outcome(strClaim, false);
+                    result.outcome(neverClaim, false);
                     break;
                 }
             } finally {
@@ -204,7 +206,7 @@ public class SpinRunner extends Runner {
             }
         }
         if (result.outcomes().isEmpty()) {
-            result.outcome(strClaim, true);
+            result.outcome(neverClaim, true);
         }
         result.log(log);
         return result;

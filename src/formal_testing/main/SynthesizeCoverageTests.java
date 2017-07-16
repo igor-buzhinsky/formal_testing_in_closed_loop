@@ -11,6 +11,8 @@ import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Created by buzhinsky on 6/28/17.
@@ -56,6 +58,8 @@ public class SynthesizeCoverageTests extends MainArgs {
 
         System.out.println("Coverage test synthesis...");
 
+        final Set<CoveragePoint> uncovered = new LinkedHashSet<>(info.coveragePoints);
+
         for (int i = 0; i < info.coveragePoints.size(); i++) {
             final CoveragePoint cp = info.coveragePoints.get(i);
             if (cp.covered()) {
@@ -65,18 +69,17 @@ public class SynthesizeCoverageTests extends MainArgs {
             final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
             try (final Runner runner = Runner.create(data, code, Collections.singletonList(cp), maxLength)) {
                 System.out.println("  " + runner.creationReport());
-                final RunnerResult result = runner.synthesize(cp);
+                final RunnerResult result = runner.synthesize(cp, minimize, uncovered);
                 if (result.found()) {
-                    cp.cover();
-                    info.coveredPoints++;
-                    System.out.println("    " + cp);
-                    final TestCase tc = result.testCase();
-                    if (minimize) {
-                        info.coveredPoints += examineTestCase(tc, info.coveragePoints,
-                                checkFiniteCoverage ? tc.length() : null, plantCodeCoverage, controllerCodeCoverage);
+                    for (CoveragePoint covered : result.covered())  {
+                        covered.cover();
+                        info.coveredPoints++;
+                        uncovered.remove(covered);
+                        System.out.println("    " + covered);
                     }
-                    System.out.println("    Generated: " + tc);
+                    final TestCase tc = result.testCase();
                     testSuite.add(tc);
+                    System.out.println("    Generated: " + tc);
                 } else {
                     System.out.println("    " + cp);
                 }

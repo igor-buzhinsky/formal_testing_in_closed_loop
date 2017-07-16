@@ -1,5 +1,7 @@
 package formal_testing.coverage;
 
+import formal_testing.TestCase;
+
 /**
  * Created by buzhinsky on 6/30/17.
  */
@@ -13,6 +15,12 @@ public class FlowCoveragePoint extends CoveragePoint {
     @Override
     public String promelaLtlName() {
         return "flow_covered_" + index;
+    }
+
+    @Override
+    public boolean isCoveredBy(TestCase tc) {
+        return false;
+        // FIXME can be potentially implemented, but this is probably not worth doing
     }
 
     @Override

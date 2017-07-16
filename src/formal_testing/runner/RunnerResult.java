@@ -2,6 +2,7 @@ package formal_testing.runner;
 
 import formal_testing.ResourceMeasurement;
 import formal_testing.TestCase;
+import formal_testing.coverage.CoveragePoint;
 
 import java.util.*;
 
@@ -12,6 +13,7 @@ public class RunnerResult {
     private TestCase testCase;
     private final Map<String, Boolean> outcomes = new LinkedHashMap<>();
     private final List<String> log = new ArrayList<>();
+    private final Set<CoveragePoint> covered = new LinkedHashSet<>();
     private ResourceMeasurement measurement = new ResourceMeasurement();
 
     void set(TestCase testCase) {
@@ -20,10 +22,6 @@ public class RunnerResult {
 
     public boolean found() {
         return testCase != null;
-    }
-
-    public ResourceMeasurement measurement() {
-        return measurement;
     }
 
     public Map<String, Boolean> outcomes() {
@@ -49,5 +47,13 @@ public class RunnerResult {
 
     public List<String> log() {
         return Collections.unmodifiableList(log);
+    }
+
+    void cover(CoveragePoint cp) {
+        covered.add(cp);
+    }
+
+    public Set<CoveragePoint> covered() {
+        return Collections.unmodifiableSet(covered);
     }
 }

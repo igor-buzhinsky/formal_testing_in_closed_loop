@@ -5,6 +5,7 @@ import formal_testing.variable.Variable;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by buzhinsky on 6/29/17.
@@ -12,6 +13,29 @@ import java.util.*;
 public class TestCase implements Serializable {
     private final Map<String, List<Value>> values = new LinkedHashMap<>();
     private int length = 0;
+
+    public TestCase reduceToNondetVars(Configuration conf) {
+        final TestCase result = new TestCase(conf, false);
+        final Set<String> properNames = conf.nondetVars.stream().map(Variable::indexedName).collect(Collectors.toSet());
+        values.entrySet().stream().filter(entry -> properNames.contains(entry.getKey())).forEach(
+                entry -> result.values.put(entry.getKey(), entry.getValue()));
+        result.length = length;
+        return result;
+    }
+
+    public boolean contains(List<Variable> vars, List<Value> values) {
+        l: for (int i = 0; i < length; i++) {
+            for (int j = 0; j < vars.size(); j++) {
+                final String varName = vars.get(j).indexedName();
+                final Value value = values.get(j);
+                if (!this.values.get(varName).get(i).toString().equals(value.toString())) {
+                    continue l;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
     public TestCase(Configuration conf, boolean allVars) {
         for (Variable v : allVars ? conf.allVariables() : conf.nondetVars) {

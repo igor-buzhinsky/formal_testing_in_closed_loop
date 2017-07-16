@@ -29,11 +29,8 @@ print_test_suite() {
 }
 
 print_log() {
-    cat log
-    #cat log | grep ">>> "
-    #cat log | grep "Covered points: "
-    #cat log | grep "Exception"
-    #cat log | grep " = \\(true\\|false\\) \\*\\*\\*"
+    #cat log
+    cat log | grep "\\(>>> \\|Covered points: \\|Exception\\| = \\(true\\|false\\) \\*\\*\\*\\)" | grep -v "\\*\\*\\* \\(pos\\|floor\\|door\\|test_passed\\).*="
 }
 
 check_spin() {
@@ -88,15 +85,31 @@ bmc_verification() {
 
 comparison() {
     set_floors "$1"
+    
     echo
-    echo ">>> RUN comparison $floors"
-    # Synthesize tests
-    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $finite --coi > log
+    echo ">>> comparison-no-minimization $floors"
+    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-large.bin $finite --coi > log
     print_log
-    print_test_suite test.bin > /dev/null
-    # Run tests
-    call_spin run --input test.bin --verify --output out.pml $finite --panO 0 > log
+    print_test_suite test-large.bin > /dev/null
+    call_spin run --input test-large.bin --verify --output out-large.pml $finite --panO 0 > log
     print_log
+
+    echo
+    echo ">>> comparison-with-minimization $floors"
+    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize > log
+    print_log
+    print_test_suite test-small.bin > /dev/null
+    call_spin run --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log
+    print_log
+
+    echo
+    echo ">>> comparison-with-minimization-and-value-pair-coverage $floors"
+    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-pair.bin $finite --minimize --valuePairCoverage > log
+    print_log
+    print_test_suite test-pair.bin > /dev/null
+    call_spin run --input test-pair.bin --verify --output out-pair.pml $finite --panO 0 > log
+    print_log
+
     # Run verification
     bmc_verification $floors $floors
     bmc_verification $floors $((floors * 2))
@@ -109,6 +122,6 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-#comparison 20
-check_nusmv 2
+comparison 3
+#check_nusmv 2
 #check_spin 2
