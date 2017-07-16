@@ -118,7 +118,7 @@ public class NuSMVRunner extends Runner {
                 result.outcome(strClaim, true);
             } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
                 result.outcome(strClaim, false);
-                testCase = new TestCase(data.conf);
+                testCase = new TestCase(data.conf, false);
                 result.set(testCase);
             } else if (testCase != null) {
                 if (line.equals("  -- Loop starts here")) {

@@ -145,7 +145,7 @@ public class SpinRunner extends Runner {
                 trailFile = new File(trailPath);
                 if (trailFile.exists()) {
                     result.outcome(strClaim, false);
-                    final TestCase testCase = new TestCase(data.conf);
+                    final TestCase testCase = new TestCase(data.conf, false);
                     result.set(testCase);
                     // counterexample trace reading
                     createTraceReader(suffix);

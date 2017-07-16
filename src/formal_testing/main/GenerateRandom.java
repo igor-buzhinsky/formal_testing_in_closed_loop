@@ -39,7 +39,7 @@ public class GenerateRandom extends MainArgs {
         final List<List<? extends Value>> allValues = data.conf.nondetVars.stream()
                 .map(Variable::values).collect(Collectors.toList());
         for (int i = 0; i < number; i++) {
-            final TestCase tc = new TestCase(data.conf);
+            final TestCase tc = new TestCase(data.conf, false);
             for (int j = 0; j < length; j++) {
                 for (int k = 0; k < data.conf.nondetVars.size(); k++) {
                     final Variable<?> var = data.conf.nondetVars.get(k);
