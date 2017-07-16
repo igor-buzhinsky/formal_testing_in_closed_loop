@@ -281,6 +281,14 @@ abstract class MainBase {
         return code.toString();
     }
 
+    private void promelaPrintf(StringBuilder sb, String indent) {
+        sb.append(indent).append("printf(\"\\n  -> State <-\\n")
+                .append(String.join("", data.conf.allVariables().stream().map(v -> "    " + v.indexedName() + " = %d\\n")
+                        .collect(Collectors.toList()))).append("\"")
+                .append(String.join("", data.conf.allVariables().stream().map(v -> ", " + v.indexedName())
+                        .collect(Collectors.toList()))).append(");\n");
+    }
+
     private String promelaModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
                                     String testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
                                     CodeCoverageCounter counter) {
@@ -332,7 +340,9 @@ abstract class MainBase {
             code.append(Util.indent(testBody)).append("\n");
         }
         code.append("\n").append(Util.indent(plantCode)).append("\n\n")
-                .append(Util.indent(controllerCode)).append("\n").append("} od }\n");
+                .append(Util.indent(controllerCode)).append("\n");
+        promelaPrintf(code, "    ");
+        code.append("} od }\n");
         if (spec) {
             code.append("\n").append(data.spec);
         }

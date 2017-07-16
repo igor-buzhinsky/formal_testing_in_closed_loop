@@ -103,6 +103,16 @@ ltl door6_close { X( []<>!(!open[6] && !door_closed[6]) ) }
 ltl door7_close { X( []<>!(!open[7] && !door_closed[7]) ) }
 ltl door8_close { X( []<>!(!open[8] && !door_closed[8]) ) }
 
+ltl door0_delay { X( [](!door_open[0] -> X(!user_floor_button[0] && !user_cabin_button[0] && door_open[0] -> X(!user_floor_button[0] && !user_cabin_button[0] -> door_open[0] && X(!user_floor_button[0] && !user_cabin_button[0] -> door_open[0] && X(!user_floor_button[0] && !user_cabin_button[0] -> !door_open[0]))))) ) }
+ltl door1_delay { X( [](!door_open[1] -> X(!user_floor_button[1] && !user_cabin_button[1] && door_open[1] -> X(!user_floor_button[1] && !user_cabin_button[1] -> door_open[1] && X(!user_floor_button[1] && !user_cabin_button[1] -> door_open[1] && X(!user_floor_button[1] && !user_cabin_button[1] -> !door_open[1]))))) ) }
+ltl door2_delay { X( [](!door_open[2] -> X(!user_floor_button[2] && !user_cabin_button[2] && door_open[2] -> X(!user_floor_button[2] && !user_cabin_button[2] -> door_open[2] && X(!user_floor_button[2] && !user_cabin_button[2] -> door_open[2] && X(!user_floor_button[2] && !user_cabin_button[2] -> !door_open[2]))))) ) }
+ltl door3_delay { X( [](!door_open[3] -> X(!user_floor_button[3] && !user_cabin_button[3] && door_open[3] -> X(!user_floor_button[3] && !user_cabin_button[3] -> door_open[3] && X(!user_floor_button[3] && !user_cabin_button[3] -> door_open[3] && X(!user_floor_button[3] && !user_cabin_button[3] -> !door_open[3]))))) ) }
+ltl door4_delay { X( [](!door_open[4] -> X(!user_floor_button[4] && !user_cabin_button[4] && door_open[4] -> X(!user_floor_button[4] && !user_cabin_button[4] -> door_open[4] && X(!user_floor_button[4] && !user_cabin_button[4] -> door_open[4] && X(!user_floor_button[4] && !user_cabin_button[4] -> !door_open[4]))))) ) }
+ltl door5_delay { X( [](!door_open[5] -> X(!user_floor_button[5] && !user_cabin_button[5] && door_open[5] -> X(!user_floor_button[5] && !user_cabin_button[5] -> door_open[5] && X(!user_floor_button[5] && !user_cabin_button[5] -> door_open[5] && X(!user_floor_button[5] && !user_cabin_button[5] -> !door_open[5]))))) ) }
+ltl door6_delay { X( [](!door_open[6] -> X(!user_floor_button[6] && !user_cabin_button[6] && door_open[6] -> X(!user_floor_button[6] && !user_cabin_button[6] -> door_open[6] && X(!user_floor_button[6] && !user_cabin_button[6] -> door_open[6] && X(!user_floor_button[6] && !user_cabin_button[6] -> !door_open[6]))))) ) }
+ltl door7_delay { X( [](!door_open[7] -> X(!user_floor_button[7] && !user_cabin_button[7] && door_open[7] -> X(!user_floor_button[7] && !user_cabin_button[7] -> door_open[7] && X(!user_floor_button[7] && !user_cabin_button[7] -> door_open[7] && X(!user_floor_button[7] && !user_cabin_button[7] -> !door_open[7]))))) ) }
+ltl door8_delay { X( [](!door_open[8] -> X(!user_floor_button[8] && !user_cabin_button[8] && door_open[8] -> X(!user_floor_button[8] && !user_cabin_button[8] -> door_open[8] && X(!user_floor_button[8] && !user_cabin_button[8] -> door_open[8] && X(!user_floor_button[8] && !user_cabin_button[8] -> !door_open[8]))))) ) }
+
 // open-loop
 ltl phi06 { X( []!(up && down) ) }
 

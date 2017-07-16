@@ -1,16 +1,32 @@
 ASSIGN
-    next(open[0]) := open[0] & !next(door_open[0]) | next(on_floor[0]) & call0;
-    next(open[1]) := open[1] & !next(door_open[1]) | next(on_floor[1]) & call1;
-    next(open[2]) := open[2] & !next(door_open[2]) | next(on_floor[2]) & call2;
-    next(open[3]) := open[3] & !next(door_open[3]) | next(on_floor[3]) & call3;
-    next(open[4]) := open[4] & !next(door_open[4]) | next(on_floor[4]) & call4;
-    next(open[5]) := open[5] & !next(door_open[5]) | next(on_floor[5]) & call5;
-    next(open[6]) := open[6] & !next(door_open[6]) | next(on_floor[6]) & call6;
-    next(open[7]) := open[7] & !next(door_open[7]) | next(on_floor[7]) & call7;
-    next(open[8]) := open[8] & !next(door_open[8]) | next(on_floor[8]) & call8;
-    next(open[9]) := open[9] & !next(door_open[9]) | next(on_floor[9]) & call9;
-    next(open[10]) := open[10] & !next(door_open[10]) | next(on_floor[10]) & call10;
-    next(open[11]) := open[11] & !next(door_open[11]) | next(on_floor[11]) & call11;
+    next(door_timer) := case
+            !open[0] & next(on_floor[0]) & call0: 4;
+            !open[1] & next(on_floor[1]) & call1: 4;
+            !open[2] & next(on_floor[2]) & call2: 4;
+            !open[3] & next(on_floor[3]) & call3: 4;
+            !open[4] & next(on_floor[4]) & call4: 4;
+            !open[5] & next(on_floor[5]) & call5: 4;
+            !open[6] & next(on_floor[6]) & call6: 4;
+            !open[7] & next(on_floor[7]) & call7: 4;
+            !open[8] & next(on_floor[8]) & call8: 4;
+            !open[9] & next(on_floor[9]) & call9: 4;
+            !open[10] & next(on_floor[10]) & call10: 4;
+            !open[11] & next(on_floor[11]) & call11: 4;
+            door_timer > 0: door_timer - 1;
+            TRUE: door_timer;
+        esac;
+    next(open[0]) := open[0] & !next(door_open[0]) | next(on_floor[0]) & call0 | next(door_open[0]) & next(door_timer) > 0;
+    next(open[1]) := open[1] & !next(door_open[1]) | next(on_floor[1]) & call1 | next(door_open[1]) & next(door_timer) > 0;
+    next(open[2]) := open[2] & !next(door_open[2]) | next(on_floor[2]) & call2 | next(door_open[2]) & next(door_timer) > 0;
+    next(open[3]) := open[3] & !next(door_open[3]) | next(on_floor[3]) & call3 | next(door_open[3]) & next(door_timer) > 0;
+    next(open[4]) := open[4] & !next(door_open[4]) | next(on_floor[4]) & call4 | next(door_open[4]) & next(door_timer) > 0;
+    next(open[5]) := open[5] & !next(door_open[5]) | next(on_floor[5]) & call5 | next(door_open[5]) & next(door_timer) > 0;
+    next(open[6]) := open[6] & !next(door_open[6]) | next(on_floor[6]) & call6 | next(door_open[6]) & next(door_timer) > 0;
+    next(open[7]) := open[7] & !next(door_open[7]) | next(on_floor[7]) & call7 | next(door_open[7]) & next(door_timer) > 0;
+    next(open[8]) := open[8] & !next(door_open[8]) | next(on_floor[8]) & call8 | next(door_open[8]) & next(door_timer) > 0;
+    next(open[9]) := open[9] & !next(door_open[9]) | next(on_floor[9]) & call9 | next(door_open[9]) & next(door_timer) > 0;
+    next(open[10]) := open[10] & !next(door_open[10]) | next(on_floor[10]) & call10 | next(door_open[10]) & next(door_timer) > 0;
+    next(open[11]) := open[11] & !next(door_open[11]) | next(on_floor[11]) & call11 | next(door_open[11]) & next(door_timer) > 0;
     next(up) := case
             !is_requested | need_stop: FALSE;
             next(on_floor[0]) & (call1 | call2 | call3 | call4 | call5 | call6 | call7 | call8 | call9 | call10 | call11): TRUE;

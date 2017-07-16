@@ -31,6 +31,10 @@ LTLSPEC X( G F !(!open[0] & !door_closed[0]) )
 LTLSPEC X( G F !(!open[1] & !door_closed[1]) ) 
 LTLSPEC X( G F !(!open[2] & !door_closed[2]) ) 
 
+LTLSPEC X( G (!door_open[0] -> X(!user_floor_button[0] & !user_cabin_button[0] & door_open[0] -> X(!user_floor_button[0] & !user_cabin_button[0] -> door_open[0] & X(!user_floor_button[0] & !user_cabin_button[0] -> door_open[0] & X(!user_floor_button[0] & !user_cabin_button[0] -> !door_open[0]))))) ) 
+LTLSPEC X( G (!door_open[1] -> X(!user_floor_button[1] & !user_cabin_button[1] & door_open[1] -> X(!user_floor_button[1] & !user_cabin_button[1] -> door_open[1] & X(!user_floor_button[1] & !user_cabin_button[1] -> door_open[1] & X(!user_floor_button[1] & !user_cabin_button[1] -> !door_open[1]))))) ) 
+LTLSPEC X( G (!door_open[2] -> X(!user_floor_button[2] & !user_cabin_button[2] & door_open[2] -> X(!user_floor_button[2] & !user_cabin_button[2] -> door_open[2] & X(!user_floor_button[2] & !user_cabin_button[2] -> door_open[2] & X(!user_floor_button[2] & !user_cabin_button[2] -> !door_open[2]))))) ) 
+
 -- open-loop
 LTLSPEC X( G !(up & down) ) 
 

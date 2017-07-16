@@ -31,6 +31,10 @@ CTLSPEC AX( AG AF !(!open[0] & !door_closed[0]) )
 CTLSPEC AX( AG AF !(!open[1] & !door_closed[1]) ) 
 CTLSPEC AX( AG AF !(!open[2] & !door_closed[2]) ) 
 
+CTLSPEC AX( AG (!door_open[0] -> AX(!user_floor_button[0] & !user_cabin_button[0] & door_open[0] -> AX(!user_floor_button[0] & !user_cabin_button[0] -> door_open[0] & AX(!user_floor_button[0] & !user_cabin_button[0] -> door_open[0] & AX(!user_floor_button[0] & !user_cabin_button[0] -> !door_open[0]))))) ) 
+CTLSPEC AX( AG (!door_open[1] -> AX(!user_floor_button[1] & !user_cabin_button[1] & door_open[1] -> AX(!user_floor_button[1] & !user_cabin_button[1] -> door_open[1] & AX(!user_floor_button[1] & !user_cabin_button[1] -> door_open[1] & AX(!user_floor_button[1] & !user_cabin_button[1] -> !door_open[1]))))) ) 
+CTLSPEC AX( AG (!door_open[2] -> AX(!user_floor_button[2] & !user_cabin_button[2] & door_open[2] -> AX(!user_floor_button[2] & !user_cabin_button[2] -> door_open[2] & AX(!user_floor_button[2] & !user_cabin_button[2] -> door_open[2] & AX(!user_floor_button[2] & !user_cabin_button[2] -> !door_open[2]))))) ) 
+
 -- open-loop
 CTLSPEC AX( AG !(up & down) ) 
 

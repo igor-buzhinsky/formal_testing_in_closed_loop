@@ -1,7 +1,7 @@
 ASSIGN
     next(elevator_pos) := elevator_pos3;
-    next(on_floor[0]) := next(elevator_pos) = 3 * 0;
-    next(on_floor[1]) := next(elevator_pos) = 3 * 1;
+    next(on_floor[0]) := next(elevator_pos) = 0;
+    next(on_floor[1]) := next(elevator_pos) = 3;
     next(door_state[0]) := open[0] ? (door_state[0] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[0] in { d_open, d_opening } ? d_closing : d_closed);
     next(door_state[1]) := open[1] ? (door_state[1] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[1] in { d_open, d_opening } ? d_closing : d_closed);
     next(door_closed[0]) := next(door_state[0]) = d_closed;

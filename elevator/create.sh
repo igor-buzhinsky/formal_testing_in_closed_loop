@@ -26,7 +26,7 @@ for ((floors = from; floors <= to; floors++)); do
     echo "ASSIGN" >> tmp
     echo "    next(elevator_pos) := elevator_pos3;" >> tmp
     for ((i = 0; i < $floors; i++)); do
-        echo "    next(on_floor[$i]) := next(elevator_pos) = $posperfloor * $i;" >> tmp
+        echo "    next(on_floor[$i]) := next(elevator_pos) = $((posperfloor * i));" >> tmp
     done
     for ((i = 0; i < $floors; i++)); do
         echo "    next(door_state[$i]) := open[$i] ? (door_state[$i] in { d_closed, d_closing } ? d_opening : d_open) : (door_state[$i] in { d_open, d_opening } ? d_closing : d_closed);" >> tmp
@@ -51,8 +51,17 @@ for ((floors = from; floors <= to; floors++)); do
     mv tmp $dir/plant.smv
 
     echo "ASSIGN" >> tmp
+    
+    echo "    next(door_timer) := case" >> tmp
     for ((i = 0; i < $floors; i++)); do
-        echo "    next(open[$i]) := open[$i] & !next(door_open[$i]) | next(on_floor[$i]) & call$i;" >> tmp
+        echo "            !open[$i] & next(on_floor[$i]) & call$i: 4;" >> tmp
+    done
+    echo "            door_timer > 0: door_timer - 1;" >> tmp
+    echo "            TRUE: door_timer;" >> tmp
+    echo "        esac;" >> tmp
+    
+    for ((i = 0; i < $floors; i++)); do
+        echo "    next(open[$i]) := open[$i] & !next(door_open[$i]) | next(on_floor[$i]) & call$i | next(door_open[$i]) & next(door_timer) > 0;" >> tmp
     done
     echo "    next(up) := case" >> tmp
     echo "            !is_requested | need_stop: FALSE;" >> tmp
@@ -109,7 +118,13 @@ for ((floors = from; floors <= to; floors++)); do
     for ((i = 0; i < $floors; i++)); do
         echo "ltl door${i}_close { X( []<>!(!open[$i] && !door_closed[$i]) ) }" >> tmp
     done
-
+    
+    # door closing delay
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_delay { X( [](!door_open[$i] -> X(!user_floor_button[$i] && !user_cabin_button[$i] && door_open[$i] -> X(!user_floor_button[$i] && !user_cabin_button[$i] -> door_open[$i] && X(!user_floor_button[$i] && !user_cabin_button[$i] -> door_open[$i] && X(!user_floor_button[$i] && !user_cabin_button[$i] -> !door_open[$i]))))) ) }" >> tmp
+    done
+    
     echo >> tmp
     echo "// open-loop" >> tmp
     echo "ltl phi06 { X( []!(up && down) ) }" >> tmp

@@ -29,6 +29,10 @@ public class Configuration {
         return variablesByNames.get(indexedName);
     }
 
+    public Collection<Variable<?>> allVariables() {
+        return Collections.unmodifiableCollection(variablesByNames.values());
+    }
+
     @Override
     public String toString() {
         return "input: " + inputVars + "\n" +
