@@ -14,6 +14,14 @@ public class TestSuite implements Serializable {
     private final Set<TestCase> testCases = new LinkedHashSet<>();
     private final boolean addOracle;
 
+    public int size() {
+        return testCases.size();
+    }
+
+    public int totalLength() {
+        return testCases.stream().mapToInt(TestCase::length).sum();
+    }
+
     public TestSuite(boolean addOracle, TestCase... testCases) {
         this.addOracle = addOracle;
         Arrays.stream(testCases).forEach(this.testCases::add);

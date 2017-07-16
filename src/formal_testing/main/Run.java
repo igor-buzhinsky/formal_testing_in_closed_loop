@@ -58,6 +58,9 @@ public class Run extends MainArgs {
         final TestSuite ts = TestSuite.read(filename);
         final String code = modelCode(true, false, true, ts.header(), ts.body(data.conf), false, false, null, true);
 
+        System.out.println("Loaded test suite " + filename + ", #test_cases = " + ts.size()
+                + ", #elements = " + ts.totalLength());
+
         if (outputFilename != null) {
             System.out.println("Writing formal model to " + outputFilename + "...");
             try (PrintWriter pw = new PrintWriter(outputFilename)) {

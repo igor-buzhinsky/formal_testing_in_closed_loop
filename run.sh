@@ -30,7 +30,7 @@ print_test_suite() {
 
 print_log() {
     #cat log
-    cat log | grep "\\(>>> \\|Covered points: \\|Exception\\| = \\(true\\|false\\) \\*\\*\\*\\)" | grep -v "\\*\\*\\* \\(pos\\|floor\\|door\\|test_passed\\).*="
+    cat log | grep "\\(>>> \\|Loaded test suite\\|Covered points: \\|Exception\\| = \\(true\\|false\\) \\*\\*\\*\\)" | grep -v "\\*\\*\\* \\(pos\\|floor\\|door\\|test_passed\\).*="
 }
 
 check_spin() {
