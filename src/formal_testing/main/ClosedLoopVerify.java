@@ -26,7 +26,7 @@ public class ClosedLoopVerify extends MainArgs {
     @Override
     protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
-        final String code = modelCode(false, true, true, null, null, false, false, null);
+        final String code = modelCode(false, true, true, null, null, false, false, null, true);
         verifyAll(code, timeout, verbose, verificationBMCK);
     }
 }

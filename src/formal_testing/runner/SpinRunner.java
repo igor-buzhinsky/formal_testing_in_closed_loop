@@ -27,12 +27,11 @@ public class SpinRunner extends Runner {
 
     private final ResourceMeasurement creationMeasurement;
 
-    private final List<Pair<String, String>> coverageClaims = new ArrayList<>();
-
     SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
             throws IOException {
         super(data, "spindir." + SPIN_DIR_INDEX++, modelCode, maxTestLength);
 
+        final List<Pair<String, String>> coverageClaims = new ArrayList<>();
         for (CoveragePoint cp : coveragePoints) {
             if (maxTestLength != null) {
                 for (int i = 1; i <= maxTestLength; i++) {

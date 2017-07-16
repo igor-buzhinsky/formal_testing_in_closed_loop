@@ -212,10 +212,10 @@ abstract class MainBase {
 
     String modelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
                      String testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
-                     CodeCoverageCounter counter) {
+                     CodeCoverageCounter counter, boolean includePrintf) {
         return Settings.LANGUAGE == Language.PROMELA
                 ? promelaModelCode(testing, nondetSelection, spec, testHeader, testBody, plantCodeCoverage,
-                controllerCodeCoverage, counter)
+                controllerCodeCoverage, counter, includePrintf)
                 : nuSMVModelCode(testing, spec, testHeader, testBody);
     }
 
@@ -282,16 +282,19 @@ abstract class MainBase {
     }
 
     private void promelaPrintf(StringBuilder sb, String indent) {
-        sb.append(indent).append("printf(\"\\n  -> State <-\\n")
-                .append(String.join("", data.conf.allVariables().stream().map(v -> "    " + v.indexedName() + " = %d\\n")
-                        .collect(Collectors.toList()))).append("\"")
-                .append(String.join("", data.conf.allVariables().stream().map(v -> ", " + v.indexedName())
-                        .collect(Collectors.toList()))).append(");\n");
+        sb.append(indent).append("d_step {\n");
+        sb.append(indent).append("    printf(\"\\n  -> New State <-\\n\");\n");
+        for (Variable<?> var : data.conf.allVariables()) {
+            final String symbol = var instanceof SetVariable ? "e" : "d";
+            sb.append(indent).append("    printf(\"").append(var.indexedName()).append(" = %").append(symbol)
+                    .append("\\n\", ").append(var.indexedName()).append(");\n");
+        }
+        sb.append(indent).append("}\n");
     }
 
     private String promelaModelCode(boolean testing, boolean nondetSelection, boolean spec, String testHeader,
                                     String testBody, boolean plantCodeCoverage, boolean controllerCodeCoverage,
-                                    CodeCoverageCounter counter) {
+                                    CodeCoverageCounter counter, boolean includePrintf) {
         final StringBuilder code = new StringBuilder();
 
         final Set<String> mtypeValues = new LinkedHashSet<>();
@@ -341,7 +344,9 @@ abstract class MainBase {
         }
         code.append("\n").append(Util.indent(plantCode)).append("\n\n")
                 .append(Util.indent(controllerCode)).append("\n");
-        promelaPrintf(code, "    ");
+        if (includePrintf) {
+            promelaPrintf(code, "    ");
+        }
         code.append("} od }\n");
         if (spec) {
             code.append("\n").append(data.spec);
@@ -357,7 +362,7 @@ abstract class MainBase {
     }
 
     String usualModelCode(CodeCoverageCounter counter, boolean plantCodeCoverage, boolean controllerCodeCoverage) {
-        return modelCode(false, true, false, null, null, plantCodeCoverage, controllerCodeCoverage, counter);
+        return modelCode(false, true, false, null, null, plantCodeCoverage, controllerCodeCoverage, counter, false);
     }
 
     int examineTestCase(TestCase tc, List<CoveragePoint> coveragePoints, Integer steps, boolean plantCodeCoverage,
@@ -366,7 +371,7 @@ abstract class MainBase {
                 .collect(Collectors.toList());
 
         final String code = modelCode(false, false, false, tc.header(false), tc.body(false, data.conf),
-                plantCodeCoverage, controllerCodeCoverage, null);
+                plantCodeCoverage, controllerCodeCoverage, null, false);
 
         int newCovered = 0;
         try (final Runner runner = Runner.create(data, code, uncovered, steps)) {

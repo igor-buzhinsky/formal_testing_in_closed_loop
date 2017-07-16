@@ -103,7 +103,7 @@ public abstract class Runner implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        delete(new File(dirName));
+        //delete(new File(dirName));
     }
 
     public abstract String creationReport();

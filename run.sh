@@ -29,11 +29,11 @@ print_test_suite() {
 }
 
 print_log() {
-    #cat log
-    cat log | grep ">>> "
-    cat log | grep "Covered points: "
-    cat log | grep "Exception"
-    cat log | grep " = \\(true\\|false\\) \\*\\*\\*"
+    cat log
+    #cat log | grep ">>> "
+    #cat log | grep "Covered points: "
+    #cat log | grep "Exception"
+    #cat log | grep " = \\(true\\|false\\) \\*\\*\\*"
 }
 
 check_spin() {
@@ -41,12 +41,12 @@ check_spin() {
     echo
     echo ">>> RUN spin $floors"
 
-    for minimize in "" "--minimize"; do
-        call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 > log
-        print_log
-        call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
-        print_log
-    done
+    #for minimize in "" "--minimize"; do
+    #    call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test.bin $minimize $finite --plantCodeCoverage --controllerCodeCoverage --panO 0 > log
+    #    print_log
+    #    call_spin run --input test.bin --measureCoverage --includeInternal $finite --plantCodeCoverage --controllerCodeCoverage > log
+    #    print_log
+    #done
 
     call_spin closed-loop-verify --verbose > log
     print_log
@@ -109,6 +109,6 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 15
+#comparison 20
 #check_nusmv 2
-#check_spin 2
+check_spin 2
