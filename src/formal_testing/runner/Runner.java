@@ -23,7 +23,7 @@ public abstract class Runner implements AutoCloseable {
     Process process;
     final String dirName;
     final ProblemData data;
-    final String modelCode;
+    String modelCode;
     final Integer maxTestLength;
 
     final String TIME = "/usr/bin/time";

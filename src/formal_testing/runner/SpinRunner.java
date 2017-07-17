@@ -1,9 +1,6 @@
 package formal_testing.runner;
 
-import formal_testing.ProblemData;
-import formal_testing.ResourceMeasurement;
-import formal_testing.Settings;
-import formal_testing.TestCase;
+import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.variable.Variable;
 import org.apache.commons.lang3.tuple.Pair;
@@ -28,30 +25,51 @@ public class SpinRunner extends Runner {
 
     private final ResourceMeasurement creationMeasurement;
 
+    private List<Pair<String, String>> coverageLtl = new ArrayList<>();
+    private List<Pair<String, String>> ltlFromModel = new ArrayList<>();
+
+    private void coverageLtl(List<CoveragePoint> coveragePoints) {
+        for (CoveragePoint cp : coveragePoints) {
+            if (maxTestLength != null) {
+                for (int i = 1; i <= maxTestLength; i++) {
+                    coverageLtl.add(Pair.of(cp.ltlProperty(i), cp.promelaLtlName() + "__" + i));
+                }
+            } else {
+                coverageLtl.add(Pair.of(cp.ltlProperty(null), cp.promelaLtlName() + "__null"));
+            }
+        }
+    }
+
+    private void ltlFromModel() {
+        //final List<String> newLines = new ArrayList<>();
+        for (String line : modelCode.split("\n")) {
+            if (line.startsWith("ltl ")) {
+                ltlFromModel.add(Pair.of(line, line.replaceAll("ltl +", "").replaceAll(" .*$", "")));
+            } /*else {
+                newLines.add(line);
+            }*/
+        }
+        //modelCode = String.join("\n", newLines);
+    }
+
     SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
             throws IOException {
         super(data, "spindir." + SPIN_DIR_INDEX++, modelCode, maxTestLength);
 
-        final List<Pair<String, String>> coverageClaims = new ArrayList<>();
-        for (CoveragePoint cp : coveragePoints) {
-            if (maxTestLength != null) {
-                for (int i = 1; i <= maxTestLength; i++) {
-                    coverageClaims.add(Pair.of(cp.ltlProperty(i), cp.promelaLtlName() + "__" + i));
-                }
-            } else {
-                coverageClaims.add(Pair.of(cp.ltlProperty(null), cp.promelaLtlName() + "__null"));
-            }
-        }
+        ltlFromModel();
+        coverageLtl(coveragePoints);
+        //final List<Pair<String, String>> allLtl = Util.merge(Arrays.asList(ltlFromModel, coverageLtl));
+        final List<Pair<String, String>> allLtl = coverageLtl;
 
-        final int parts = coverageClaims.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
+        final int parts = allLtl.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
         for (int i = 0; i < parts; i++) {
             try (final PrintWriter pw = new PrintWriter(dirName + "/" + MODEL_FILENAME + "." + i)) {
                 pw.println(modelCode);
-                final int start = coverageClaims.size() / parts * i;
-                final int end = coverageClaims.size() / parts * (i + 1);
+                final int start = allLtl.size() / parts * i;
+                final int end = allLtl.size() / parts * (i + 1);
                 for (int j = start; j < end; j++) {
-                    pw.println(coverageClaims.get(j).getLeft());
-                    propertyToPart.put(coverageClaims.get(j).getRight(), i);
+                    pw.println(allLtl.get(j).getLeft());
+                    propertyToPart.put(allLtl.get(j).getRight(), i);
                 }
             }
         }
@@ -240,18 +258,17 @@ public class SpinRunner extends Runner {
     @Override
     public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK) throws IOException {
         final RunnerResult result = new RunnerResult();
-        File trailFile = null;
         final List<String> log = new ArrayList<>();
-        for (String strClaim : Arrays.stream(modelCode.split("\n")).filter(l -> l.startsWith("ltl "))
-                .map(l -> l.replaceAll("ltl +", "").replaceAll(" .*$", "")).collect(Collectors.toList())) {
-            final String suffix = ".0";
+        for (String ltlName : ltlFromModel.stream().map(Pair::getRight).collect(Collectors.toList())) {
+            final String suffix = ".0" /*+ propertyToPart.get(ltlName)*/;
             final String trailPath = trailPath(suffix);
+            File trailFile = null;
             try {
-                log.addAll(runPan(suffix, strClaim));
+                log.addAll(runPan(suffix, ltlName));
                 //log.forEach(System.out::println);
                 trailFile = new File(trailPath);
                 if (trailFile.exists()) {
-                    result.outcome(strClaim, false);
+                    result.outcome(ltlName, false);
                     createTraceReader(suffix);
                     try (final BufferedReader reader = new BufferedReader(
                             new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -259,7 +276,7 @@ public class SpinRunner extends Runner {
                     }
                     waitFor();
                 } else {
-                    result.outcome(strClaim, true);
+                    result.outcome(ltlName, true);
                 }
             } finally {
                 tryDelete(trailFile, trailPath);

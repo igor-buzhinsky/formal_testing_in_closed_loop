@@ -124,9 +124,9 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 15
+#comparison 5
 #comparison 10
-#comparison 15
+comparison 15
 #comparison 20
 #check_nusmv 3
 #check_spin 2
