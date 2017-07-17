@@ -55,11 +55,29 @@ LTLSPEC X( G F !(!open[2] & !door_closed[2]) )
 LTLSPEC X( G F !(!open[3] & !door_closed[3]) ) 
 LTLSPEC X( G F !(!open[4] & !door_closed[4]) ) 
 
-LTLSPEC X( G (!door_open[0] -> X(!user_floor_button[0] & !user_cabin_button[0] & door_open[0] -> X(!user_floor_button[0] & !user_cabin_button[0] -> door_open[0] & X(!user_floor_button[0] & !user_cabin_button[0] -> door_open[0] & X(!user_floor_button[0] & !user_cabin_button[0] -> !door_open[0]))))) ) 
-LTLSPEC X( G (!door_open[1] -> X(!user_floor_button[1] & !user_cabin_button[1] & door_open[1] -> X(!user_floor_button[1] & !user_cabin_button[1] -> door_open[1] & X(!user_floor_button[1] & !user_cabin_button[1] -> door_open[1] & X(!user_floor_button[1] & !user_cabin_button[1] -> !door_open[1]))))) ) 
-LTLSPEC X( G (!door_open[2] -> X(!user_floor_button[2] & !user_cabin_button[2] & door_open[2] -> X(!user_floor_button[2] & !user_cabin_button[2] -> door_open[2] & X(!user_floor_button[2] & !user_cabin_button[2] -> door_open[2] & X(!user_floor_button[2] & !user_cabin_button[2] -> !door_open[2]))))) ) 
-LTLSPEC X( G (!door_open[3] -> X(!user_floor_button[3] & !user_cabin_button[3] & door_open[3] -> X(!user_floor_button[3] & !user_cabin_button[3] -> door_open[3] & X(!user_floor_button[3] & !user_cabin_button[3] -> door_open[3] & X(!user_floor_button[3] & !user_cabin_button[3] -> !door_open[3]))))) ) 
-LTLSPEC X( G (!door_open[4] -> X(!user_floor_button[4] & !user_cabin_button[4] & door_open[4] -> X(!user_floor_button[4] & !user_cabin_button[4] -> door_open[4] & X(!user_floor_button[4] & !user_cabin_button[4] -> door_open[4] & X(!user_floor_button[4] & !user_cabin_button[4] -> !door_open[4]))))) ) 
+LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(!door_open[0])))) )  -- false
+LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(!door_open[1])))) )  -- false
+LTLSPEC X( G (!door_open[2] -> X(door_open[2] -> X(door_open[2] & X(!door_open[2])))) )  -- false
+LTLSPEC X( G (!door_open[3] -> X(door_open[3] -> X(door_open[3] & X(!door_open[3])))) )  -- false
+LTLSPEC X( G (!door_open[4] -> X(door_open[4] -> X(door_open[4] & X(!door_open[4])))) )  -- false
+
+LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> X(door_open[0]))))  -- false
+LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(door_open[1]))))  -- false
+LTLSPEC X( G (door_open[2] -> X(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> X(door_open[2]))))  -- false
+LTLSPEC X( G (door_open[3] -> X(!door_open[3] & (user_floor_button[3] | user_cabin_button[3]) -> X(door_open[3]))))  -- false
+LTLSPEC X( G (door_open[4] -> X(!door_open[4] & (user_floor_button[4] | user_cabin_button[4]) -> X(door_open[4]))))  -- false
+
+LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(door_open[0] & X(!door_open[0]))))) ) 
+LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(door_open[1] & X(!door_open[1]))))) ) 
+LTLSPEC X( G (!door_open[2] -> X(door_open[2] -> X(door_open[2] & X(door_open[2] & X(!door_open[2]))))) ) 
+LTLSPEC X( G (!door_open[3] -> X(door_open[3] -> X(door_open[3] & X(door_open[3] & X(!door_open[3]))))) ) 
+LTLSPEC X( G (!door_open[4] -> X(door_open[4] -> X(door_open[4] & X(door_open[4] & X(!door_open[4]))))) ) 
+
+LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> X(X(door_open[0]))))) 
+LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(X(door_open[1]))))) 
+LTLSPEC X( G (door_open[2] -> X(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> X(X(door_open[2]))))) 
+LTLSPEC X( G (door_open[3] -> X(!door_open[3] & (user_floor_button[3] | user_cabin_button[3]) -> X(X(door_open[3]))))) 
+LTLSPEC X( G (door_open[4] -> X(!door_open[4] & (user_floor_button[4] | user_cabin_button[4]) -> X(X(door_open[4]))))) 
 
 -- open-loop
 LTLSPEC X( G !(up & down) ) 

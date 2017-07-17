@@ -19,19 +19,28 @@ ltl door1_open { X( []<>!(open[1] && !door_open[1]) ) }
 ltl door0_close { X( []<>!(!open[0] && !door_closed[0]) ) }
 ltl door1_close { X( []<>!(!open[1] && !door_closed[1]) ) }
 
-ltl door0_delay { X( [](!door_open[0] -> X(!user_floor_button[0] && !user_cabin_button[0] && door_open[0] -> X(!user_floor_button[0] && !user_cabin_button[0] -> door_open[0] && X(!user_floor_button[0] && !user_cabin_button[0] -> door_open[0] && X(!user_floor_button[0] && !user_cabin_button[0] -> !door_open[0]))))) ) }
-ltl door1_delay { X( [](!door_open[1] -> X(!user_floor_button[1] && !user_cabin_button[1] && door_open[1] -> X(!user_floor_button[1] && !user_cabin_button[1] -> door_open[1] && X(!user_floor_button[1] && !user_cabin_button[1] -> door_open[1] && X(!user_floor_button[1] && !user_cabin_button[1] -> !door_open[1]))))) ) }
+ltl door0_delay_1step { X( [](!door_open[0] -> X(door_open[0] -> X(door_open[0] && X(!door_open[0])))) ) } // false
+ltl door1_delay_1step { X( [](!door_open[1] -> X(door_open[1] -> X(door_open[1] && X(!door_open[1])))) ) } // false
+
+ltl door0_reopen_1step { X( [](door_open[0] -> X(!door_open[0] && (user_floor_button[0] || user_cabin_button[0]) -> X(door_open[0])))) } // false
+ltl door1_reopen_1step { X( [](door_open[1] -> X(!door_open[1] && (user_floor_button[1] || user_cabin_button[1]) -> X(door_open[1])))) } // false
+
+ltl door0_delay_2steps { X( [](!door_open[0] -> X(door_open[0] -> X(door_open[0] && X(door_open[0] && X(!door_open[0]))))) ) }
+ltl door1_delay_2steps { X( [](!door_open[1] -> X(door_open[1] -> X(door_open[1] && X(door_open[1] && X(!door_open[1]))))) ) }
+
+ltl door0_reopen_2steps { X( [](door_open[0] -> X(!door_open[0] && (user_floor_button[0] || user_cabin_button[0]) -> X(X(door_open[0]))))) }
+ltl door1_reopen_2steps { X( [](door_open[1] -> X(!door_open[1] && (user_floor_button[1] || user_cabin_button[1]) -> X(X(door_open[1]))))) }
 
 // open-loop
-ltl phi06 { X( []!(up && down) ) }
+ltl no_up_and_down { X( []!(up && down) ) }
 
 // closed-loop
-ltl phi04_1 { X( []<>!down ) }
-ltl phi04_2 { X( []<>!up ) }
-ltl phi15 { X( [](!on_floor[0] && !on_floor[1] -> door_closed[0] && door_closed[1]) ) }
+ltl no_infinite_down { X( []<>!down ) }
+ltl no_infinite_up { X( []<>!up ) }
+ltl doors_closed_when_between_floors { X( [](!on_floor[0] && !on_floor[1] -> door_closed[0] && door_closed[1]) ) }
 
-ltl cl0 { X( []((user_floor_button[0] || user_cabin_button[0]) -> <>(on_floor[0] || user_floor_button[1] || user_cabin_button[1])) ) }
-ltl cl1 { X( []((user_floor_button[1] || user_cabin_button[1]) -> <>(on_floor[1] || user_floor_button[0] || user_cabin_button[0])) ) }
+ltl floor_reached_single_call_0 { X( []((user_floor_button[0] || user_cabin_button[0]) -> <>(on_floor[0] || user_floor_button[1] || user_cabin_button[1])) ) }
+ltl floor_reached_single_call_1 { X( []((user_floor_button[1] || user_cabin_button[1]) -> <>(on_floor[1] || user_floor_button[0] || user_cabin_button[0])) ) }
 
-ltl phi11_0 { X( []((user_floor_button[0] || user_cabin_button[0]) -> <>on_floor[0]) ) } // false
-ltl phi11_1 { X( []((user_floor_button[1] || user_cabin_button[1]) -> <>on_floor[1]) ) } // false
+ltl floor_reached_multiple_calls_0 { X( []((user_floor_button[0] || user_cabin_button[0]) -> <>on_floor[0]) ) } // false
+ltl floor_reached_multiple_calls_1 { X( []((user_floor_button[1] || user_cabin_button[1]) -> <>on_floor[1]) ) } // false

@@ -1,8 +1,8 @@
 #!/bin/bash
 posperfloor=3
 
-from=$1
-to=$2
+from=2
+to=20
 
 for ((floors = from; floors <= to; floors++)); do
     floorstimes=$((floors * posperfloor))
@@ -119,30 +119,48 @@ for ((floors = from; floors <= to; floors++)); do
         echo "ltl door${i}_close { X( []<>!(!open[$i] && !door_closed[$i]) ) }" >> tmp
     done
     
-    # door closing delay
+    # door closing delay - 1 step - false
     echo >> tmp
     for ((i = 0; i < $floors; i++)); do
-        echo "ltl door${i}_delay { X( [](!door_open[$i] -> X(!user_floor_button[$i] && !user_cabin_button[$i] && door_open[$i] -> X(!user_floor_button[$i] && !user_cabin_button[$i] -> door_open[$i] && X(!user_floor_button[$i] && !user_cabin_button[$i] -> door_open[$i] && X(!user_floor_button[$i] && !user_cabin_button[$i] -> !door_open[$i]))))) ) }" >> tmp
+        echo "ltl door${i}_delay_1step { X( [](!door_open[$i] -> X(door_open[$i] -> X(door_open[$i] && X(!door_open[$i])))) ) } // false" >> tmp
+    done
+    
+    # door reopening - 1 step - false
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_reopen_1step { X( [](door_open[$i] -> X(!door_open[$i] && (user_floor_button[$i] || user_cabin_button[$i]) -> X(door_open[$i])))) } // false" >> tmp
+    done
+    
+    # door closing delay - 2 step - true
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_delay_2steps { X( [](!door_open[$i] -> X(door_open[$i] -> X(door_open[$i] && X(door_open[$i] && X(!door_open[$i]))))) ) }" >> tmp
+    done
+    
+    # door reopening - 2 steps - true
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_reopen_2steps { X( [](door_open[$i] -> X(!door_open[$i] && (user_floor_button[$i] || user_cabin_button[$i]) -> X(X(door_open[$i]))))) }" >> tmp
     done
     
     echo >> tmp
     echo "// open-loop" >> tmp
-    echo "ltl phi06 { X( []!(up && down) ) }" >> tmp
+    echo "ltl no_up_and_down { X( []!(up && down) ) }" >> tmp
 
     echo >> tmp
     echo "// closed-loop" >> tmp
-    echo "ltl phi04_1 { X( []<>!down ) }" >> tmp
-    echo "ltl phi04_2 { X( []<>!up ) }" >> tmp
-    echo "ltl phi15 { X( []($(for ((i = 0; i < $floors - 1; i++)); do echo -n "!on_floor[$i] && "; done)!on_floor[$fm1] -> $(for ((i = 0; i < $floors - 1; i++)); do echo -n "door_closed[$i] && "; done)door_closed[$fm1]) ) }" >> tmp
+    echo "ltl no_infinite_down { X( []<>!down ) }" >> tmp
+    echo "ltl no_infinite_up { X( []<>!up ) }" >> tmp
+    echo "ltl doors_closed_when_between_floors { X( []($(for ((i = 0; i < $floors - 1; i++)); do echo -n "!on_floor[$i] && "; done)!on_floor[$fm1] -> $(for ((i = 0; i < $floors - 1; i++)); do echo -n "door_closed[$i] && "; done)door_closed[$fm1]) ) }" >> tmp
 
     echo >> tmp
     for ((i = 0; i < $floors; i++)); do
-        echo "ltl cl$i { X( []((user_floor_button[$i] || user_cabin_button[$i]) -> <>(on_floor[$i]$(for ((j = 0; j < $i; j++)); do echo -n " || user_floor_button[$j] || user_cabin_button[$j]"; done)$(for ((j = $i + 1; j < $floors; j++)); do echo -n " || user_floor_button[$j] || user_cabin_button[$j]"; done))) ) }" >> tmp
+        echo "ltl floor_reached_single_call_$i { X( []((user_floor_button[$i] || user_cabin_button[$i]) -> <>(on_floor[$i]$(for ((j = 0; j < $i; j++)); do echo -n " || user_floor_button[$j] || user_cabin_button[$j]"; done)$(for ((j = $i + 1; j < $floors; j++)); do echo -n " || user_floor_button[$j] || user_cabin_button[$j]"; done))) ) }" >> tmp
     done
 
     echo >> tmp
     for ((i = 0; i < $floors; i++)); do
-        echo "ltl phi11_$i { X( []((user_floor_button[$i] || user_cabin_button[$i]) -> <>on_floor[$i]) ) } // false" >> tmp
+        echo "ltl floor_reached_multiple_calls_$i { X( []((user_floor_button[$i] || user_cabin_button[$i]) -> <>on_floor[$i]) ) } // false" >> tmp
     done
 
     cat tmp | sed 's/<>/AF /g; s/\[\]/AG /g; s/X(/AX(/g; s/||/|/g; s/\&\&/\&/g; s/==/=/g; s/^ltl \w\+ { /CTLSPEC /g; s/}//g; s/\/\//--/g' > $dir/spec.smv
