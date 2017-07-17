@@ -87,13 +87,13 @@ bmc_verification() {
 comparison() {
     set_floors "$1"
 
-    echo
-    echo ">>> comparison-no-minimization $floors"
-    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-large.bin $finite --coi > log
-    print_log
-    print_test_suite test-large.bin > /dev/null
-    call_spin run --input test-large.bin --verify --output out-large.pml $finite --panO 0 > log
-    print_log
+    #echo
+    #echo ">>> comparison-no-minimization $floors"
+    #call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-large.bin $finite --coi > log
+    #print_log
+    #print_test_suite test-large.bin > /dev/null
+    #call_spin run --input test-large.bin --verify --output out-large.pml $finite --panO 0 > log
+    #print_log
 
     echo
     echo ">>> comparison-with-minimization $floors"
@@ -103,13 +103,13 @@ comparison() {
     call_spin run --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log
     print_log
 
-    echo
-    echo ">>> comparison-with-minimization-and-value-pair-coverage $floors"
-    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-pair.bin $finite --minimize --valuePairCoverage > log
-    print_log
-    print_test_suite test-pair.bin > /dev/null
-    call_spin run --input test-pair.bin --verify --output out-pair.pml $finite --panO 0 > log
-    print_log
+    #echo
+    #echo ">>> comparison-with-minimization-and-value-pair-coverage $floors"
+    #call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-pair.bin $finite --minimize --valuePairCoverage > log
+    #print_log
+    #print_test_suite test-pair.bin > /dev/null
+    #call_spin run --input test-pair.bin --verify --output out-pair.pml $finite --panO 0 > log
+    #print_log
 
     # Run verification
     bmc_verification $floors $floors
@@ -125,5 +125,8 @@ finite="--checkFiniteCoverage"
 #finite=
 
 #comparison 5
+#comparison 10
+comparison 15
+comparison 20
 #check_nusmv 2
-check_spin 2
+#check_spin 2

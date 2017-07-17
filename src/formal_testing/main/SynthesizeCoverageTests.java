@@ -58,10 +58,9 @@ public class SynthesizeCoverageTests extends MainArgs {
 
         System.out.println("Coverage test synthesis...");
 
-        final Set<CoveragePoint> uncovered = new LinkedHashSet<>(info.coveragePoints);
+        final Set<CoveragePoint> unknown = new LinkedHashSet<>(info.coveragePoints);
 
-        for (int i = 0; i < info.coveragePoints.size(); i++) {
-            final CoveragePoint cp = info.coveragePoints.get(i);
+        for (CoveragePoint cp : info.coveragePoints) {
             if (cp.covered()) {
                 continue;
             }
@@ -69,12 +68,12 @@ public class SynthesizeCoverageTests extends MainArgs {
             final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
             try (final Runner runner = Runner.create(data, code, Collections.singletonList(cp), maxLength)) {
                 System.out.println("  " + runner.creationReport());
-                final RunnerResult result = runner.synthesize(cp, minimize, uncovered);
+                final RunnerResult result = runner.synthesize(cp, minimize, unknown);
                 if (result.found()) {
                     for (CoveragePoint covered : result.covered())  {
                         covered.cover();
                         info.coveredPoints++;
-                        uncovered.remove(covered);
+                        unknown.remove(covered);
                         System.out.println("    " + covered);
                     }
                     final TestCase tc = result.testCase();
@@ -86,6 +85,7 @@ public class SynthesizeCoverageTests extends MainArgs {
                 result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
                         System.out.println("    " + new ResourceMeasurement(line, "test synthesis")));
             }
+            unknown.remove(cp);
         }
         System.out.println(testSuite);
         testSuite.print(outputFilename);
