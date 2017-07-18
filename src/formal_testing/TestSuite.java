@@ -123,7 +123,7 @@ public class TestSuite implements Serializable {
 
     private static final boolean ALTERNATIVE_PROMELA_UPDATES = false;
     private static final boolean LOGARITHMIC_LENGTH_EXPANSION_IN_PROMELA = false;
-    private static final boolean LARGE_D_STEPS = false;
+    private static final boolean LARGE_D_STEPS = true;
 
     private String promelaBody(Configuration conf) {
         // looping scenario
