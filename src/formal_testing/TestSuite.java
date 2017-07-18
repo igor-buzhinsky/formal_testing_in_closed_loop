@@ -123,6 +123,7 @@ public class TestSuite implements Serializable {
 
     private static final boolean ALTERNATIVE_PROMELA_UPDATES = false;
     private static final boolean LOGARITHMIC_LENGTH_EXPANSION_IN_PROMELA = false;
+    private static final boolean LARGE_D_STEPS = false;
 
     private String promelaBody(Configuration conf) {
         // looping scenario
@@ -198,7 +199,8 @@ public class TestSuite implements Serializable {
                                 updates.add(varName + " = " + value + "; ");
                             }
                         }
-                        final String strUpdates = updates.size() > 1 ? ("d_step { " + String.join("", updates) + "}")
+                        final String strUpdates = updates.size() > 1 ? ((LARGE_D_STEPS ? "" : "d_step { ")
+                                + String.join("", updates) + (LARGE_D_STEPS ? "" : "}"))
                                 : updates.size() == 1 ? updates.get(0) : ";";
                         Set<Integer> steps = buckets.get(strUpdates);
                         if (steps == null) {
@@ -217,12 +219,12 @@ public class TestSuite implements Serializable {
                         actions.add(updates);
                     }
                     conditions.set(conditions.size() - 1, "else");
-                    testBuilder.append("if\n");
+                    testBuilder.append((LARGE_D_STEPS ? "d_step { " : "") + "if\n");
                     for (int j = 0; j < conditions.size(); j++) {
                         testBuilder.append(":: ").append(conditions.get(j)).append(" -> ").append(actions.get(j))
                                 .append("\n");
                     }
-                    testBuilder.append("fi\n");
+                    testBuilder.append("fi" + (LARGE_D_STEPS ? " }" : "") + "\n");
                 }
                 strTests.add(testBuilder.toString());
             }

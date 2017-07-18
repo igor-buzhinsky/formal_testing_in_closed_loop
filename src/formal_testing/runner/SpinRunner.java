@@ -28,6 +28,8 @@ public class SpinRunner extends Runner {
     private List<Pair<String, String>> coverageLtl = new ArrayList<>();
     private List<Pair<String, String>> ltlFromModel = new ArrayList<>();
 
+    private static final boolean DISTRIBUTE_MODEL_LTL = false;
+
     private void coverageLtl(List<CoveragePoint> coveragePoints) {
         for (CoveragePoint cp : coveragePoints) {
             if (maxTestLength != null) {
@@ -41,15 +43,17 @@ public class SpinRunner extends Runner {
     }
 
     private void ltlFromModel() {
-        //final List<String> newLines = new ArrayList<>();
+        final List<String> newLines = new ArrayList<>();
         for (String line : modelCode.split("\n")) {
             if (line.startsWith("ltl ")) {
                 ltlFromModel.add(Pair.of(line, line.replaceAll("ltl +", "").replaceAll(" .*$", "")));
-            } /*else {
+            } else {
                 newLines.add(line);
-            }*/
+            }
         }
-        //modelCode = String.join("\n", newLines);
+        if (DISTRIBUTE_MODEL_LTL) {
+            modelCode = String.join("\n", newLines);
+        }
     }
 
     SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
@@ -58,8 +62,8 @@ public class SpinRunner extends Runner {
 
         ltlFromModel();
         coverageLtl(coveragePoints);
-        //final List<Pair<String, String>> allLtl = Util.merge(Arrays.asList(ltlFromModel, coverageLtl));
-        final List<Pair<String, String>> allLtl = coverageLtl;
+        final List<Pair<String, String>> allLtl = DISTRIBUTE_MODEL_LTL
+                ? Util.merge(Arrays.asList(ltlFromModel, coverageLtl)) : coverageLtl;
 
         final int parts = allLtl.size() / MAX_CLAIMS_IN_ONE_PAN + 1;
         for (int i = 0; i < parts; i++) {
@@ -260,7 +264,7 @@ public class SpinRunner extends Runner {
         final RunnerResult result = new RunnerResult();
         final List<String> log = new ArrayList<>();
         for (String ltlName : ltlFromModel.stream().map(Pair::getRight).collect(Collectors.toList())) {
-            final String suffix = ".0" /*+ propertyToPart.get(ltlName)*/;
+            final String suffix = "." + (DISTRIBUTE_MODEL_LTL ? propertyToPart.get(ltlName) : 0);
             final String trailPath = trailPath(suffix);
             File trailFile = null;
             try {
