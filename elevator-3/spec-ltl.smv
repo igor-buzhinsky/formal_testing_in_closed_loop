@@ -1,43 +1,53 @@
 -- plant
-LTLSPEC X( G ((elevator_pos = 0) & !(!down & up) -> X(elevator_pos = 0)) ) 
-LTLSPEC X( G ((elevator_pos = 0) & !down & up -> X(elevator_pos = 1)) ) 
-LTLSPEC X( G ((elevator_pos = 1) & down & !up -> X(elevator_pos = 0)) ) 
-LTLSPEC X( G ((elevator_pos = 1) & !down & up -> X(elevator_pos = 2)) ) 
-LTLSPEC X( G ((elevator_pos = 1) & (down = up) -> X(elevator_pos = 1)) ) 
-LTLSPEC X( G ((elevator_pos = 2) & down & !up -> X(elevator_pos = 1)) ) 
-LTLSPEC X( G ((elevator_pos = 2) & !down & up -> X(elevator_pos = 3)) ) 
-LTLSPEC X( G ((elevator_pos = 2) & (down = up) -> X(elevator_pos = 2)) ) 
-LTLSPEC X( G ((elevator_pos = 3) & down & !up -> X(elevator_pos = 2)) ) 
-LTLSPEC X( G ((elevator_pos = 3) & !down & up -> X(elevator_pos = 4)) ) 
-LTLSPEC X( G ((elevator_pos = 3) & (down = up) -> X(elevator_pos = 3)) ) 
-LTLSPEC X( G ((elevator_pos = 4) & down & !up -> X(elevator_pos = 3)) ) 
-LTLSPEC X( G ((elevator_pos = 4) & !down & up -> X(elevator_pos = 5)) ) 
-LTLSPEC X( G ((elevator_pos = 4) & (down = up) -> X(elevator_pos = 4)) ) 
-LTLSPEC X( G ((elevator_pos = 5) & down & !up -> X(elevator_pos = 4)) ) 
-LTLSPEC X( G ((elevator_pos = 5) & !down & up -> X(elevator_pos = 6)) ) 
-LTLSPEC X( G ((elevator_pos = 5) & (down = up) -> X(elevator_pos = 5)) ) 
-LTLSPEC X( G ((elevator_pos = 6) & down & !up -> X(elevator_pos = 5)) ) 
-LTLSPEC X( G ((elevator_pos = 6) & !(down & !up) -> X(elevator_pos = 6)) ) 
+-- ltl pos0_1 { X( G ((elevator_pos = 0) & !(!down & up) -> X(elevator_pos = 0)) ) 
+-- ltl pos0_2 { X( G ((elevator_pos = 0) & !down & up -> X(elevator_pos = 1)) ) 
+-- ltl pos1_1 { X( G ((elevator_pos = 1) & down & !up -> X(elevator_pos = 0)) ) 
+-- ltl pos1_2 { X( G ((elevator_pos = 1) & !down & up -> X(elevator_pos = 2)) ) 
+-- ltl pos1_3 { X( G ((elevator_pos = 1) & (down = up) -> X(elevator_pos = 1)) ) 
+-- ltl pos2_1 { X( G ((elevator_pos = 2) & down & !up -> X(elevator_pos = 1)) ) 
+-- ltl pos2_2 { X( G ((elevator_pos = 2) & !down & up -> X(elevator_pos = 3)) ) 
+-- ltl pos2_3 { X( G ((elevator_pos = 2) & (down = up) -> X(elevator_pos = 2)) ) 
+-- ltl pos3_1 { X( G ((elevator_pos = 3) & down & !up -> X(elevator_pos = 2)) ) 
+-- ltl pos3_2 { X( G ((elevator_pos = 3) & !down & up -> X(elevator_pos = 4)) ) 
+-- ltl pos3_3 { X( G ((elevator_pos = 3) & (down = up) -> X(elevator_pos = 3)) ) 
+-- ltl pos4_1 { X( G ((elevator_pos = 4) & down & !up -> X(elevator_pos = 3)) ) 
+-- ltl pos4_2 { X( G ((elevator_pos = 4) & !down & up -> X(elevator_pos = 5)) ) 
+-- ltl pos4_3 { X( G ((elevator_pos = 4) & (down = up) -> X(elevator_pos = 4)) ) 
+-- ltl pos5_1 { X( G ((elevator_pos = 5) & down & !up -> X(elevator_pos = 4)) ) 
+-- ltl pos5_2 { X( G ((elevator_pos = 5) & !down & up -> X(elevator_pos = 6)) ) 
+-- ltl pos5_3 { X( G ((elevator_pos = 5) & (down = up) -> X(elevator_pos = 5)) ) 
+-- ltl pos6_1 { X( G ((elevator_pos = 6) & down & !up -> X(elevator_pos = 5)) ) 
+-- ltl pos6_2 { X( G ((elevator_pos = 6) & !(down & !up) -> X(elevator_pos = 6)) ) 
 
-LTLSPEC X( G  (on_floor[0] <-> (elevator_pos = 0)) ) 
-LTLSPEC X( G  (on_floor[1] <-> (elevator_pos = 3)) ) 
-LTLSPEC X( G  (on_floor[2] <-> (elevator_pos = 6)) ) 
+-- ltl floor0 { X( G  (on_floor[0] <-> (elevator_pos = 0)) ) 
+-- ltl floor1 { X( G  (on_floor[1] <-> (elevator_pos = 3)) ) 
+-- ltl floor2 { X( G  (on_floor[2] <-> (elevator_pos = 6)) ) 
 
-LTLSPEC X( G F !(open[0] & !door_open[0]) ) 
-LTLSPEC X( G F !(open[1] & !door_open[1]) ) 
-LTLSPEC X( G F !(open[2] & !door_open[2]) ) 
+-- ltl door0_open { X( G F !(open[0] & !door_open[0]) ) 
+-- ltl door1_open { X( G F !(open[1] & !door_open[1]) ) 
+-- ltl door2_open { X( G F !(open[2] & !door_open[2]) ) 
 
-LTLSPEC X( G F !(!open[0] & !door_closed[0]) ) 
-LTLSPEC X( G F !(!open[1] & !door_closed[1]) ) 
-LTLSPEC X( G F !(!open[2] & !door_closed[2]) ) 
+-- ltl door0_close { X( G F !(!open[0] & !door_closed[0]) ) 
+-- ltl door1_close { X( G F !(!open[1] & !door_closed[1]) ) 
+-- ltl door2_close { X( G F !(!open[2] & !door_closed[2]) ) 
 
-LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(!door_open[0])))) )  -- false
-LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(!door_open[1])))) )  -- false
-LTLSPEC X( G (!door_open[2] -> X(door_open[2] -> X(door_open[2] & X(!door_open[2])))) )  -- false
+-- open-loop
+-- ltl no_up_and_down_MUST_BE_TRUE { X( G !(up & down) ) 
 
-LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> X(door_open[0]))))  -- false
-LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(door_open[1]))))  -- false
-LTLSPEC X( G (door_open[2] -> X(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> X(door_open[2]))))  -- false
+-- closed-loop
+-- ltl no_infinite_down_MUST_BE_TRUE { X( G F !down ) 
+-- ltl no_infinite_up_MUST_BE_TRUE { X( G F !up ) 
+
+LTLSPEC X( G (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0] & door_closed[1] & door_closed[2]) ) 
+LTLSPEC X( G (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_open[0] & door_open[1] & door_open[2]) ) 
+
+LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(!door_open[0])))) ) 
+LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(!door_open[1])))) ) 
+LTLSPEC X( G (!door_open[2] -> X(door_open[2] -> X(door_open[2] & X(!door_open[2])))) ) 
+
+LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> X(door_open[0])))) 
+LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(door_open[1])))) 
+LTLSPEC X( G (door_open[2] -> X(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> X(door_open[2])))) 
 
 LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(door_open[0] & X(!door_open[0]))))) ) 
 LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(door_open[1] & X(!door_open[1]))))) ) 
@@ -47,18 +57,10 @@ LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cab
 LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(X(door_open[1]))))) 
 LTLSPEC X( G (door_open[2] -> X(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> X(X(door_open[2]))))) 
 
--- open-loop
-LTLSPEC X( G !(up & down) ) 
+LTLSPEC X( G ((user_floor_button[0] | user_cabin_button[0]) -> F (on_floor[0] & door_open[0] | user_floor_button[1] | user_cabin_button[1] | user_floor_button[2] | user_cabin_button[2])) ) 
+LTLSPEC X( G ((user_floor_button[1] | user_cabin_button[1]) -> F (on_floor[1] & door_open[1] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[2] | user_cabin_button[2])) ) 
+LTLSPEC X( G ((user_floor_button[2] | user_cabin_button[2]) -> F (on_floor[2] & door_open[2] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[1] | user_cabin_button[1])) ) 
 
--- closed-loop
-LTLSPEC X( G F !down ) 
-LTLSPEC X( G F !up ) 
-LTLSPEC X( G (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0] & door_closed[1] & door_closed[2]) ) 
-
-LTLSPEC X( G ((user_floor_button[0] | user_cabin_button[0]) -> F (on_floor[0] | user_floor_button[1] | user_cabin_button[1] | user_floor_button[2] | user_cabin_button[2])) ) 
-LTLSPEC X( G ((user_floor_button[1] | user_cabin_button[1]) -> F (on_floor[1] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[2] | user_cabin_button[2])) ) 
-LTLSPEC X( G ((user_floor_button[2] | user_cabin_button[2]) -> F (on_floor[2] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[1] | user_cabin_button[1])) ) 
-
-LTLSPEC X( G ((user_floor_button[0] | user_cabin_button[0]) -> F on_floor[0]) )  -- false
-LTLSPEC X( G ((user_floor_button[1] | user_cabin_button[1]) -> F on_floor[1]) )  -- false
-LTLSPEC X( G ((user_floor_button[2] | user_cabin_button[2]) -> F on_floor[2]) )  -- false
+LTLSPEC X( G ((user_floor_button[0] | user_cabin_button[0]) -> F on_floor[0] & door_open[0]) ) 
+LTLSPEC X( G ((user_floor_button[1] | user_cabin_button[1]) -> F on_floor[1] & door_open[1]) ) 
+LTLSPEC X( G ((user_floor_button[2] | user_cabin_button[2]) -> F on_floor[2] & door_open[2]) ) 

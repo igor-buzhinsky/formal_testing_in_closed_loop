@@ -30,7 +30,7 @@ print_test_suite() {
 
 print_log() {
     #cat log
-    cat log | grep "\\(>>> \\|Loaded test suite\\|Covered points: \\|Exception\\| = \\(true\\|false\\) \\*\\*\\*\\)" | grep -v "\\*\\*\\* \\(pos\\|floor[0-9]\\|door.*_open\\|door.*_close\\|test_passed\\).*="
+    cat log | grep "\\(>>> \\|Loaded test suite\\|Covered points: \\|Exception\\| = \\(true\\|false\\) \\*\\*\\*\\)" | grep -v "\\*\\*\\* test_passed ="
 }
 
 check_spin() {
@@ -125,8 +125,8 @@ finite="--checkFiniteCoverage"
 #finite=
 
 #comparison 5
-#comparison 10
+comparison 10
 #comparison 15
-comparison 20
+#comparison 20
 #check_nusmv 3
-#check_spin 2
+#check_spin 3
