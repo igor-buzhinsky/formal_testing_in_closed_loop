@@ -129,20 +129,10 @@ for ((floors = from; floors <= to; floors++)); do
     echo "// closed-loop" >> tmp
     echo "// ltl no_infinite_down_MUST_BE_TRUE { X( []<>!down ) }" >> tmp
     echo "// ltl no_infinite_up_MUST_BE_TRUE { X( []<>!up ) }" >> tmp
-    echo >> tmp
-    echo "ltl doors_closed_when_between_floors_MUST_BE_TRUE { X( []($(for ((i = 0; i < $floors - 1; i++)); do echo -n "!on_floor[$i] && "; done)!on_floor[$fm1] -> $(for ((i = 0; i < $floors - 1; i++)); do echo -n "door_closed[$i] && "; done)door_closed[$fm1]) ) }" >> tmp
-    echo "ltl doors_open_when_between_floors_MUST_BE_FALSE { X( []($(for ((i = 0; i < $floors - 1; i++)); do echo -n "!on_floor[$i] && "; done)!on_floor[$fm1] -> $(for ((i = 0; i < $floors - 1; i++)); do echo -n "door_open[$i] && "; done)door_open[$fm1]) ) }" >> tmp
-
-    # door closing delay - 1 step - false
-    echo >> tmp
-    for ((i = 0; i < $floors; i++)); do
-        echo "ltl door${i}_delay_1step_MUST_BE_FALSE { X( [](!door_open[$i] -> X(door_open[$i] -> X(door_open[$i] && X(!door_open[$i])))) ) }" >> tmp
-    done
     
-    # door reopening - 1 step - false
     echo >> tmp
     for ((i = 0; i < $floors; i++)); do
-        echo "ltl door${i}_reopen_1step_MUST_BE_FALSE { X( [](door_open[$i] -> X(!door_open[$i] && (user_floor_button[$i] || user_cabin_button[$i]) -> X(door_open[$i])))) }" >> tmp
+        echo "ltl door${i}_closed_when_between_floors_MUST_BE_TRUE { X( []($(for ((i = 0; i < $floors - 1; i++)); do echo -n "!on_floor[$i] && "; done)!on_floor[$fm1] -> door_closed[$i]) ) }" >> tmp
     done
     
     # door closing delay - 2 step - true
@@ -160,6 +150,23 @@ for ((floors = from; floors <= to; floors++)); do
     echo >> tmp
     for ((i = 0; i < $floors; i++)); do
         echo "ltl floor_reached_single_call_${i}_MUST_BE_TRUE { X( []((user_floor_button[$i] || user_cabin_button[$i]) -> <>(on_floor[$i] && door_open[$i]$(for ((j = 0; j < $i; j++)); do echo -n " || user_floor_button[$j] || user_cabin_button[$j]"; done)$(for ((j = $i + 1; j < $floors; j++)); do echo -n " || user_floor_button[$j] || user_cabin_button[$j]"; done))) ) }" >> tmp
+    done
+    
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_open_when_between_floors_MUST_BE_FALSE { X( []($(for ((i = 0; i < $floors - 1; i++)); do echo -n "!on_floor[$i] && "; done)!on_floor[$fm1] -> door_open[$i]) ) }" >> tmp
+    done
+    
+    # door closing delay - 1 step - false
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_delay_1step_MUST_BE_FALSE { X( [](!door_open[$i] -> X(door_open[$i] -> X(door_open[$i] && X(!door_open[$i])))) ) }" >> tmp
+    done
+    
+    # door reopening - 1 step - false
+    echo >> tmp
+    for ((i = 0; i < $floors; i++)); do
+        echo "ltl door${i}_reopen_1step_MUST_BE_FALSE { X( [](door_open[$i] -> X(!door_open[$i] && (user_floor_button[$i] || user_cabin_button[$i]) -> X(door_open[$i])))) }" >> tmp
     done
 
     echo >> tmp

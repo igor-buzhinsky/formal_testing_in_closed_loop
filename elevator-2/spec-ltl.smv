@@ -26,14 +26,8 @@
 -- ltl no_infinite_down_MUST_BE_TRUE { X( G F !down ) 
 -- ltl no_infinite_up_MUST_BE_TRUE { X( G F !up ) 
 
-LTLSPEC X( G (!on_floor[0] & !on_floor[1] -> door_closed[0] & door_closed[1]) ) 
-LTLSPEC X( G (!on_floor[0] & !on_floor[1] -> door_open[0] & door_open[1]) ) 
-
-LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(!door_open[0])))) ) 
-LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(!door_open[1])))) ) 
-
-LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> X(door_open[0])))) 
-LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(door_open[1])))) 
+LTLSPEC X( G (!on_floor[0] & !on_floor[1] -> door_closed[0]) ) 
+LTLSPEC X( G (!on_floor[0] & !on_floor[1] -> door_closed[1]) ) 
 
 LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(door_open[0] & X(!door_open[0]))))) ) 
 LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(door_open[1] & X(!door_open[1]))))) ) 
@@ -43,6 +37,15 @@ LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cab
 
 LTLSPEC X( G ((user_floor_button[0] | user_cabin_button[0]) -> F (on_floor[0] & door_open[0] | user_floor_button[1] | user_cabin_button[1])) ) 
 LTLSPEC X( G ((user_floor_button[1] | user_cabin_button[1]) -> F (on_floor[1] & door_open[1] | user_floor_button[0] | user_cabin_button[0])) ) 
+
+LTLSPEC X( G (!on_floor[0] & !on_floor[1] -> door_open[0]) ) 
+LTLSPEC X( G (!on_floor[0] & !on_floor[1] -> door_open[1]) ) 
+
+LTLSPEC X( G (!door_open[0] -> X(door_open[0] -> X(door_open[0] & X(!door_open[0])))) ) 
+LTLSPEC X( G (!door_open[1] -> X(door_open[1] -> X(door_open[1] & X(!door_open[1])))) ) 
+
+LTLSPEC X( G (door_open[0] -> X(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> X(door_open[0])))) 
+LTLSPEC X( G (door_open[1] -> X(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> X(door_open[1])))) 
 
 LTLSPEC X( G ((user_floor_button[0] | user_cabin_button[0]) -> F on_floor[0] & door_open[0]) ) 
 LTLSPEC X( G ((user_floor_button[1] | user_cabin_button[1]) -> F on_floor[1] & door_open[1]) ) 

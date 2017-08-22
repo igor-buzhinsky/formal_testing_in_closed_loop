@@ -38,16 +38,9 @@
 -- ltl no_infinite_down_MUST_BE_TRUE { AX( AG AF !down ) 
 -- ltl no_infinite_up_MUST_BE_TRUE { AX( AG AF !up ) 
 
-CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0] & door_closed[1] & door_closed[2]) ) 
-CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_open[0] & door_open[1] & door_open[2]) ) 
-
-CTLSPEC AX( AG (!door_open[0] -> AX(door_open[0] -> AX(door_open[0] & AX(!door_open[0])))) ) 
-CTLSPEC AX( AG (!door_open[1] -> AX(door_open[1] -> AX(door_open[1] & AX(!door_open[1])))) ) 
-CTLSPEC AX( AG (!door_open[2] -> AX(door_open[2] -> AX(door_open[2] & AX(!door_open[2])))) ) 
-
-CTLSPEC AX( AG (door_open[0] -> AX(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> AX(door_open[0])))) 
-CTLSPEC AX( AG (door_open[1] -> AX(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> AX(door_open[1])))) 
-CTLSPEC AX( AG (door_open[2] -> AX(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> AX(door_open[2])))) 
+CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[0]) ) 
+CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[1]) ) 
+CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_closed[2]) ) 
 
 CTLSPEC AX( AG (!door_open[0] -> AX(door_open[0] -> AX(door_open[0] & AX(door_open[0] & AX(!door_open[0]))))) ) 
 CTLSPEC AX( AG (!door_open[1] -> AX(door_open[1] -> AX(door_open[1] & AX(door_open[1] & AX(!door_open[1]))))) ) 
@@ -60,6 +53,18 @@ CTLSPEC AX( AG (door_open[2] -> AX(!door_open[2] & (user_floor_button[2] | user_
 CTLSPEC AX( AG ((user_floor_button[0] | user_cabin_button[0]) -> AF (on_floor[0] & door_open[0] | user_floor_button[1] | user_cabin_button[1] | user_floor_button[2] | user_cabin_button[2])) ) 
 CTLSPEC AX( AG ((user_floor_button[1] | user_cabin_button[1]) -> AF (on_floor[1] & door_open[1] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[2] | user_cabin_button[2])) ) 
 CTLSPEC AX( AG ((user_floor_button[2] | user_cabin_button[2]) -> AF (on_floor[2] & door_open[2] | user_floor_button[0] | user_cabin_button[0] | user_floor_button[1] | user_cabin_button[1])) ) 
+
+CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_open[0]) ) 
+CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_open[1]) ) 
+CTLSPEC AX( AG (!on_floor[0] & !on_floor[1] & !on_floor[2] -> door_open[2]) ) 
+
+CTLSPEC AX( AG (!door_open[0] -> AX(door_open[0] -> AX(door_open[0] & AX(!door_open[0])))) ) 
+CTLSPEC AX( AG (!door_open[1] -> AX(door_open[1] -> AX(door_open[1] & AX(!door_open[1])))) ) 
+CTLSPEC AX( AG (!door_open[2] -> AX(door_open[2] -> AX(door_open[2] & AX(!door_open[2])))) ) 
+
+CTLSPEC AX( AG (door_open[0] -> AX(!door_open[0] & (user_floor_button[0] | user_cabin_button[0]) -> AX(door_open[0])))) 
+CTLSPEC AX( AG (door_open[1] -> AX(!door_open[1] & (user_floor_button[1] | user_cabin_button[1]) -> AX(door_open[1])))) 
+CTLSPEC AX( AG (door_open[2] -> AX(!door_open[2] & (user_floor_button[2] | user_cabin_button[2]) -> AX(door_open[2])))) 
 
 CTLSPEC AX( AG ((user_floor_button[0] | user_cabin_button[0]) -> AF on_floor[0] & door_open[0]) ) 
 CTLSPEC AX( AG ((user_floor_button[1] | user_cabin_button[1]) -> AF on_floor[1] & door_open[1]) ) 
