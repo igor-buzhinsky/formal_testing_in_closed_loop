@@ -25,8 +25,8 @@ public class SpinRunner extends Runner {
 
     private final ResourceMeasurement creationMeasurement;
 
-    private List<Pair<String, String>> coverageLtl = new ArrayList<>();
-    private List<Pair<String, String>> ltlFromModel = new ArrayList<>();
+    private final List<Pair<String, String>> coverageLtl = new ArrayList<>();
+    private final List<Pair<String, String>> ltlFromModel = new ArrayList<>();
 
     private static final boolean DISTRIBUTE_MODEL_LTL = false;
 
@@ -157,13 +157,13 @@ public class SpinRunner extends Runner {
             } else if (line.matches("^[\t ]+\\w+(\\[[0-9]+\\])? = \\w+$")) {
                 final String[] tokens = line.split(" = ");
                 final String varName = tokens[0].trim();
-                //System.out.println(varName);
                 final Variable<?> var = data.conf.byName(varName);
                 if (var != null) {
                     tc.addValue(varName, var.readValue(tokens[1].trim()));
                 }
             }
         }
+
         return tc;
     }
 

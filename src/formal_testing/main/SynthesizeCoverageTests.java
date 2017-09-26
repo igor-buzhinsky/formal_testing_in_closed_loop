@@ -53,7 +53,7 @@ public class SynthesizeCoverageTests extends MainArgs {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
-                valuePairCoverage);
+                valuePairCoverage, nusmvSpecCoverage);
         final TestSuite testSuite = new TestSuite(true);
 
         System.out.println("Coverage test synthesis...");

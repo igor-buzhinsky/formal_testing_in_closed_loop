@@ -5,6 +5,7 @@ package formal_testing.main;
  */
 
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 abstract class MainArgs extends MainBase {
     @Argument(usage = "configuration filename", metaVar = "<filename>", required = true, index = 0)
@@ -21,4 +22,7 @@ abstract class MainArgs extends MainBase {
 
     @Argument(usage = "specification filename", metaVar = "<filename>", required = true, index = 4)
     String specFilename;
+
+    @Option(name = "--nusmvSpecCoverage", usage = "cover Boolean subformulas in NuSMV LTL specification")
+    String nusmvSpecCoverage;
 }

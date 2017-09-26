@@ -4,7 +4,12 @@ import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
 import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
+import formal_testing.coverage.FormulaCoveragePoint;
 import formal_testing.enums.Language;
+import formal_testing.formula.LTLFormula;
+import formal_testing.formula.UnaryOperator;
+import formal_testing.generated.nusmv_ltlLexer;
+import formal_testing.generated.nusmv_ltlParser;
 import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
 import formal_testing.value.BooleanValue;
@@ -14,13 +19,17 @@ import formal_testing.variable.BooleanVariable;
 import formal_testing.variable.IntegerVariable;
 import formal_testing.variable.SetVariable;
 import formal_testing.variable.Variable;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
 import org.apache.commons.lang3.tuple.Pair;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -127,7 +136,68 @@ abstract class MainBase {
         return sb.toString();
     }
 
-    private List<CoveragePoint> coveragePoints(boolean includeInternal, boolean valuePairCoverage, int coverageClaims) {
+    private List<CoveragePoint> specCoveragePoints(String nusmvSpecCoverage) {
+        final Set<LTLFormula> subformulas = new LinkedHashSet<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(new File(nusmvSpecCoverage)))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.replaceAll("--.*$", "").trim();
+                if (!line.startsWith("LTLSPEC ")) {
+                    continue;
+                }
+                //System.out.println(line);
+
+                try (InputStream in = new ByteArrayInputStream(line.getBytes(StandardCharsets.UTF_8))) {
+                    final nusmv_ltlLexer lexer = new nusmv_ltlLexer(new ANTLRInputStream(in));
+                    final CommonTokenStream tokens = new CommonTokenStream(lexer);
+                    final nusmv_ltlParser parser = new nusmv_ltlParser(tokens);
+                    parser.addErrorListener(new ANTLRErrorListener() {
+                        @Override
+                        public void syntaxError(Recognizer<?, ?> recognizer, Object o, int i, int i1, String s,
+                                                RecognitionException e) {
+                            throw new NullPointerException();
+                        }
+
+                        @Override
+                        public void reportAmbiguity(Parser parser, DFA dfa, int i, int i1, boolean b, BitSet bitSet,
+                                                    ATNConfigSet atnConfigSet) {
+                            throw new NullPointerException();
+                        }
+
+                        @Override
+                        public void reportAttemptingFullContext(Parser parser, DFA dfa, int i, int i1, BitSet bitSet,
+                                                                ATNConfigSet atnConfigSet) {
+                            throw new NullPointerException();
+                        }
+
+                        @Override
+                        public void reportContextSensitivity(Parser parser, DFA dfa, int i, int i1, int i2,
+                                                             ATNConfigSet atnConfigSet) {
+                            throw new NullPointerException();
+                        }
+                    });
+                    try {
+                        final LTLFormula f = parser.formula().f;
+                        f.allBooleanSubformulas(subformulas);
+                    } catch (NullPointerException | RecognitionException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // add negations
+        subformulas.addAll(subformulas.stream().map(f -> f instanceof UnaryOperator
+                ? ((UnaryOperator) f).argument : new UnaryOperator("!", f)).collect(Collectors.toList()));
+
+        return subformulas.stream().map(FormulaCoveragePoint::new).collect(Collectors.toList());
+    }
+
+    private List<CoveragePoint> coveragePoints(boolean includeInternal, boolean valuePairCoverage, int coverageClaims,
+                                               String nusmvSpecCoverage) {
         final List<Variable> variables = new ArrayList<>();
         variables.addAll(data.conf.inputVars);
         variables.addAll(data.conf.nondetVars);
@@ -161,6 +231,11 @@ abstract class MainBase {
         for (int i = 0; i < coverageClaims; i++) {
             result.add(new FlowCoveragePoint(i));
         }
+
+        if (nusmvSpecCoverage != null) {
+            result.addAll(specCoveragePoints(nusmvSpecCoverage));
+        }
+
         return result;
     }
 
@@ -407,10 +482,11 @@ abstract class MainBase {
         int coveredPoints = 0;
 
         CoverageInfo(boolean plantCodeCoverage, boolean controllerCodeCoverage, boolean includeInternal,
-                     boolean valuePairCoverage) {
+                     boolean valuePairCoverage, String nusmvSpecCoverage) {
             final CodeCoverageCounter counter = new CodeCoverageCounter();
             usualModelCode(counter, plantCodeCoverage, controllerCodeCoverage);
-            coveragePoints = coveragePoints(includeInternal, valuePairCoverage, counter.coverageClaims);
+            coveragePoints = coveragePoints(includeInternal, valuePairCoverage, counter.coverageClaims,
+                    nusmvSpecCoverage);
             totalPoints = coveragePoints.size();
         }
 

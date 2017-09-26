@@ -1,5 +1,6 @@
 package formal_testing;
 
+import formal_testing.formula.LTLFormula;
 import formal_testing.value.Value;
 import formal_testing.variable.Variable;
 
@@ -23,12 +24,20 @@ public class TestCase implements Serializable {
         return result;
     }
 
+    public boolean hasFormulaSatisfied(LTLFormula f) {
+        for (int i = 0; i < length; i++) {
+            if (f.booleanValue(values, i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean contains(List<Variable> vars, List<Value> values) {
         l: for (int i = 0; i < length; i++) {
             for (int j = 0; j < vars.size(); j++) {
                 final String varName = vars.get(j).indexedName();
                 final Value value = values.get(j);
-                //System.out.println(this);
                 if (!this.values.get(varName).get(i).toString().equals(value.toString())) {
                     continue l;
                 }
@@ -46,7 +55,7 @@ public class TestCase implements Serializable {
 
     @Override
     public String toString() {
-        return values.toString();
+        return "TestCase[length = " + length + "; values = " + values.toString() + "]";
     }
 
     @Override
@@ -90,7 +99,7 @@ public class TestCase implements Serializable {
 
     public void crop(int maxLength) {
         values.values().stream().filter(l -> l.size() > maxLength).forEach(l -> l.remove(l.size() - 1));
-        length = values.values().stream().mapToInt(List::size).max().getAsInt();
+        length = values.values().stream().mapToInt(List::size).max().orElse(0);
     }
 
     public void validate() {

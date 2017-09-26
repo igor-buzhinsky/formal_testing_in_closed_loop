@@ -10,7 +10,7 @@ call_spin() {
     local name="$1"
     echo " >>> $name"
     shift
-    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" -l PROMELA $@ 2>&1
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.pml" "$dir/plant.pml" "$dir/controller.pml" "$dir/spec.pml" --nusmvSpecCoverage "$dir/spec-ltl.smv" -l PROMELA $@ 2>&1
     echo
 }
 
@@ -19,7 +19,7 @@ call_nusmv() {
     local name="$1"
     echo " >>> $name"
     shift
-    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" -l NUSMV $@ 2>&1
+    /usr/bin/time -f "  >>> Elapsed time: %e s" java -jar jars/"$name".jar "$dir/elevator.conf" "$dir/header.smv" "$dir/plant.smv" "$dir/controller.smv" "$dir/$nusmv_spec_file" --nusmvSpecCoverage "$dir/spec-ltl.smv" -l NUSMV $@ 2>&1
     echo
 }
 
@@ -84,7 +84,7 @@ bmc_verification() {
     nusmv_spec_file=spec.smv
 }
 
-comparison() {
+old_comparison() {
     set_floors "$1"
 
     #echo
@@ -114,7 +114,36 @@ comparison() {
     # Run verification
     bmc_verification $floors $floors
     bmc_verification $floors $((floors * 2))
-    #bmc_verification $floors $((floors * 3))
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    
+    print_log
+}
+comparison() {
+    set_floors "$1"
+
+    echo
+    echo ">>> comparison $floors"
+    
+    # Framework: synthesis
+    call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize > log
+    print_log
+    print_test_suite test-small.bin > /dev/null
+    
+    # Framework: execution
+    call_spin run --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log
+    print_log
+
+    # BMC
+    bmc_verification $floors $(((floors * 3 + 5) / 2))
+    bmc_verification $floors $((floors * 3 + 5))
+    
+    # BDD-based LTL MC 
+    nusmv_spec_file=spec-ltl.smv
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    nusmv_spec_file=spec.smv
+    print_log
+    
+    # BDD-based CTL MC
     call_nusmv closed-loop-verify --verbose --dynamic --coi > log
     print_log
 }
@@ -124,9 +153,21 @@ seed="--seed 200"
 finite="--checkFiniteCoverage"
 #finite=
 
-comparison 5
+#set_floors 4
+#call_spin closed-loop-verify 
+#exit
+
+#for ((i = 12; i <= 15; i++)); do
+#    echo
+#    echo "==== $i FLOORS ===="
+#    comparison $i
+#done
+comparison 2
 #comparison 10
 #comparison 15
 #comparison 20
 #check_nusmv 3
-#check_spin 3
+#set_floors 2
+#call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize
+#call_spin generate-random --number 2 --length 2 --output test.bin $seed
+#call_spin run --input test.bin --verify --output out.pml $finite --panO 0

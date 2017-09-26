@@ -74,7 +74,7 @@ public class Run extends MainArgs {
         if (measureCoverage) {
             System.out.println("\nMeasuring coverage of test suite " + filename + "...");
             final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
-                    valuePairCoverage);
+                    valuePairCoverage, nusmvSpecCoverage);
 
             for (TestCase tc : ts.testCases()) {
                 if (info.allCovered()) {

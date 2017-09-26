@@ -38,14 +38,13 @@ public abstract class CoveragePoint {
 
     private String promelaLtlProperty(Integer steps) {
         return steps == null
-                ? promelaLtlProperty("!X(<>(", "))", steps) : promelaLtlProperty("!"
-                + String.join("", Collections.nCopies(steps, "X(")), String.join("", Collections.nCopies(steps, ")")),
-                steps);
+                ? promelaLtlProperty("!X(<>(", "))", null)
+                : promelaLtlProperty("!" + nTimes(steps, "X("), nTimes(steps, ")"), steps);
     }
 
     private String nuSMVTemporalProperty(Integer steps) {
         return steps == null
-                ? nuSMVTemporalProperty("X G !(", ")", steps)
+                ? nuSMVTemporalProperty("X G !(", ")", null)
                 : nuSMVTemporalProperty(nTimes(steps, "X ") + "!(", ")", steps);
     }
 

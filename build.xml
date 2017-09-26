@@ -5,7 +5,8 @@
 
     <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
     <property name="commons.lang3.path" value="lib/commons-lang3-3.1.jar"/>
-    
+    <property name="antlr.path" value="lib/antlr-runtime-4.6.jar"/>
+
     <property name="closed-loop-verify.main" value="formal_testing/main/ClosedLoopVerify"/>
     <property name="closed-loop-verify.jar" value="closed-loop-verify.jar"/>
     
@@ -29,7 +30,7 @@
 
     <target name="closed-loop-verify-jar">
         <mkdir dir="${bin.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}:${antlr.path}"
                includeantruntime="false" debug="${debug}">
             <include name="${closed-loop-verify.main}.java"/>
         </javac>
@@ -37,13 +38,14 @@
             <manifest><attribute name="Main-Class" value="${closed-loop-verify.main}"/></manifest>
             <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+            <zipfileset src="${antlr.path}" excludes="meta-inf/*.sf"/>
         </jar>
         <delete dir="${bin.dir}"/>
     </target>
     
     <target name="generate-random-jar">
         <mkdir dir="${bin.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}:${antlr.path}"
                includeantruntime="false" debug="${debug}">
             <include name="${generate-random.main}.java"/>
         </javac>
@@ -51,13 +53,14 @@
             <manifest><attribute name="Main-Class" value="${generate-random.main}"/></manifest>
             <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+            <zipfileset src="${antlr.path}" excludes="meta-inf/*.sf"/>
         </jar>
         <delete dir="${bin.dir}"/>
     </target>
 
     <target name="run-jar">
     <mkdir dir="${bin.dir}"/>
-    <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}:${antlr.path}"
             includeantruntime="false" debug="${debug}">
         <include name="${run.main}.java"/>
     </javac>
@@ -65,13 +68,14 @@
         <manifest><attribute name="Main-Class" value="${run.main}"/></manifest>
         <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
         <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+        <zipfileset src="${antlr.path}" excludes="meta-inf/*.sf"/>
     </jar>
     <delete dir="${bin.dir}"/>
     </target>
 
     <target name="print-test-suite-jar">
         <mkdir dir="${bin.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}:${antlr.path}"
                includeantruntime="false" debug="${debug}">
             <include name="${print.test.suite.main}.java"/>
         </javac>
@@ -79,13 +83,14 @@
             <manifest><attribute name="Main-Class" value="${print.test.suite.main}"/></manifest>
             <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+            <zipfileset src="${antlr.path}" excludes="meta-inf/*.sf"/>
         </jar>
         <delete dir="${bin.dir}"/>
     </target>
     
     <target name="synthesize-coverage-tests-jar">
         <mkdir dir="${bin.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}"
+        <javac srcdir="${src.dir}" destdir="${bin.dir}" classpath="${commons.lang3.path}:${args4j.path}:${antlr.path}"
                includeantruntime="false" debug="${debug}">
             <include name="${synthesize-coverage-tests.main}.java"/>
         </javac>
@@ -93,6 +98,7 @@
             <manifest><attribute name="Main-Class" value="${synthesize-coverage-tests.main}"/></manifest>
             <zipfileset src="${commons.lang3.path}" excludes="META-INF/*.SF"/>
             <zipfileset src="${args4j.path}" excludes="meta-inf/*.sf"/>
+            <zipfileset src="${antlr.path}" excludes="meta-inf/*.sf"/>
         </jar>
         <delete dir="${bin.dir}"/>
     </target>
