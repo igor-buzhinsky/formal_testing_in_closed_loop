@@ -31,6 +31,8 @@ public class PrintTestSuite extends MainArgs {
 
     @Override
     protected void launcher() throws IOException {
+        loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
+        
         final TestSuite ts = TestSuite.read(filename);
         if (outputHeader == null) {
             outputHeader = "test.header." + extension();
