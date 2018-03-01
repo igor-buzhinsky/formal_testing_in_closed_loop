@@ -2,7 +2,8 @@
 posperfloor=3
 
 from=2
-to=20
+to=3
+#to=20
 
 plantcomment="// "
 
@@ -25,6 +26,7 @@ for ((floors = from; floors <= to; floors++)); do
     cat elevator.conf | sed "s/__1/$floors/g; s/__2/$((floorstimes - posperfloor))/g" > tmp
     mv tmp $dir/elevator.conf
 
+    # NuSMV
     echo "ASSIGN" >> tmp
     echo "    next(elevator_pos) := elevator_pos3;" >> tmp
     for ((i = 0; i < $floors; i++)); do
@@ -95,6 +97,7 @@ for ((floors = from; floors <= to; floors++)); do
 
     mv tmp $dir/controller.smv
     
+    # Promela (only requirements: the rest is copied from plant.pml and controller.pml
     echo "// plant" >> tmp
     echo ${plantcomment}"ltl pos0_1 { X( []((elevator_pos == 0) && !(!down && up) -> X(elevator_pos == 0)) ) }" >> tmp
     echo ${plantcomment}"ltl pos0_2 { X( []((elevator_pos == 0) && !down && up -> X(elevator_pos == 1)) ) }" >> tmp
@@ -177,4 +180,131 @@ for ((floors = from; floors <= to; floors++)); do
     cat tmp | sed 's/<>/AF /g; s/\[\]/AG /g; s/X(/AX(/g; s/||/|/g; s/\&\&/\&/g; s/==/=/g; s/^ltl \w\+ { /CTLSPEC /g; s/}//g; s/\/\//--/g' > $dir/spec.smv
     cat tmp | sed 's/<>/F /g; s/\[\]/G /g; s/||/|/g; s/\&\&/\&/g; s/==/=/g; s/^ltl \w\+ { /LTLSPEC /g; s/}//g; s/\/\//--/g' > $dir/spec-ltl.smv
     mv tmp $dir/spec.pml
+    
+    # Structured text without loops
+    echo -n > tmp
+    echo "VAR" >> tmp
+    echo "    up: BOOL;" >> tmp
+    echo "    down: BOOL;" >> tmp
+    echo "    open: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    on_floor: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    door_closed: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    door_open: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    call: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    user_floor_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    user_cabin_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    elevator_pos: INT;" >> tmp
+    echo "    door_state: INT;" >> tmp
+    echo "    // door_state enumeration" >> tmp
+    echo "    d_closed: INT := 0;" >> tmp
+    echo "    d_opening: INT := 1;" >> tmp
+    echo "    d_open: INT := 2;" >> tmp
+    echo "    d_closing: INT := 3;" >> tmp
+    echo "    door_timer: INT;" >> tmp
+    echo "    // controller temporary variables" >> tmp
+    echo "    on_some_floor: BOOL;" >> tmp
+    echo "    requested: BOOL;" >> tmp
+    echo "    timer_set: BOOL;" >> tmp
+    echo "    need_stop: BOOL;" >> tmp
+    echo "END_VAR" >> tmp
+    
+    echo "// plant" >> tmp
+    echo "elevator_pos := elevator_pos + up - down;" >> tmp
+    echo "IF elevator_pos > $((posperfloor * (floors - 1))) THEN" >> tmp
+    echo "    elevator_pos := $((posperfloor * (floors - 1)));" >> tmp
+    echo "END_IF" >> tmp
+    echo "IF elevator_pos < 0 THEN" >> tmp
+    echo "    elevator_pos := 0;" >> tmp
+    echo "END_IF" >> tmp
+    
+    for ((floor = 0; floor < $floors; floor++)); do
+        echo "on_floor[$floor] := elevator_pos = $((posperfloor * floor));" >> tmp
+        
+        echo "IF open[$floor] THEN" >> tmp
+        echo "    IF door_state[$floor] = d_closed OR door_state[$floor] = d_closing THEN" >> tmp
+        echo "        door_state[$floor] := d_opening;" >> tmp
+        echo "    ELSE" >> tmp
+        echo "        door_state[$floor] := d_open;" >> tmp
+        echo "    END_IF" >> tmp
+        echo "ELSE" >> tmp
+        echo "    IF door_state[$floor] = d_open OR door_state[$floor] = d_opening THEN" >> tmp
+        echo "        door_state[$floor] := d_closing;" >> tmp
+        echo "    ELSE" >> tmp
+        echo "        door_state[$floor] := d_closed;" >> tmp
+        echo "    END_IF" >> tmp
+        echo "END_IF" >> tmp
+        
+        echo "door_closed[$floor] := door_state[$floor] = d_closed;" >> tmp
+        echo "door_open[$floor] := door_state[$floor] = d_open;" >> tmp
+        
+        echo "IF on_floor[$floor] AND door_open[$floor] THEN" >> tmp
+        echo "    button[$floor] := FALSE;" >> tmp
+        echo "    call[$floor] := FALSE;" >> tmp
+        echo "ELSE" >> tmp
+        echo "    button[$floor] := button[$floor] OR user_floor_button[$floor];" >> tmp
+        echo "    call[$floor] := call[$floor] OR user_cabin_button[$floor];" >> tmp
+        echo "END_IF" >> tmp
+    done
+    
+    echo "// controller" >> tmp
+
+    echo "on_some_floor := FALSE;" >> tmp
+    echo "is_requested := FALSE;" >> tmp
+    echo "timer_set := FALSE;" >> tmp
+    
+    for ((floor = 0; floor < $floors; floor++)); do
+        echo "IF NOT open[$floor] AND on_floor[$floor] AND (button[$floor] OR call[$floor]) THEN" >> tmp
+        echo "    door_timer := 4;" >> tmp
+        echo "    timer_set := TRUE;" >> tmp
+        echo "END_IF" >> tmp
+    done
+    echo "IF door_timer > 0 AND NOT timer_set THEN" >> tmp
+    echo "    door_timer := door_timer - 1;" >> tmp
+    echo "END_IF" >> tmp
+    
+    for ((floor = 0; floor < $floors; floor++)); do
+        echo "on_some_floor := on_some_floor OR on_floor[$floor];" >> tmp
+        echo "is_requested := is_requested OR button[$floor] OR call[$floor];" >> tmp
+        echo "open[$floor] := open[$floor] AND NOT door_open[$floor];" >> tmp
+    done
+    
+    echo "need_stop := FALSE;" >> tmp
+    
+    echo "IF NOT on_some_floor THEN" >> tmp
+    echo "    ;" >> tmp
+    echo "ELSIF NOT is_requested THEN" >> tmp
+    echo "    up := FALSE;" >> tmp
+    echo "    down := FALSE;" >> tmp
+    echo "ELSE" >> tmp
+    for ((floor = 0; floor < $floors; floor++)); do
+        echo "    need_stop := need_stop OR NOT door_closed[$floor] OR on_floor[$floor] AND (button[$floor] OR call[$floor]);" >> tmp
+        echo "    open[$floor] := open[$floor] OR on_floor[$floor] AND (button[$floor] OR call[$floor]);" >> tmp
+    done
+    echo "    IF need_stop THEN" >> tmp
+    echo "        up := FALSE;" >> tmp
+    echo "        down := FALSE;" >> tmp
+    echo "    ELSE" >> tmp
+    for ((floor = 0; floor < $floors; floor++)); do
+        for ((floor_cur = 0; floor_cur < $floor; floor_cur++)); do
+            echo "        IF on_floor[$floor_cur] AND (button[$floor] OR call[$floor]) THEN" >> tmp
+            echo "            up := TRUE;" >> tmp
+            echo "            down := FALSE;" >> tmp
+            echo "        END_IF" >> tmp
+        done
+        for ((floor_cur = $floor + 1; floor_cur < $floors; floor_cur++)); do
+            echo "        IF on_floor[$floor_cur] AND (button[$floor] OR call[$floor]) THEN" >> tmp
+            echo "            up := FALSE;" >> tmp
+            echo "            down := TRUE;" >> tmp
+            echo "        END_IF" >> tmp
+        done
+    done
+    echo "    END_IF" >> tmp
+    echo "END_IF" >> tmp
+    
+    for ((floor = 0; floor < $floors; floor++)); do
+        echo "open[$floor] := open[$floor] OR door_open[$floor] AND door_timer > 0;" >> tmp
+    done
+
+    mv tmp $dir/elevator-st.txt
 done
