@@ -196,11 +196,6 @@ for ((floors = from; floors <= to; floors++)); do
     echo "    user_cabin_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
     echo "    elevator_pos: INT;" >> tmp
     echo "    door_state: INT;" >> tmp
-    echo "    // door_state enumeration" >> tmp
-    echo "    d_closed: INT := 0;" >> tmp
-    echo "    d_opening: INT := 1;" >> tmp
-    echo "    d_open: INT := 2;" >> tmp
-    echo "    d_closing: INT := 3;" >> tmp
     echo "    door_timer: INT;" >> tmp
     echo "    // controller temporary variables" >> tmp
     echo "    on_some_floor: BOOL;" >> tmp
@@ -208,7 +203,15 @@ for ((floors = from; floors <= to; floors++)); do
     echo "    timer_set: BOOL;" >> tmp
     echo "    need_stop: BOOL;" >> tmp
     echo "END_VAR" >> tmp
+    echo "VAR_CONSTANT" >> tmp
+    echo "    // door_state enumeration" >> tmp
+    echo "    d_closed: INT := 0;" >> tmp
+    echo "    d_opening: INT := 1;" >> tmp
+    echo "    d_open: INT := 2;" >> tmp
+    echo "    d_closing: INT := 3;" >> tmp
+    echo "END_VAR" >> tmp
     
+    echo >> tmp
     echo "// plant" >> tmp
     echo "elevator_pos := elevator_pos + up - down;" >> tmp
     echo "IF elevator_pos > $((posperfloor * (floors - 1))) THEN" >> tmp
@@ -247,6 +250,7 @@ for ((floors = from; floors <= to; floors++)); do
         echo "END_IF" >> tmp
     done
     
+    echo >> tmp
     echo "// controller" >> tmp
 
     echo "on_some_floor := FALSE;" >> tmp
