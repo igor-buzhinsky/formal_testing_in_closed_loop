@@ -2,8 +2,8 @@
 posperfloor=3
 
 from=2
-to=3
 #to=20
+to=3
 
 plantcomment="// "
 
