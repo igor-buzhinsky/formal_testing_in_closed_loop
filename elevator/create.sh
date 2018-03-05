@@ -2,15 +2,14 @@
 posperfloor=3
 
 from=2
-#to=20
-to=3
+to=20
 
 plantcomment="// "
 
 for ((floors = from; floors <= to; floors++)); do
     floorstimes=$((floors * posperfloor))
     fm1=$((floors - 1))
-    dir="../elevator-$floors"
+    dir="elevator-$floors"
     mkdir -p $dir
 
     cat header | sed "s/__1/$floors/g" | sed "s/__2/$posperfloor/g" > tmp
@@ -183,7 +182,11 @@ for ((floors = from; floors <= to; floors++)); do
     
     # Structured text without loops
     echo -n > tmp
-    echo "VAR" >> tmp
+    echo "VAR_INPUT" >> tmp
+    echo "    user_floor_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "    user_cabin_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
+    echo "END_VAR" >> tmp
+    echo "VAR_OUTPUT" >> tmp
     echo "    up: BOOL;" >> tmp
     echo "    down: BOOL;" >> tmp
     echo "    open: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
@@ -192,10 +195,10 @@ for ((floors = from; floors <= to; floors++)); do
     echo "    door_open: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
     echo "    button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
     echo "    call: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
-    echo "    user_floor_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
-    echo "    user_cabin_button: ARRAY[0..$((floors - 1))] OF BOOL;" >> tmp
-    echo "    elevator_pos: INT;" >> tmp
     echo "    door_state: ARRAY[0..$((floors - 1))] OF INT;" >> tmp
+    echo "END_VAR" >> tmp
+    echo "VAR" >> tmp
+    echo "    elevator_pos: INT;" >> tmp
     echo "    door_timer: INT;" >> tmp
     echo "    // controller temporary variables" >> tmp
     echo "    on_some_floor: BOOL;" >> tmp

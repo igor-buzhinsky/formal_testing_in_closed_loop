@@ -24,12 +24,12 @@ public class TestSuite implements Serializable {
 
     public TestSuite(boolean addOracle, TestCase... testCases) {
         this.addOracle = addOracle;
-        Arrays.stream(testCases).forEach(this.testCases::add);
+        this.testCases.addAll(Arrays.asList(testCases));
     }
 
     private void lengthReorder() {
         final ArrayList<TestCase> ordered = new ArrayList<>(testCases);
-        Collections.sort(ordered, (o1, o2) -> o1.length() - o2.length());
+        ordered.sort(Comparator.comparingInt(TestCase::length));
         testCases.clear();
         testCases.addAll(ordered);
     }
@@ -202,11 +202,7 @@ public class TestSuite implements Serializable {
                         final String strUpdates = updates.size() > 1 ? ((LARGE_D_STEPS ? "" : "d_step { ")
                                 + String.join("", updates) + (LARGE_D_STEPS ? "" : "}"))
                                 : updates.size() == 1 ? updates.get(0) : ";";
-                        Set<Integer> steps = buckets.get(strUpdates);
-                        if (steps == null) {
-                            steps = new TreeSet<>();
-                            buckets.put(strUpdates, steps);
-                        }
+                        Set<Integer> steps = buckets.computeIfAbsent(strUpdates, k -> new TreeSet<>());
                         steps.add(j);
                     }
 
@@ -271,6 +267,9 @@ public class TestSuite implements Serializable {
     }
 
     private void logarithmicValueChoice(StringBuilder sb, List<String> innerParts, String varName) {
+        if (innerParts.isEmpty()) {
+            throw new AssertionError();
+        }
         logarithmicValueChoice(sb, innerParts, varName, 0, innerParts.size(), 0);
     }
 
@@ -296,16 +295,8 @@ public class TestSuite implements Serializable {
             final TestCase tc = list.get(i);
             for (int j = 0; j < tc.length(); j++) {
                 final String value = tc.values().get(varName).get(j).toString();
-                Map<Integer, Set<Integer>> bucket = buckets.get(value);
-                if (bucket == null) {
-                    bucket = new TreeMap<>();
-                    buckets.put(value, bucket);
-                }
-                Set<Integer> valueSet = bucket.get(i);
-                if (valueSet == null) {
-                    valueSet = new TreeSet<>();
-                    bucket.put(i, valueSet);
-                }
+                final Map<Integer, Set<Integer>> bucket = buckets.computeIfAbsent(value, k -> new TreeMap<>());
+                final Set<Integer> valueSet = bucket.computeIfAbsent(i, k -> new TreeSet<>());
                 valueSet.add(j);
             }
         }
@@ -316,11 +307,7 @@ public class TestSuite implements Serializable {
         final Map<Integer, Set<Integer>> lengthBuckets = new TreeMap<>();
         for (int i = 0; i < list.size(); i++) {
             final int length = list.get(i).length();
-            Set<Integer> valueSet = lengthBuckets.get(length);
-            if (valueSet == null) {
-                valueSet = new TreeSet<>();
-                lengthBuckets.put(length, valueSet);
-            }
+            final Set<Integer> valueSet = lengthBuckets.computeIfAbsent(length, k -> new TreeSet<>());
             valueSet.add(i);
         }
         return lengthBuckets;

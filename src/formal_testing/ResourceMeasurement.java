@@ -24,7 +24,7 @@ public class ResourceMeasurement {
         this.systemTime = systemTime;
         this.elapsedTime = elapsedTime;
         this.maxResident = maxResident;
-        Arrays.stream(comments).forEach(this.comments::add);
+        this.comments.addAll(Arrays.asList(comments));
     }
 
     /*
@@ -36,7 +36,7 @@ public class ResourceMeasurement {
         systemTime = Double.parseDouble(tokens[3]);
         elapsedTime = Double.parseDouble(tokens[4]);
         maxResident = Integer.parseInt(tokens[5]);
-        Arrays.stream(comments).forEach(this.comments::add);
+        this.comments.addAll(Arrays.asList(comments));
     }
 
     public static boolean isMeasurement(String measurement) {

@@ -510,7 +510,7 @@ abstract class MainBase {
                 System.out.println("*** " + outcome.getKey() + " = " + outcome.getValue() + " ***");
             }
             if (verbose) {
-                result.log().stream().forEach(System.out::println);
+                result.log().forEach(System.out::println);
             }
             System.out.println(runner.totalResourceReport());
         }

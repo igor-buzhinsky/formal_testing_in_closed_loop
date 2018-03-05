@@ -2,7 +2,7 @@
 
 set_floors() {
     floors=$1
-    dir=elevator-$floors
+    dir=elevator/elevator-$floors
     maxlen=$((floors * 3 + 3)) # optimum
     maxlen=$((floors * 3 + 6))
 }
@@ -135,18 +135,18 @@ comparison() {
     print_log
 
     # BMC
-    #bmc_verification $floors $(((floors * 3 + 5) / 2))
-    #bmc_verification $floors $((floors * 3 + 5))
+    bmc_verification $floors $(((floors * 3 + 5) / 2))
+    bmc_verification $floors $((floors * 3 + 5))
     
     # BDD-based LTL MC 
-    #nusmv_spec_file=spec-ltl.smv
-    #call_nusmv closed-loop-verify --verbose --dynamic --coi > log
-    #nusmv_spec_file=spec.smv
-    #print_log
+    nusmv_spec_file=spec-ltl.smv
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    nusmv_spec_file=spec.smv
+    print_log
     
     # BDD-based CTL MC
-    #call_nusmv closed-loop-verify --verbose --dynamic --coi > log
-    #print_log
+    call_nusmv closed-loop-verify --verbose --dynamic --coi > log
+    print_log
 }
 
 seed="--seed 200"
@@ -158,12 +158,15 @@ finite="--checkFiniteCoverage"
 #call_spin closed-loop-verify 
 #exit
 
-for ((i = 3; i <= 15; i++)); do
-    echo
-    echo "==== $i FLOORS ===="
-    comparison $i
-done
-comparison 2
+#for ((i = 3; i <= 15; i++)); do
+#    echo
+#    echo "==== $i FLOORS ===="
+#    comparison $i
+#done
+
+
+comparison 5
+
 #comparison 10
 #comparison 15
 #comparison 20
