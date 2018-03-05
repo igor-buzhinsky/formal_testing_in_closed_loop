@@ -165,7 +165,7 @@ finite="--checkFiniteCoverage"
 #done
 
 
-comparison 5
+comparison 3
 
 #comparison 10
 #comparison 15
