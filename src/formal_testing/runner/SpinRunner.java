@@ -58,7 +58,7 @@ public class SpinRunner extends Runner {
 
     SpinRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
             throws IOException {
-        super(data, "spindir." + SPIN_DIR_INDEX++, modelCode, maxTestLength);
+        super(data, "spindir." + SPIN_DIR_INDEX++, "spindir-last", modelCode, maxTestLength);
 
         ltlFromModel();
         coverageLtl(coveragePoints);

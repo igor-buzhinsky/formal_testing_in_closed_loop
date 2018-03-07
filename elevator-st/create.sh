@@ -6,25 +6,25 @@ to=3
 
 plantcomment="// "
 
+st_convert() {
+    java -jar $(cat converter-location) --input "$1" --promelaOutput "$2" --nusmvOutput "$3"
+}
+
 for ((floors = from; floors <= to; floors++)); do
     floorstimes=$((floors * posperfloor))
     fm1=$((floors - 1))
-    dir="elevator-st-$floors"
+    dir="elevator-$floors"
     mkdir -p $dir
 
     echo -n > $dir/header.smv
     echo -n > $dir/header.pml
-    echo -n > $dir/controller.pml
-    echo -n > $dir/plant.pml
-    echo -n > $dir/controller.smv
-    echo -n > $dir/plant.smv
 
     # 1 floor  - pos : 0..0
     # 2 floors - pos : 0..posperfloor
     # 3 floors - pos : 0..2*posperfloor
     # k floors - pos : 0..(k - 1)*posperfloor
-    cat elevator-st.conf | sed "s/__1/$floors/g; s/__2/$((floorstimes - posperfloor))/g" > tmp
-    mv tmp $dir/elevator-st.conf
+    cat elevator.conf | sed "s/__1/$floors/g; s/__2/$((floorstimes - posperfloor))/g" > tmp
+    mv tmp $dir/elevator.conf
 
     # Promela specs
     echo "// plant" >> tmp
@@ -273,4 +273,16 @@ for ((floors = from; floors <= to; floors++)); do
     done
 
     mv tmp $dir/controller-st.txt
+
+    st_convert $dir/plant-st.txt $dir/plant.pml $dir/plant.smv
+    st_convert $dir/controller-st.txt $dir/controller.pml $dir/controller.smv
+
+    for name in $dir/plant.smv $dir/controller.smv; do
+        cat $name | grep -Pv "^MODULE main$" | grep -Pv "^VAR$" | grep -Pv "^    \\w+: .*;$" | grep -Pv "^    init\\(.*;$"> tmp
+        mv tmp $name
+    done
+    for name in $dir/plant.pml $dir/controller.pml; do
+        cat $name | grep -Pv "^(bool|short) .*$" | sed 's/^init {.*$/d_step {/; s/} } od }/}/' > tmp
+        mv tmp $name
+    done
 done

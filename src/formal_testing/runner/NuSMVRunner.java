@@ -22,9 +22,9 @@ public class NuSMVRunner extends Runner {
 
     private static final String MODEL_FILENAME = "model.smv";
 
-    NuSMVRunner(ProblemData data, String modelCode, List<CoveragePoint> coveragePoints, Integer maxTestLength)
+    NuSMVRunner(ProblemData data, String modelCode, Integer maxTestLength)
             throws IOException {
-        super(data, "nusmvdir." + NUSMV_DIR_INDEX++, modelCode, maxTestLength);
+        super(data, "nusmvdir." + NUSMV_DIR_INDEX++, "nusmvdir-last", modelCode, maxTestLength);
     }
 
     private void writeModel(String property) throws FileNotFoundException {

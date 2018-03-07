@@ -1,8 +1,11 @@
 #!/bin/bash
 
+basedir=elevator
+#basedir=elevator-st
+
 set_floors() {
     floors=$1
-    dir=elevator/elevator-$floors
+    dir=$basedir/elevator-$floors
     maxlen=$((floors * 3 + 3)) # optimum
     maxlen=$((floors * 3 + 6))
 }
@@ -165,7 +168,7 @@ finite="--checkFiniteCoverage"
 #done
 
 
-comparison 3
+comparison 2
 
 #comparison 10
 #comparison 15

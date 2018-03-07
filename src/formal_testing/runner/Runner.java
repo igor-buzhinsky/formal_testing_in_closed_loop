@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 public abstract class Runner implements AutoCloseable {
     Process process;
     final String dirName;
+    final String logDirName;
     final ProblemData data;
     String modelCode;
     final Integer maxTestLength;
@@ -39,10 +40,11 @@ public abstract class Runner implements AutoCloseable {
                 line -> totalResourceMeasurement = totalResourceMeasurement.add(new ResourceMeasurement(line)));
     }
 
-    Runner(ProblemData data, String dirName, String modelCode, Integer maxTestLength)
+    Runner(ProblemData data, String dirName, String logDirName, String modelCode, Integer maxTestLength)
             throws IOException {
         this.data = data;
         this.dirName = dirName;
+        this.logDirName = logDirName;
         this.modelCode = modelCode;
         this.maxTestLength = maxTestLength;
         createDir();
@@ -87,7 +89,7 @@ public abstract class Runner implements AutoCloseable {
                                 Integer maxLength) throws IOException {
         return Settings.LANGUAGE == Language.PROMELA
                 ? new SpinRunner(data, modelCode, coveragePoints, maxLength)
-                : new NuSMVRunner(data, modelCode, coveragePoints, maxLength);
+                : new NuSMVRunner(data, modelCode, maxLength);
     }
 
     public abstract RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
@@ -106,7 +108,12 @@ public abstract class Runner implements AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        delete(new File(dirName));
+        final File logDir = new File(logDirName);
+        if (logDir.exists()) {
+            delete(logDir);
+        }
+        final File movedDir = new File(dirName);
+        Files.move(Paths.get(movedDir.toURI()), Paths.get(logDir.toURI()));
     }
 
     public abstract String creationReport();
