@@ -2,12 +2,12 @@
 posperfloor=3
 
 from=2
-to=3
+to=15
 
 plantcomment="// "
 
 st_convert() {
-    java -jar $(cat converter-location) --input "$1" --promelaOutput "$2" --nusmvOutput "$3"
+    java -jar $(cat converter-location) --input "$1" --promelaOutput "$2" --nusmvOutput "$3" --nusmvPreviousStepInputs up,down,open
 }
 
 for ((floors = from; floors <= to; floors++)); do
