@@ -70,7 +70,8 @@ public class NuSMVRunner extends Runner {
     private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout)
             throws IOException {
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
-                ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df", "-cpp"));
+                ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df",
+                "-pre", "cpp"));
         if (nusmvBMCK != null) {
             command.addAll(Arrays.asList("-bmc", "-bmc_length", String.valueOf(nusmvBMCK)));
         }

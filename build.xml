@@ -5,7 +5,7 @@
 
     <property name="args4j.path" value="lib/args4j-2.0.21.jar"/>
     <property name="commons.lang3.path" value="lib/commons-lang3-3.1.jar"/>
-    <property name="antlr.path" value="lib/antlr-runtime-4.6.jar"/>
+    <property name="antlr.path" value="lib/antlr-runtime-4.7.1.jar"/>
 
     <property name="closed-loop-verify.main" value="formal_testing/main/ClosedLoopVerify"/>
     <property name="closed-loop-verify.jar" value="closed-loop-verify.jar"/>
