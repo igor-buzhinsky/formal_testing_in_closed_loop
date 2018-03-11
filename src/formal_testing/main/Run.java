@@ -47,6 +47,9 @@ public class Run extends MainArgs {
             usage = "if measureCoverage is on, measure controller code coverage")
     private boolean controllerCodeCoverage;
 
+    @Option(name = "--maxGoals", usage = "maximum coverage goals per integer variable", metaVar = "<maxGoals>")
+    private int maxGoals = Integer.MAX_VALUE;
+
     public static void main(String[] args) {
         new Run().run(args);
     }
@@ -74,7 +77,7 @@ public class Run extends MainArgs {
         if (measureCoverage) {
             System.out.println("\nMeasuring coverage of test suite " + filename + "...");
             final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
-                    valuePairCoverage, nusmvSpecCoverage);
+                    valuePairCoverage, nusmvSpecCoverage, maxGoals);
 
             for (TestCase tc : ts.testCases()) {
                 if (info.allCovered()) {

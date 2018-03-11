@@ -2,10 +2,10 @@ package formal_testing.main;
 
 import formal_testing.*;
 import formal_testing.coverage.CoveragePoint;
-import formal_testing.coverage.DataCoveragePoint;
 import formal_testing.coverage.FlowCoveragePoint;
 import formal_testing.coverage.FormulaCoveragePoint;
 import formal_testing.enums.Language;
+import formal_testing.formula.BinaryOperator;
 import formal_testing.formula.LTLFormula;
 import formal_testing.formula.UnaryOperator;
 import formal_testing.generated.nusmv_ltlLexer;
@@ -197,7 +197,7 @@ abstract class MainBase {
     }
 
     private List<CoveragePoint> coveragePoints(boolean includeInternal, boolean valuePairCoverage, int coverageClaims,
-                                               String nusmvSpecCoverage) {
+                                               String nusmvSpecCoverage, int maxGoals) {
         final List<Variable> variables = new ArrayList<>();
         variables.addAll(data.conf.inputVars);
         variables.addAll(data.conf.nondetVars);
@@ -212,19 +212,20 @@ abstract class MainBase {
         if (valuePairCoverage && variables.size() > 1) {
             for (int i = 0; i < variables.size(); i++) {
                 final Variable<?> varI = variables.get(i);
+                final List<LTLFormula> listI = oneVariableGoalFormulas(varI, maxGoals);
                 for (int j = i + 1; j < variables.size(); j++) {
                     final Variable<?> varJ = variables.get(j);
-                    for (Value valueI : varI.values()) {
-                        for (Value valueJ : varJ.values()) {
-                            result.add(new DataCoveragePoint(varI, valueI, varJ, valueJ));
+                    final List<LTLFormula> listJ = oneVariableGoalFormulas(varJ, maxGoals);
+                    for (LTLFormula fI : listI) {
+                        for (LTLFormula fJ : listJ) {
+                            result.add(new FormulaCoveragePoint(new BinaryOperator("&", fI, fJ)));
                         }
                     }
                 }
             }
         } else {
             for (Variable<?> var : variables) {
-                result.addAll(var.values().stream().map(value -> new DataCoveragePoint(var, value))
-                        .collect(Collectors.toList()));
+                oneVariableGoalFormulas(var, maxGoals).forEach(f -> result.add(new FormulaCoveragePoint(f)));
             }
         }
 
@@ -236,6 +237,21 @@ abstract class MainBase {
             result.addAll(specCoveragePoints(nusmvSpecCoverage));
         }
 
+        return result;
+    }
+
+    private List<LTLFormula> oneVariableGoalFormulas(Variable<?> var, int maxGoals) {
+        final List<? extends Value> values = var.values();
+        final List<LTLFormula> result = new ArrayList<>();
+        if (values.size() < maxGoals || !(var instanceof IntegerVariable)) {
+            values.forEach(value -> result.add(LTLFormula.equality(var, value)));
+        } else {
+            for (int i = 0; i < maxGoals; i++) {
+                final int fromIndex = i * values.size() / maxGoals;
+                final int toIndex = (i + 1) * values.size() / maxGoals - 1;
+                result.add(LTLFormula.between(var, values.get(fromIndex), values.get(toIndex)));
+            }
+        }
         return result;
     }
 
@@ -482,11 +498,11 @@ abstract class MainBase {
         int coveredPoints = 0;
 
         CoverageInfo(boolean plantCodeCoverage, boolean controllerCodeCoverage, boolean includeInternal,
-                     boolean valuePairCoverage, String nusmvSpecCoverage) {
+                     boolean valuePairCoverage, String nusmvSpecCoverage, int maxGoals) {
             final CodeCoverageCounter counter = new CodeCoverageCounter();
             usualModelCode(counter, plantCodeCoverage, controllerCodeCoverage);
             coveragePoints = coveragePoints(includeInternal, valuePairCoverage, counter.coverageClaims,
-                    nusmvSpecCoverage);
+                    nusmvSpecCoverage, maxGoals);
             totalPoints = coveragePoints.size();
         }
 

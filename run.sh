@@ -19,7 +19,7 @@ comparison() {
         set_floors "$i"
         
         echo
-        echo "==== comparison with $i FLOORS, basedir=$basedir ===="
+        echo "==== comparison with $i floors, basedir=$basedir ===="
         
         # Framework: synthesis
         call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize > log
@@ -57,7 +57,7 @@ additional_tests() {
     #check_nusmv "set_floors 2" # FIXME hangs after test generation...
 }
 
-comparison 2
+comparison 2 2
 #comparison 3 15
 #additional_tests
 

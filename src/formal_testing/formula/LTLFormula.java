@@ -1,6 +1,7 @@
 package formal_testing.formula;
 
 import formal_testing.value.Value;
+import formal_testing.variable.Variable;
 
 import java.util.Collection;
 import java.util.List;
@@ -71,4 +72,19 @@ public abstract class LTLFormula {
             return "FALSE";
         }
     };
+
+
+    public static LTLFormula equality(Variable<?> var, Value value) {
+        return new Proposition(var.indexedName(), "=", value.toNuSMVString());
+    }
+
+    public static LTLFormula between(Variable<?> var, Value value1, Value value2) {
+        if (value1.toNuSMVString().equals(value2.toNuSMVString())) {
+            return equality(var, value1);
+        } else {
+            return new BinaryOperator("&",
+                    new Proposition(var.indexedName(), ">=", value1.toNuSMVString()),
+                    new Proposition(var.indexedName(), "<=", value2.toNuSMVString()));
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package formal_testing.formula;
 
 import formal_testing.value.Value;
+import formal_testing.variable.Variable;
 
 import java.util.Collection;
 import java.util.List;

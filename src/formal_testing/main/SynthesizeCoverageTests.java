@@ -24,7 +24,7 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--maxlen", usage = "maximum test length, default = 10", metaVar = "<length>")
     private int maxLength = 10;
 
-    @Option(name = "--maxGoals", usage = "maximum coverage goals per variable", metaVar = "<maxGoals>")
+    @Option(name = "--maxGoals", usage = "maximum coverage goals per integer variable", metaVar = "<maxGoals>")
     private int maxGoals = Integer.MAX_VALUE;
 
     @Option(name = "--minimize", handler = BooleanOptionHandler.class,
@@ -56,7 +56,7 @@ public class SynthesizeCoverageTests extends MainArgs {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
 
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
-                valuePairCoverage, nusmvSpecCoverage);
+                valuePairCoverage, nusmvSpecCoverage, maxGoals);
         final TestSuite testSuite = new TestSuite(true);
 
         System.out.println("Coverage test synthesis...");
