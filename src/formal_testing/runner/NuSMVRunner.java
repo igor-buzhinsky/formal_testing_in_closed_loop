@@ -24,7 +24,7 @@ public class NuSMVRunner extends Runner {
 
     NuSMVRunner(ProblemData data, String modelCode, Integer maxTestLength)
             throws IOException {
-        super(data, "nusmvdir." + NUSMV_DIR_INDEX++, "nusmvdir-last", modelCode, maxTestLength);
+        super(data, "nusmvdir-" + NUSMV_DIR_INDEX++, "nusmvdir-last", modelCode, maxTestLength);
     }
 
     private void writeModel(String property) throws FileNotFoundException {

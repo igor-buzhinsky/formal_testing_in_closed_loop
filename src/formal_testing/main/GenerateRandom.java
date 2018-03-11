@@ -27,7 +27,7 @@ public class GenerateRandom extends MainArgs {
     @Option(name = "--output", usage = "output filename", metaVar = "<filename>")
     private String outputFilename = "test.bin";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new GenerateRandom().run(args);
     }
 

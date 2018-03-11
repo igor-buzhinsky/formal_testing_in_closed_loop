@@ -19,7 +19,7 @@ public class ClosedLoopVerify extends MainArgs {
             usage = "if on, NuSMV LTL verification will be performed using BMC with given k", metaVar = "<k>")
     private Integer verificationBMCK;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new ClosedLoopVerify().run(args);
     }
 

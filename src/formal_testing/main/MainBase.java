@@ -149,7 +149,7 @@ abstract class MainBase {
                 //System.out.println(line);
 
                 try (InputStream in = new ByteArrayInputStream(line.getBytes(StandardCharsets.UTF_8))) {
-                    final nusmv_ltlLexer lexer = new nusmv_ltlLexer(new ANTLRInputStream(in));
+                    final nusmv_ltlLexer lexer = new nusmv_ltlLexer(CharStreams.fromStream(in, StandardCharsets.UTF_8));
                     final CommonTokenStream tokens = new CommonTokenStream(lexer);
                     final nusmv_ltlParser parser = new nusmv_ltlParser(tokens);
                     parser.addErrorListener(new ANTLRErrorListener() {

@@ -21,7 +21,7 @@ public class PrintTestSuite extends MainArgs {
     @Option(name = "--outputBody", usage = "output test body file", metaVar = "<filename>")
     private String outputBody;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new PrintTestSuite().run(args);
     }
 

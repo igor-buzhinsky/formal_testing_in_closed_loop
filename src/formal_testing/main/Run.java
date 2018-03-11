@@ -47,7 +47,7 @@ public class Run extends MainArgs {
             usage = "if measureCoverage is on, measure controller code coverage")
     private boolean controllerCodeCoverage;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new Run().run(args);
     }
 

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public abstract class Runner implements AutoCloseable {
     Process process;
     final String dirName;
-    final String logDirName;
+    private final String logDirName;
     final ProblemData data;
     String modelCode;
     final Integer maxTestLength;

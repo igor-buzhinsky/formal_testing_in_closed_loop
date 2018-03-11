@@ -10,9 +10,9 @@ import java.util.Map;
  * Created by buzhinsky on 4/18/17.
  */
 public class Proposition extends LTLFormula {
-    public final String varName;
-    public final String operator;
-    public final String constant;
+    private final String varName;
+    private final String operator;
+    private final String constant;
 
     private static String boolToInt(String s) {
         return s.equals("TRUE") ? "1" : s.equals("FALSE") ? "0" : s;
@@ -24,7 +24,7 @@ public class Proposition extends LTLFormula {
         this.constant = constant;
     }
 
-    public boolean calculate(String value) {
+    private boolean calculate(String value) {
         final String c = boolToInt(constant);
         final String v = boolToInt(value);
         switch (operator) {

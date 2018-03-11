@@ -12,8 +12,8 @@ import java.util.Map;
  */
 public class BinaryOperator extends LTLFormula {
     public final String name;
-    public final LTLFormula leftArgument;
-    public final LTLFormula rightArgument;
+    private final LTLFormula leftArgument;
+    private final LTLFormula rightArgument;
 
     private final boolean isBoolean;
 

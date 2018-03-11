@@ -24,6 +24,9 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--maxlen", usage = "maximum test length, default = 10", metaVar = "<length>")
     private int maxLength = 10;
 
+    @Option(name = "--maxGoals", usage = "maximum coverage goals per variable", metaVar = "<maxGoals>")
+    private int maxGoals = Integer.MAX_VALUE;
+
     @Option(name = "--minimize", handler = BooleanOptionHandler.class,
             usage = "check coverage of each new test, thus making the resultant test suite smaller")
     private boolean minimize;
@@ -44,7 +47,7 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
     private boolean controllerCodeCoverage;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new SynthesizeCoverageTests().run(args);
     }
 
