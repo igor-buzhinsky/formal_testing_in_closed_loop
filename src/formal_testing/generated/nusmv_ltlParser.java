@@ -1,4 +1,4 @@
-// Generated from /home/buzhinsky/repos/formal_testing_in_closed_loop/nusmv_ltl.g4 by ANTLR 4.6
+// Generated from C:/Users/Lenovo/repos/formal_testing_in_closed_loop\nusmv_ltl.g4 by ANTLR 4.7
 package formal_testing.generated;
 
 import formal_testing.formula.*;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class nusmv_ltlParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.6", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.7", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -1040,7 +1040,7 @@ public class nusmv_ltlParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\35\u00b6\4\2\t\2"+
+		"\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\35\u00b6\4\2\t\2"+
 		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
 		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\3\2\3\2\3\2\3\2\3\2\3\2\3\2\3\2\5\2%\n"+
 		"\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3\63\n\3\3\4\3\4"+
@@ -1053,8 +1053,8 @@ public class nusmv_ltlParser extends Parser {
 		"\7\13\u0095\n\13\f\13\16\13\u0098\13\13\3\f\3\f\3\f\3\f\3\f\3\f\7\f\u00a0"+
 		"\n\f\f\f\16\f\u00a3\13\f\3\r\3\r\3\r\3\r\3\r\3\r\7\r\u00ab\n\r\f\r\16"+
 		"\r\u00ae\13\r\3\r\3\r\3\16\3\16\3\16\3\16\3\16\2\2\17\2\4\6\b\n\f\16\20"+
-		"\22\24\26\30\32\2\2\u00c1\2$\3\2\2\2\4\62\3\2\2\2\6:\3\2\2\2\b<\3\2\2"+
-		"\2\nW\3\2\2\2\fa\3\2\2\2\16j\3\2\2\2\20l\3\2\2\2\22{\3\2\2\2\24\u0086"+
+		"\22\24\26\30\32\2\2\2\u00c1\2$\3\2\2\2\4\62\3\2\2\2\6:\3\2\2\2\b<\3\2"+
+		"\2\2\nW\3\2\2\2\fa\3\2\2\2\16j\3\2\2\2\20l\3\2\2\2\22{\3\2\2\2\24\u0086"+
 		"\3\2\2\2\26\u0099\3\2\2\2\30\u00a4\3\2\2\2\32\u00b1\3\2\2\2\34\35\7\3"+
 		"\2\2\35%\b\2\1\2\36\37\7\4\2\2\37%\b\2\1\2 !\7\5\2\2!%\b\2\1\2\"#\7\6"+
 		"\2\2#%\b\2\1\2$\34\3\2\2\2$\36\3\2\2\2$ \3\2\2\2$\"\3\2\2\2%\3\3\2\2\2"+

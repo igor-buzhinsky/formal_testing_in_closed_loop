@@ -39,7 +39,7 @@ public class NuSMVRunner extends Runner {
     private int runBatchBMC(List<String> result, int timeout, String solveCommand, boolean coi) throws IOException {
         final String language = Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv";
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
-                ResourceMeasurement.FORMAT, language, "-df", "-cpp", "-int"));
+                ResourceMeasurement.FORMAT, language, "-df", "-pre", "cpp", "-int"));
         if (coi) {
             command.add("-coi");
         }
