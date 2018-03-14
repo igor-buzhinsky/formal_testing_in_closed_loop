@@ -18,8 +18,8 @@ public class TestCase implements Serializable {
     public TestCase reduceToNondetVars(Configuration conf) {
         final TestCase result = new TestCase(conf, false);
         final Set<String> properNames = conf.nondetVars.stream().map(Variable::indexedName).collect(Collectors.toSet());
-        values.entrySet().stream().filter(entry -> properNames.contains(entry.getKey())).forEach(
-                entry -> result.values.put(entry.getKey(), entry.getValue()));
+        values.entrySet().stream().filter(entry -> properNames.contains(entry.getKey()))
+                .forEach(entry -> result.values.put(entry.getKey(), entry.getValue()));
         result.length = length;
         return result;
     }
@@ -29,20 +29,6 @@ public class TestCase implements Serializable {
             if (f.booleanValue(values, i)) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    public boolean contains(List<Variable> vars, List<Value> values) {
-        l: for (int i = 0; i < length; i++) {
-            for (int j = 0; j < vars.size(); j++) {
-                final String varName = vars.get(j).indexedName();
-                final Value value = values.get(j);
-                if (!this.values.get(varName).get(i).toString().equals(value.toString())) {
-                    continue l;
-                }
-            }
-            return true;
         }
         return false;
     }

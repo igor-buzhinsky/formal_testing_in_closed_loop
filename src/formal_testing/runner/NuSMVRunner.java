@@ -60,6 +60,7 @@ public class NuSMVRunner extends Runner {
             reader.lines().forEach(line -> result.add(line.replace(language + " > ", "")));
         }
         inspectResourceConsumption(result);
+        //System.out.println(result);
         return waitFor();
     }
 
