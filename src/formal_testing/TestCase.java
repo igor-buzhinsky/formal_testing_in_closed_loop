@@ -1,5 +1,6 @@
 package formal_testing;
 
+import formal_testing.formula.InconclusiveException;
 import formal_testing.formula.LTLFormula;
 import formal_testing.value.Value;
 import formal_testing.variable.Variable;
@@ -26,8 +27,11 @@ public class TestCase implements Serializable {
 
     public boolean hasFormulaSatisfied(LTLFormula f) {
         for (int i = 0; i < length; i++) {
-            if (f.booleanValue(values, i)) {
-                return true;
+            try {
+                if (f.booleanValue(values, i)) {
+                    return true;
+                }
+            } catch(InconclusiveException ignored) {
             }
         }
         return false;
@@ -78,7 +82,12 @@ public class TestCase implements Serializable {
     }
 
     public void addValue(String varName, Value value) {
-        final List<Value> varValues = values.get(varName);
+        List<Value> varValues = values.get(varName);
+        if (varValues == null) {
+            // create this value
+            varValues = new ArrayList<>();
+            values.put(varName, varValues);
+        }
         varValues.add(value);
         length = Math.max(length, varValues.size());
     }

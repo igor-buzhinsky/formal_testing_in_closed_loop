@@ -40,7 +40,7 @@ public class UnaryOperator extends LTLFormula {
     }
 
     @Override
-    public boolean booleanValue(Map<String, List<Value>> values, int index) {
+    public boolean booleanValue(Map<String, List<Value>> values, int index) throws InconclusiveException {
         if (!isBoolean) {
             throw new RuntimeException();
         }

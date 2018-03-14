@@ -52,16 +52,53 @@ public class BinaryOperator extends LTLFormula {
     }
 
     @Override
-    public boolean booleanValue(Map<String, List<Value>> values, int index) {
+    public boolean booleanValue(Map<String, List<Value>> values, int index) throws InconclusiveException {
         if (!isBoolean) {
             throw new AssertionError();
         }
+        Boolean v1 = null;
+        try {
+            v1 = leftArgument.booleanValue(values, index);
+        } catch (InconclusiveException ignored) {
+        }
+        Boolean v2 = null;
+        try {
+            v2 = rightArgument.booleanValue(values, index);
+        } catch (InconclusiveException ignored) {
+        }
         switch (name) {
-            case "&": return leftArgument.booleanValue(values, index) && rightArgument.booleanValue(values, index);
-            case "|": return leftArgument.booleanValue(values, index) || rightArgument.booleanValue(values, index);
-            case "->": return !leftArgument.booleanValue(values, index) || rightArgument.booleanValue(values, index);
-            case "<->": return leftArgument.booleanValue(values, index) == rightArgument.booleanValue(values, index);
-            default: throw new AssertionError();
+            case "&":
+                if (v1 != null && !v1 || v2 != null && !v2) {
+                    return false;
+                } else if (v1 == null || v2 == null) {
+                    throw new InconclusiveException();
+                } else {
+                    return true;
+                }
+            case "|":
+                if (v1 != null && v1 || v2 != null && v2) {
+                    return true;
+                } else if (v1 == null || v2 == null) {
+                    throw new InconclusiveException();
+                } else {
+                    return false;
+                }
+            case "->":
+                if (v1 != null && !v1 || v2 != null && v2) {
+                    return true;
+                } else if (v1 == null || v2 == null) {
+                    throw new InconclusiveException();
+                } else {
+                    return false;
+                }
+            case "<->":
+                if (v1 == null || v2 == null) {
+                    throw new InconclusiveException();
+                } else {
+                    return v1 == v2;
+                }
+            default:
+                throw new AssertionError();
         }
     }
 }

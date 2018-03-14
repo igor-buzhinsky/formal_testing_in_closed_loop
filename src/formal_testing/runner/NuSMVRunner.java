@@ -64,8 +64,8 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private void runBMCIterative(List<String> result, int k, boolean disableCoi) throws IOException {
-        runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI & !disableCoi);
+    private void runBMCIterative(List<String> result, int k) throws IOException {
+        runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
     }
 
     private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout)
@@ -109,7 +109,7 @@ public class NuSMVRunner extends Runner {
         final String neverClaim = cp.ltlProperty(null);
         writeModel(neverClaim);
         final List<String> log = new ArrayList<>();
-        runBMCIterative(log, maxTestLength, minimize);
+        runBMCIterative(log, maxTestLength);
         TestCase testCase = null;
         Integer loopPosition = null;
         int effectiveLength = 0;
@@ -122,7 +122,10 @@ public class NuSMVRunner extends Runner {
                 result.outcome(neverClaim, true);
             } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
                 result.outcome(neverClaim, false);
-                testCase = new TestCase(data.conf, minimize);
+                // more variables will be added to the test suite as they appear:
+                // (nondet vars are included anyway: they will be replaced with default values
+                // if they are missing in the counterexample)
+                testCase = new TestCase(data.conf, false);
                 result.set(testCase);
                 result.cover(cp);
             } else if (testCase != null) {
@@ -153,6 +156,7 @@ public class NuSMVRunner extends Runner {
             }
             testCase.crop(effectiveLength);
             if (minimize) {
+                // test suite minimization: check coverage of remaining goals
                 CoveragePoint.checkCovered(otherCps, testCase).forEach(result::cover);
             }
             testCase.validate();
@@ -173,7 +177,7 @@ public class NuSMVRunner extends Runner {
         final String neverClaim = cp.ltlProperty(null);
         writeModel(neverClaim);
         final List<String> log = new ArrayList<>();
-        runBMCIterative(log, maxTestLength, false);
+        runBMCIterative(log, maxTestLength);
         for (String line : log) {
             //System.out.println(line);
             if (line.startsWith(NOT_FOUND + maxTestLength)) {

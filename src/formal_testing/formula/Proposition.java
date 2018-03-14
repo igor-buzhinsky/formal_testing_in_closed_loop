@@ -1,7 +1,6 @@
 package formal_testing.formula;
 
 import formal_testing.value.Value;
-import formal_testing.variable.Variable;
 
 import java.util.Collection;
 import java.util.List;
@@ -70,7 +69,11 @@ public class Proposition extends LTLFormula {
     }
 
     @Override
-    public boolean booleanValue(Map<String, List<Value>> values, int index) {
-        return calculate(values.get(varName).get(index).toString());
+    public boolean booleanValue(Map<String, List<Value>> values, int index) throws InconclusiveException {
+        final List<Value> list = values.get(varName);
+        if (list == null) {
+            throw new InconclusiveException();
+        }
+        return calculate(list.get(index).toString());
     }
 }

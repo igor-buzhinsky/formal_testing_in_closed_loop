@@ -15,6 +15,7 @@ set_floors() {
 comparison() {
     min="$1"
     max="$2"
+    nomc="$3"
     for ((i = $min; i <= $max; i++)); do
         set_floors "$i"
         
@@ -22,13 +23,17 @@ comparison() {
         echo "==== comparison with $i floors, basedir=$basedir ===="
         
         # Framework: synthesis
-        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize > log
+        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize --coi > log
         print_log
         print_test_suite test-small.bin > /dev/null
         
         # Framework: execution
         call_spin run --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log
         print_log
+        
+        if [[ "$nomc" == true ]]; then
+            continue
+        fi
 
         # BMC
         bmc_verification "set_floors $floors" $(((floors * 3 + 5) / 2))
@@ -57,7 +62,7 @@ additional_tests() {
     #check_nusmv "set_floors 2" # FIXME hangs after test generation...
 }
 
-comparison 2 2
+comparison 3 15 true
 #comparison 3 15
 #additional_tests
 

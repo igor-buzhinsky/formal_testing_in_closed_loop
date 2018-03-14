@@ -19,7 +19,7 @@ public abstract class LTLFormula {
 
     public abstract void allBooleanSubformulas(Collection<LTLFormula> subformulas);
 
-    public abstract boolean booleanValue(Map<String, List<Value>> values, int index);
+    public abstract boolean booleanValue(Map<String, List<Value>> values, int index) throws InconclusiveException;
 
     @Override
     public boolean equals(Object other) {
