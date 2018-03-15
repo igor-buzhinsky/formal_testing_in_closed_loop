@@ -62,7 +62,7 @@ additional_tests() {
     #check_nusmv "set_floors 2" # FIXME hangs after test generation...
 }
 
-comparison 3 15 true
+comparison 2 2 true
 #comparison 3 15
 #additional_tests
 

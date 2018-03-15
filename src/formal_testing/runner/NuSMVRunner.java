@@ -64,8 +64,8 @@ public class NuSMVRunner extends Runner {
         return waitFor();
     }
 
-    private void runBMCIterative(List<String> result, int k) throws IOException {
-        runBatchBMC(result, 0, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
+    private int runBMCIterative(List<String> result, int k, int timeout) throws IOException {
+        return runBatchBMC(result, timeout, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
     }
 
     private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout)
@@ -99,8 +99,8 @@ public class NuSMVRunner extends Runner {
     private final static String NOT_FOUND = "-- no counterexample found with bound ";
 
     @Override
-    public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
-            throws IOException {
+    public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps,
+                                   int timeout) throws IOException {
         if (maxTestLength == null) {
             throw new RuntimeException("Unbounded test case synthesis is not supported.");
         }
@@ -109,59 +109,65 @@ public class NuSMVRunner extends Runner {
         final String neverClaim = cp.ltlProperty(null);
         writeModel(neverClaim);
         final List<String> log = new ArrayList<>();
-        runBMCIterative(log, maxTestLength);
-        TestCase testCase = null;
-        Integer loopPosition = null;
-        int effectiveLength = 0;
-        for (String line : log) {
-            //System.out.println(line);
-            if (line.startsWith(NOT_FOUND)) {
-                effectiveLength++;
-            }
-            if (line.startsWith(NOT_FOUND + maxTestLength)) {
-                result.outcome(neverClaim, true);
-            } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
-                result.outcome(neverClaim, false);
-                // more variables will be added to the test suite as they appear:
-                // (nondet vars are included anyway: they will be replaced with default values
-                // if they are missing in the counterexample)
-                testCase = new TestCase(data.conf, false);
-                result.set(testCase);
-                result.cover(cp);
-            } else if (testCase != null) {
-                if (line.equals("  -- Loop starts here")) {
-                    loopPosition = testCase.length();
-                } else if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
-                    if (testCase.length() > 0) {
-                        testCase.padMissing(data.conf);
+        final int retCode = runBMCIterative(log, maxTestLength, timeout);
+        if (retCode == 124) {
+            log.add("*** TIMEOUT ***");
+            // assuming that there is no counterexample
+            result.outcome(neverClaim, true);
+        } else {
+            TestCase testCase = null;
+            Integer loopPosition = null;
+            int effectiveLength = 0;
+            for (String line : log) {
+                //System.out.println(line);
+                if (line.startsWith(NOT_FOUND)) {
+                    effectiveLength++;
+                }
+                if (line.startsWith(NOT_FOUND + maxTestLength)) {
+                    result.outcome(neverClaim, true);
+                } else if (line.startsWith("-- specification") && line.endsWith(" is false")) {
+                    result.outcome(neverClaim, false);
+                    // more variables will be added to the test suite as they appear:
+                    // (nondet vars are included anyway: they will be replaced with default values
+                    // if they are missing in the counterexample)
+                    testCase = new TestCase(data.conf, false);
+                    result.set(testCase);
+                    result.cover(cp);
+                } else if (testCase != null) {
+                    if (line.equals("  -- Loop starts here")) {
+                        loopPosition = testCase.length();
+                    } else if (line.matches("  -> State: [0-9]++\\.[0-9]+ <-")) {
+                        if (testCase.length() > 0) {
+                            testCase.padMissing(data.conf);
+                        }
+                        testCase.newElement();
+                    } else if (line.matches(trailRegexp)) {
+                        final String[] tokens = line.split("((    )|( = ))");
+                        testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
                     }
-                    testCase.newElement();
-                } else if (line.matches(trailRegexp)) {
-                    final String[] tokens = line.split("((    )|( = ))");
-                    testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
                 }
             }
-        }
-        if (testCase != null) {
-            if (effectiveLength == 0) {
-                effectiveLength = 1;
-            }
-            testCase.padMissing(data.conf);
-            if (loopPosition != null) {
-                testCase.loopFromPosition(loopPosition, effectiveLength + 1);
-            }
-            testCase.removeInitial();
-            if (loopPosition == null) {
-                testCase.loopFromPosition(0, effectiveLength);
-            }
-            testCase.crop(effectiveLength);
-            if (minimize) {
-                // test suite minimization: check coverage of remaining goals
-                CoveragePoint.checkCovered(otherCps, testCase).forEach(result::cover);
-            }
-            testCase.validate();
-            if (minimize) {
-                result.set(testCase.reduceToNondetVars(data.conf));
+            if (testCase != null) {
+                if (effectiveLength == 0) {
+                    effectiveLength = 1;
+                }
+                testCase.padMissing(data.conf);
+                if (loopPosition != null) {
+                    testCase.loopFromPosition(loopPosition, effectiveLength + 1);
+                }
+                testCase.removeInitial();
+                if (loopPosition == null) {
+                    testCase.loopFromPosition(0, effectiveLength);
+                }
+                testCase.crop(effectiveLength);
+                if (minimize) {
+                    // test suite minimization: check coverage of remaining goals
+                    CoveragePoint.checkCovered(otherCps, testCase).forEach(result::cover);
+                }
+                testCase.validate();
+                if (minimize) {
+                    result.set(testCase.reduceToNondetVars(data.conf));
+                }
             }
         }
         result.log(log);
@@ -177,7 +183,7 @@ public class NuSMVRunner extends Runner {
         final String neverClaim = cp.ltlProperty(null);
         writeModel(neverClaim);
         final List<String> log = new ArrayList<>();
-        runBMCIterative(log, maxTestLength);
+        runBMCIterative(log, maxTestLength, 0);
         for (String line : log) {
             //System.out.println(line);
             if (line.startsWith(NOT_FOUND + maxTestLength)) {

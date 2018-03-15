@@ -168,8 +168,8 @@ public class SpinRunner extends Runner {
     }
 
     @Override
-    public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
-            throws IOException {
+    public RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps,
+                                   int timeout) throws IOException {
         if (maxTestLength == null) {
             throw new RuntimeException("Unbounded test case synthesis is not supported.");
         }

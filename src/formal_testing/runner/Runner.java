@@ -92,8 +92,8 @@ public abstract class Runner implements AutoCloseable {
                 : new NuSMVRunner(data, modelCode, maxLength);
     }
 
-    public abstract RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps)
-            throws IOException;
+    public abstract RunnerResult synthesize(CoveragePoint cp, boolean minimize, Collection<CoveragePoint> otherCps,
+                                            int timeout) throws IOException;
 
     public abstract RunnerResult checkCoverage(CoveragePoint cp) throws IOException;
 

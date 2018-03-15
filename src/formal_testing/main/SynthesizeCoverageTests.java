@@ -27,6 +27,9 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--maxGoals", usage = "maximum coverage goals per integer variable", metaVar = "<maxGoals>")
     private int maxGoals = Integer.MAX_VALUE;
 
+    @Option(name = "--timeout", usage = "timeout in seconds, default = 0 = no, NuSMV only", metaVar = "<timeout>")
+    private int timeout;
+
     @Option(name = "--minimize", handler = BooleanOptionHandler.class,
             usage = "check coverage of each new test, thus making the resultant test suite smaller")
     private boolean minimize;
@@ -71,7 +74,7 @@ public class SynthesizeCoverageTests extends MainArgs {
             final String code = usualModelCode(null, plantCodeCoverage, controllerCodeCoverage);
             try (final Runner runner = Runner.create(data, code, Collections.singletonList(cp), maxLength)) {
                 System.out.println("  " + runner.creationReport());
-                final RunnerResult result = runner.synthesize(cp, minimize, unknown);
+                final RunnerResult result = runner.synthesize(cp, minimize, unknown, timeout);
                 if (result.found()) {
                     for (CoveragePoint covered : result.covered())  {
                         covered.cover();
@@ -87,6 +90,8 @@ public class SynthesizeCoverageTests extends MainArgs {
                 }
                 result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
                         System.out.println("    " + new ResourceMeasurement(line, "test synthesis")));
+                result.log().stream().filter(line -> line.equals("*** TIMEOUT ***")).forEach(line ->
+                        System.out.println("    " + line));
             }
             unknown.remove(cp);
         }
