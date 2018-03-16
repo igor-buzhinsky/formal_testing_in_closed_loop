@@ -154,7 +154,8 @@ public class SpinRunner extends Runner {
         for (String line : lines) {
             if (line.equals("  -> New State <-") || line.equals("#processes: 1")) {
                 tc.newElement();
-            } else if (line.matches("^[\t ]+\\w+(\\[[0-9]+\\])? = \\w+$")) {
+            } else if (line.matches("^[\t ]+\\w+(\\[[0-9]+\\])? = [-\\(\\)\\w]+$")) {
+                // parentheses can appear in SPIN with negative values, e.g. VAR = -(2)
                 final String[] tokens = line.split(" = ");
                 final String varName = tokens[0].trim();
                 final Variable<?> var = data.conf.byName(varName);
@@ -174,46 +175,41 @@ public class SpinRunner extends Runner {
             throw new RuntimeException("Unbounded test case synthesis is not supported.");
         }
         final RunnerResult result = new RunnerResult();
-        final String trailRegexp = "^.*proc.*state.*\\[" + trailRegexp(false) + "\\].*$";
-        File trailFile = null;
+        final String trailRegexp = "^.*proc.*state.*\\[" + trailVarLineRegexp(false) + "\\].*$";
         final List<String> log = new ArrayList<>();
         final String neverClaim = cp.promelaLtlName();
         for (int len = 1; len <= maxTestLength; len++) {
             final String suffix = "." + propertyToPart.get(neverClaim + "__" + len);
             final String trailPath = trailPath(suffix);
-            try {
-                log.addAll(runPan(suffix, neverClaim + "__" + len));
-                //log.forEach(System.out::println);
-                trailFile = new File(trailPath);
-                if (trailFile.exists()) {
-                    result.outcome(neverClaim, false);
-                    result.cover(cp);
-                    final TestCase testCase = new TestCase(data.conf, false);
-                    result.set(testCase);
-                    // counterexample trace reading
-                    createTraceReader(suffix);
-                    final List<String> counterexample = new ArrayList<>();
-                    try (final BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                        reader.lines().forEach(counterexample::add);
-                    }
-                    for (String line : counterexample) {
-                        inspectResourceConsumption(Collections.singletonList(line));
-                        if (line.matches(trailRegexp)) {
-                            final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
-                            testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
-                        }
-                    }
-                    testCase.crop(len);
-                    waitFor();
-                    if (minimize) {
-                        CoveragePoint.checkCovered(otherCps, reconstructSpinTrace(counterexample))
-                                .forEach(result::cover);
-                    }
-                    break;
+            log.addAll(runPan(suffix, neverClaim + "__" + len));
+            //log.forEach(System.out::println);
+            final File trailFile = new File(trailPath);
+            if (trailFile.exists()) {
+                result.outcome(neverClaim, false);
+                result.cover(cp);
+                final TestCase testCase = new TestCase(data.conf, false);
+                result.set(testCase);
+                // counterexample trace reading
+                createTraceReader(suffix);
+                final List<String> counterexample = new ArrayList<>();
+                try (final BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                    reader.lines().forEach(counterexample::add);
                 }
-            } finally {
-                tryDelete(trailFile, trailPath);
+                for (String line : counterexample) {
+                    inspectResourceConsumption(Collections.singletonList(line));
+                    if (line.matches(trailRegexp)) {
+                        final String[] tokens = line.split("((\t\\[)|( = )|(\\]$))");
+                        testCase.addValue(tokens[1], data.conf.byName(tokens[1]).readValue(tokens[2]));
+                    }
+                }
+                testCase.crop(len);
+                waitFor();
+                if (minimize) {
+                    CoveragePoint.checkCovered(otherCps, reconstructSpinTrace(counterexample))
+                            .forEach(result::cover);
+                }
+                break;
             }
         }
         if (!result.found()) {

@@ -82,12 +82,7 @@ public class TestCase implements Serializable {
     }
 
     public void addValue(String varName, Value value) {
-        List<Value> varValues = values.get(varName);
-        if (varValues == null) {
-            // create this value
-            varValues = new ArrayList<>();
-            values.put(varName, varValues);
-        }
+        final List<Value> varValues = values.computeIfAbsent(varName, k -> new ArrayList<>());
         varValues.add(value);
         length = Math.max(length, varValues.size());
     }

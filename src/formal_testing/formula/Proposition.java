@@ -74,6 +74,10 @@ public class Proposition extends LTLFormula {
         if (list == null) {
             throw new InconclusiveException();
         }
+        if (list.size() <= index) {
+            throw new RuntimeException("Variable " + varName + ": bad indexing of list " + list + " with index "
+                    + index);
+        }
         return calculate(list.get(index).toString());
     }
 }

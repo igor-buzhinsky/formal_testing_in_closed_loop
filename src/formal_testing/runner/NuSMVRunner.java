@@ -104,7 +104,7 @@ public class NuSMVRunner extends Runner {
         if (maxTestLength == null) {
             throw new RuntimeException("Unbounded test case synthesis is not supported.");
         }
-        final String trailRegexp = "    " + trailRegexp(minimize);
+        final String trailRegexp = "    " + trailVarLineRegexp(minimize);
         final RunnerResult result = new RunnerResult();
         final String neverClaim = cp.ltlProperty(null);
         writeModel(neverClaim);

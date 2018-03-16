@@ -31,9 +31,11 @@ public class FormulaCoveragePoint extends CoveragePoint {
 
     @Override
     public String promelaLtlName() {
-        return "spec_" + target.toString().replace(" ", "_").replace("(", "_popen_").replace(")", "_pclose_")
-                .replace(".", "__").replace("&", "_and_").replace("|", "_or_").replace("->", "_implies_")
-                .replace("<->", "_eq_").replace("[", "_sopen_").replace("]", "_sclose_").replace("!", "_not_");
+        final StringBuilder sb = new StringBuilder("spec_");
+        for (char c : target.toString().toCharArray()) {
+            sb.append(String.format("%02x", (int) c));
+        }
+        return sb.toString();
     }
 
     @Override

@@ -100,10 +100,11 @@ public abstract class Runner implements AutoCloseable {
     public abstract RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
             throws IOException;
 
-    String trailRegexp(boolean allVars) {
+    String trailVarLineRegexp(boolean allVars) {
+        // parentheses can appear in SPIN with negative values, e.g. VAR = -(2)
         return "(" + String.join("|", (allVars ? data.conf.allVariables() : data.conf.nondetVars).stream()
                 .map(Variable::indexedName)
-                .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ") = [\\w]+";
+                .map(s -> s.replace("[", "\\[").replace("]", "\\]")).collect(Collectors.toList())) + ") = [-\\(\\)\\w]+";
     }
 
     @Override

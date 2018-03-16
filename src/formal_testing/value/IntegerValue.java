@@ -11,7 +11,8 @@ public class IntegerValue extends Value {
     }
 
     public static IntegerValue read(String s) {
-        return new IntegerValue(Integer.parseInt(s));
+        // replacements of parentheses is needed to handle SPIN trail assignments like VAR = -(2)
+        return new IntegerValue(Integer.parseInt(s.replace("(", "").replace(")", "")));
     }
 
     @Override
