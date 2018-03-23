@@ -19,6 +19,9 @@ public class ClosedLoopVerify extends MainArgs {
             usage = "if on, NuSMV LTL verification will be performed using BMC with given k", metaVar = "<k>")
     private Integer verificationBMCK;
 
+    @Option(name = "--inheritIO", handler = BooleanOptionHandler.class, usage = "output to stdout/stderr online")
+    private boolean inheritIO;
+
     public static void main(String[] args) {
         new ClosedLoopVerify().run(args);
     }
@@ -27,6 +30,6 @@ public class ClosedLoopVerify extends MainArgs {
     protected void launcher() throws IOException {
         loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename, specFilename);
         final String code = modelCode(false, true, true, null, null, false, false, null, true);
-        verifyAll(code, timeout, verbose, verificationBMCK);
+        verifyAll(code, timeout, verbose, verificationBMCK, inheritIO);
     }
 }

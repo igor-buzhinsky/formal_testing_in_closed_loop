@@ -68,7 +68,8 @@ public class NuSMVRunner extends Runner {
         return runBatchBMC(result, timeout, "check_ltlspec_sbmc_inc -n 0 -k " + k, Settings.NUSMV_COI);
     }
 
-    private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout)
+    private int run(List<String> result, boolean disableCounterexamples, Integer nusmvBMCK, int timeout,
+                    boolean inheritIO)
             throws IOException {
         final List<String> command = new ArrayList<>(Arrays.asList("timeout", timeout + "s", TIME, "-f",
                 ResourceMeasurement.FORMAT, Settings.LANGUAGE == Language.NUSMV ? "NuSMV" : "nuXmv", "-df",
@@ -87,12 +88,18 @@ public class NuSMVRunner extends Runner {
         }
         command.add(MODEL_FILENAME);
 
-        process = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName)).start();
-        try (final BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-            reader.lines().forEach(result::add);
+        final ProcessBuilder pb = new ProcessBuilder(command).redirectErrorStream(true).directory(new File(dirName));
+        if (inheritIO) {
+            pb.inheritIO();
         }
-        inspectResourceConsumption(result);
+        process = pb.start();
+        if (!inheritIO) {
+            try (final BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                reader.lines().forEach(result::add);
+            }
+            inspectResourceConsumption(result);
+        }
         return waitFor();
     }
 
@@ -197,10 +204,11 @@ public class NuSMVRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK) throws IOException {
+    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK, boolean inheritIO)
+            throws IOException {
         final List<String> log = new ArrayList<>();
         writeModel(null);
-        final int retCode = run(log, disableCounterexamples, nusmvBMCK, timeout);
+        final int retCode = run(log, disableCounterexamples, nusmvBMCK, timeout, inheritIO);
         if (retCode == 124) {
             log.add("*** TIMEOUT ***");
         }

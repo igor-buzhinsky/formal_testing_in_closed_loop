@@ -519,9 +519,9 @@ abstract class MainBase {
         }
     }
 
-    void verifyAll(String code, int timeout, boolean verbose, Integer nusmvBMCK) throws IOException {
+    void verifyAll(String code, int timeout, boolean verbose, Integer nusmvBMCK, boolean inheritIO) throws IOException {
         try (final Runner runner = Runner.create(data, code, Collections.emptyList(), null)) {
-            final RunnerResult result = runner.verify(timeout, false, nusmvBMCK);
+            final RunnerResult result = runner.verify(timeout, false, nusmvBMCK, inheritIO);
             for (Map.Entry<String, Boolean> outcome : result.outcomes().entrySet()) {
                 System.out.println("*** " + outcome.getKey() + " = " + outcome.getValue() + " ***");
             }

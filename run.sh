@@ -58,7 +58,7 @@ additional_tests() {
     #check_nusmv "set_floors 2" # 16.03 passed
 }
 
-comparison 2 2 false
+comparison 3 3 false
 #comparison 3 15
 #additional_tests
 

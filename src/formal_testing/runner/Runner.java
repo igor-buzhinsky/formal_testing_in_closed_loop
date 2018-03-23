@@ -97,8 +97,8 @@ public abstract class Runner implements AutoCloseable {
 
     public abstract RunnerResult checkCoverage(CoveragePoint cp) throws IOException;
 
-    public abstract RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK)
-            throws IOException;
+    public abstract RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK,
+                                        boolean inheritIO) throws IOException;
 
     String trailVarLineRegexp(boolean allVars) {
         // parentheses can appear in SPIN with negative values, e.g. VAR = -(2)

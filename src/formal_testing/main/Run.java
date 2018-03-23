@@ -50,6 +50,9 @@ public class Run extends MainArgs {
     @Option(name = "--maxGoals", usage = "maximum coverage goals per integer variable", metaVar = "<maxGoals>")
     private int maxGoals = Integer.MAX_VALUE;
 
+    @Option(name = "--inheritIO", handler = BooleanOptionHandler.class, usage = "output to stdout/stderr online")
+    private boolean inheritIO;
+
     public static void main(String[] args) {
         new Run().run(args);
     }
@@ -72,7 +75,7 @@ public class Run extends MainArgs {
         }
         if (verify) {
             System.out.println("Running verification for test suite " + filename + "...");
-            verifyAll(code, 0, verbose, null);
+            verifyAll(code, 0, verbose, null, inheritIO);
         }
         if (measureCoverage) {
             System.out.println("\nMeasuring coverage of test suite " + filename + "...");

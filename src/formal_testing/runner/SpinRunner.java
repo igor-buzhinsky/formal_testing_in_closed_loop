@@ -140,9 +140,13 @@ public class SpinRunner extends Runner {
         return log;
     }
 
-    private void createTraceReader(String suffix) throws IOException {
-        process = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
-                MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName)).start();
+    private void createTraceReader(String suffix, boolean inheritIO) throws IOException {
+        final ProcessBuilder pb = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
+                MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName));
+        if (inheritIO) {
+            pb.inheritIO();
+        }
+        process = pb.start();
     }
 
     private String trailPath(String suffix) {
@@ -190,7 +194,7 @@ public class SpinRunner extends Runner {
                 final TestCase testCase = new TestCase(data.conf, false);
                 result.set(testCase);
                 // counterexample trace reading
-                createTraceReader(suffix);
+                createTraceReader(suffix, false);
                 final List<String> counterexample = new ArrayList<>();
                 try (final BufferedReader reader = new BufferedReader(
                         new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
@@ -256,7 +260,8 @@ public class SpinRunner extends Runner {
     }
 
     @Override
-    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK) throws IOException {
+    public RunnerResult verify(int timeout, boolean disableCounterexamples, Integer nusmvBMCK, boolean inheritIO)
+            throws IOException {
         final RunnerResult result = new RunnerResult();
         final List<String> log = new ArrayList<>();
         for (String ltlName : ltlFromModel.stream().map(Pair::getRight).collect(Collectors.toList())) {
@@ -269,10 +274,12 @@ public class SpinRunner extends Runner {
                 trailFile = new File(trailPath);
                 if (trailFile.exists()) {
                     result.outcome(ltlName, false);
-                    createTraceReader(suffix);
-                    try (final BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                        reader.lines().forEach(log::add);
+                    createTraceReader(suffix, inheritIO);
+                    if (!inheritIO) {
+                        try (final BufferedReader reader = new BufferedReader(
+                                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                            reader.lines().forEach(log::add);
+                        }
                     }
                     waitFor();
                 } else {
