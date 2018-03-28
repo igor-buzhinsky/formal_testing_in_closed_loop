@@ -24,6 +24,8 @@ public abstract class CoveragePoint {
         covered = true;
     }
 
+    private Set<CoveragePoint> equivalenceClass = Collections.emptySet();
+
     protected abstract String promelaLtlProperty(String opStart, String opEnd, Integer steps);
     protected abstract String nuSMVTemporalProperty(String opStart, String opEnd, Integer steps);
     public abstract boolean isCoveredBy(TestCase tc);
@@ -54,5 +56,14 @@ public abstract class CoveragePoint {
 
     public static Set<CoveragePoint> checkCovered(Collection<CoveragePoint> cps, TestCase tc) {
         return cps.stream().filter(cp -> cp.isCoveredBy(tc)).collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    // used to implement banning a series of coverage points based on timeout
+    public Set<CoveragePoint> equivalenceClass() {
+        return Collections.unmodifiableSet(equivalenceClass);
+    }
+
+    public void setEquivalenceClass(Set<CoveragePoint> equivalenceClass) {
+        this.equivalenceClass = equivalenceClass;
     }
 }

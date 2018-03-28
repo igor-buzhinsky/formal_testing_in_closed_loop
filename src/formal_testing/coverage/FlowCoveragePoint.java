@@ -2,6 +2,9 @@ package formal_testing.coverage;
 
 import formal_testing.TestCase;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
  * Created by buzhinsky on 6/30/17.
  */

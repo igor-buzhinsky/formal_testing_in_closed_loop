@@ -11,6 +11,7 @@ import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -61,13 +62,18 @@ public class SynthesizeCoverageTests extends MainArgs {
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
                 valuePairCoverage, nusmvSpecCoverage, maxGoals);
         final TestSuite testSuite = new TestSuite(true);
+        final Set<CoveragePoint> unknown = new LinkedHashSet<>(info.coveragePoints);
+        final Set<CoveragePoint> tlBanned = new HashSet<>();
+        final String timeoutText = "*** TIMEOUT ***";
 
         System.out.println("Coverage test synthesis...");
 
-        final Set<CoveragePoint> unknown = new LinkedHashSet<>(info.coveragePoints);
-
         for (CoveragePoint cp : info.coveragePoints) {
             if (cp.covered()) {
+                continue;
+            }
+            if (tlBanned.contains(cp)) {
+                System.out.println("Skipping coverage goal " + cp + " based on earlier violated time limits.");
                 continue;
             }
             System.out.println("Coverage test synthesis for " + cp + "...");
@@ -90,8 +96,10 @@ public class SynthesizeCoverageTests extends MainArgs {
                 }
                 result.log().stream().filter(ResourceMeasurement::isMeasurement).forEach(line ->
                         System.out.println("    " + new ResourceMeasurement(line, "test synthesis")));
-                result.log().stream().filter(line -> line.equals("*** TIMEOUT ***")).forEach(line ->
-                        System.out.println("    " + line));
+                if (result.log().contains(timeoutText)) {
+                    System.out.println("    " + timeoutText);
+                    tlBanned.addAll(cp.equivalenceClass());
+                }
             }
             unknown.remove(cp);
         }

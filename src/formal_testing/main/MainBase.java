@@ -136,8 +136,14 @@ abstract class MainBase {
         return sb.toString();
     }
 
-    private List<CoveragePoint> specCoveragePoints(String nusmvSpecCoverage) {
+    private List<FormulaCoveragePoint> specCoveragePoints(String nusmvSpecCoverage) {
         final Set<LTLFormula> subformulas = new LinkedHashSet<>();
+
+        class MyRecognitionException extends RuntimeException {
+            MyRecognitionException(String message) {
+                super(message);
+            }
+        }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(new File(nusmvSpecCoverage)))) {
             String line;
@@ -156,25 +162,25 @@ abstract class MainBase {
                         @Override
                         public void syntaxError(Recognizer<?, ?> recognizer, Object o, int i, int i1, String s,
                                                 RecognitionException e) {
-                            throw new NullPointerException();
+                            throw new MyRecognitionException("syntaxError");
                         }
 
                         @Override
                         public void reportAmbiguity(Parser parser, DFA dfa, int i, int i1, boolean b, BitSet bitSet,
                                                     ATNConfigSet atnConfigSet) {
-                            throw new NullPointerException();
+                            throw new MyRecognitionException("reportAmbiguity");
                         }
 
                         @Override
                         public void reportAttemptingFullContext(Parser parser, DFA dfa, int i, int i1, BitSet bitSet,
                                                                 ATNConfigSet atnConfigSet) {
-                            throw new NullPointerException();
+                            throw new MyRecognitionException("reportAttemptingFullContext");
                         }
 
                         @Override
                         public void reportContextSensitivity(Parser parser, DFA dfa, int i, int i1, int i2,
                                                              ATNConfigSet atnConfigSet) {
-                            throw new NullPointerException();
+                            throw new MyRecognitionException("reportContextSensitivity");
                         }
                     });
                     try {
@@ -182,6 +188,9 @@ abstract class MainBase {
                         f.allBooleanSubformulas(subformulas);
                     } catch (NullPointerException | RecognitionException e) {
                         e.printStackTrace();
+                    } catch (MyRecognitionException e) {
+                        System.err.println("LTL parse error: " + e.getMessage()
+                                + " (may be connected with support of a reduced subset of LTL)");
                     }
                 }
             }
@@ -207,7 +216,7 @@ abstract class MainBase {
             variables.addAll(data.conf.controllerInternalVars);
         }
 
-        final List<CoveragePoint> result = new ArrayList<>();
+        final List<FormulaCoveragePoint> formulas = new ArrayList<>();
 
         if (valuePairCoverage && variables.size() > 1) {
             for (int i = 0; i < variables.size(); i++) {
@@ -218,23 +227,41 @@ abstract class MainBase {
                     final List<LTLFormula> listJ = oneVariableGoalFormulas(varJ, maxGoals);
                     for (LTLFormula fI : listI) {
                         for (LTLFormula fJ : listJ) {
-                            result.add(new FormulaCoveragePoint(new BinaryOperator("&", fI, fJ)));
+                            formulas.add(new FormulaCoveragePoint(new BinaryOperator("&", fI, fJ)));
                         }
                     }
                 }
             }
+            // TODO add equivalence classes for pair coverage (if this is ever needed)
+            // TODO maybe remove pair coverage completely?
         } else {
             for (Variable<?> var : variables) {
-                oneVariableGoalFormulas(var, maxGoals).forEach(f -> result.add(new FormulaCoveragePoint(f)));
+                final Set<CoveragePoint> cps = oneVariableGoalFormulas(var, maxGoals).stream()
+                        .map(FormulaCoveragePoint::new).collect(Collectors.toCollection(LinkedHashSet::new));
+                for (CoveragePoint cp : cps) {
+                    final FormulaCoveragePoint casted = (FormulaCoveragePoint) cp;
+                    casted.setEquivalenceClass(cps);
+                    formulas.add(casted);
+                }
             }
         }
 
-        for (int i = 0; i < coverageClaims; i++) {
-            result.add(new FlowCoveragePoint(i));
+        if (nusmvSpecCoverage != null) {
+            formulas.addAll(specCoveragePoints(nusmvSpecCoverage));
         }
 
-        if (nusmvSpecCoverage != null) {
-            result.addAll(specCoveragePoints(nusmvSpecCoverage));
+        // filter out equal FORMULA coverage points
+        final Map<String, FormulaCoveragePoint> unique = new LinkedHashMap<>();
+        for (FormulaCoveragePoint cp : formulas) {
+            final String key = cp.toString();
+            if (!unique.containsKey(key)) {
+                unique.put(key, cp);
+            }
+        }
+        final List<CoveragePoint> result = new ArrayList<>(unique.values());
+
+        for (int i = 0; i < coverageClaims; i++) {
+            result.add(new FlowCoveragePoint(i));
         }
 
         return result;
@@ -281,7 +308,7 @@ abstract class MainBase {
         final StringBuilder transformed = new StringBuilder();
         int lastPos = 0;
         while (m.find()) {
-            transformed.append(code.substring(lastPos, m.end()));
+            transformed.append(code, lastPos, m.end());
             int index = m.end();
             int balance = 0;
             while (index < code.length()) {
@@ -289,7 +316,7 @@ abstract class MainBase {
                 char cLast = code.charAt(index - 1);
                 balance += cCur == '(' ? 1 : cCur == ')' ? -1 : 0;
                 if (balance == 0 && cLast == '-' && cCur == '>') {
-                    transformed.append(code.substring(m.end(), index + 1)).append(" ").append("_cover[")
+                    transformed.append(code, m.end(), index + 1).append(" _cover[")
                             .append(nextClaimIndex++).append("] = true; ");
                     break;
                 }

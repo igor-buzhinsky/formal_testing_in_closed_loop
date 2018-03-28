@@ -3,6 +3,8 @@ package formal_testing.coverage;
 import formal_testing.TestCase;
 import formal_testing.formula.LTLFormula;
 
+import java.util.Set;
+
 /**
  * Created by buzhinsky on 9/24/17.
  */
