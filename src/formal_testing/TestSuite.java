@@ -226,7 +226,7 @@ public class TestSuite implements Serializable {
             }
             logarithmicValueChoice(sb, strTests, "_test_index");
         }
-        /*sb.append("d_step {\n");
+        sb.append("d_step {\n");
         if (trivial()) {
             sb.append("    _test_step = (_test_step + 1) % ").append(list.get(0).length()).append(";\n");
         } else {
@@ -243,8 +243,10 @@ public class TestSuite implements Serializable {
             sb.append("    fi\n");
         }
         sb.append(addOracle ? "    _test_passed = (_test_step == 0 -> 1 : _test_passed);\n" : "")
-                .append("}\n");*/
-        sb.append("c_code {\n");
+                .append("}\n");
+
+        // WARNING: c code creates some problems while replaying traces, thus it was disabled
+        /*sb.append("c_code {\n");
         sb.append("    now._test_step++;\n");
         if (trivial()) {
             sb.append("    now._test_step %= ").append(list.get(0).length()).append(";\n");
@@ -262,7 +264,7 @@ public class TestSuite implements Serializable {
             sb.append("    }\n");
         }
         sb.append(addOracle ? "    now._test_passed |= now._test_step == 0;\n" : "")
-                .append("}\n");
+                .append("}\n");*/
         return sb.toString();
     }
 

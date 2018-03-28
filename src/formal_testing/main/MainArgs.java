@@ -23,6 +23,7 @@ abstract class MainArgs extends MainBase {
     @Argument(usage = "specification filename", metaVar = "<spec-filename>", required = true, index = 4)
     String specFilename;
 
-    @Option(name = "--nusmvSpecCoverage", usage = "cover Boolean subformulas in NuSMV LTL specification")
+    @Option(name = "--nusmvSpecCoverage", metaVar = "<spec-filename>",
+            usage = "cover Boolean subformulas in NuSMV LTL specification")
     String nusmvSpecCoverage;
 }
