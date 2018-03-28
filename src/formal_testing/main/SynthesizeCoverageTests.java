@@ -1,19 +1,19 @@
 package formal_testing.main;
 
 import formal_testing.ResourceMeasurement;
+import formal_testing.Settings;
 import formal_testing.TestCase;
 import formal_testing.TestSuite;
 import formal_testing.coverage.CoveragePoint;
+import formal_testing.enums.Language;
 import formal_testing.runner.Runner;
 import formal_testing.runner.RunnerResult;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Created by buzhinsky on 6/28/17.
@@ -51,6 +51,30 @@ public class SynthesizeCoverageTests extends MainArgs {
     @Option(name = "--controllerCodeCoverage", handler = BooleanOptionHandler.class, usage = "cover controller code")
     private boolean controllerCodeCoverage;
 
+    // --startWithRandom
+
+    @Option(name = "--startWithRandom",
+            usage = "in the beginning, first generate some random tests; format #tests:#length", metaVar = "<filename>")
+    private String startWithRandom = null;
+
+    @Option(name = "--seed", usage = "random seed (used with --startWithRandom)", metaVar = "<seed>")
+    private Long seed;
+
+    @Option(name = "--promelaHeaderFilename",
+            usage = "header filename (in Promela, used with --startWithRandom)",
+            metaVar = "<header-filename>")
+    private String promelaHeaderFilename;
+
+    @Option(name = "--promelaPlantModelFilename",
+            usage = "plant model filename (in Promela, used with --startWithRandom)",
+            metaVar = "<plant-filename>")
+    private String promelaPlantModelFilename;
+
+    @Option(name = "--promelaControllerModelFilename",
+            usage = "controller model filename (in Promela, used with --startWithRandom)",
+            metaVar = "<controller-filename>")
+    private String promelaControllerModelFilename;
+
     public static void main(String[] args) {
         new SynthesizeCoverageTests().run(args);
     }
@@ -61,10 +85,50 @@ public class SynthesizeCoverageTests extends MainArgs {
 
         final CoverageInfo info = new CoverageInfo(plantCodeCoverage, controllerCodeCoverage, includeInternal,
                 valuePairCoverage, nusmvSpecCoverage, maxGoals);
-        final TestSuite testSuite = new TestSuite(true);
+        final TestSuite ts = new TestSuite(true);
         final Set<CoveragePoint> unknown = new LinkedHashSet<>(info.coveragePoints);
         final Set<CoveragePoint> tlBanned = new HashSet<>();
         final String timeoutText = "*** TIMEOUT ***";
+
+        if (startWithRandom != null) {
+            final String[] tokens = startWithRandom.split(":");
+            try {
+                if (tokens.length != 2) {
+                    throw new NumberFormatException();
+                }
+                final int number = Integer.parseInt(tokens[0]);
+                final int length = Integer.parseInt(tokens[1]);
+
+                System.out.println("Generating random tests...");
+                fillRandom(ts, data, seed, number, length);
+
+                System.out.println("Checking coverage of random tests...");
+                // if the tool is run in the NuSMV mode, a temporary switch to Promela is needed
+                final Language saved = Settings.LANGUAGE;
+                Settings.LANGUAGE = Language.PROMELA;
+                if (saved != Language.PROMELA) {
+                    loadData(configurationFilename, promelaHeaderFilename, promelaPlantModelFilename,
+                            promelaControllerModelFilename, specFilename);
+                }
+                for (TestCase tc : ts.testCases()) {
+                    info.coveredPoints += examineTestCase(tc, info.coveragePoints, checkFiniteCoverage ? tc.length()
+                                    : null, plantCodeCoverage, controllerCodeCoverage);
+                }
+                Settings.LANGUAGE = saved;
+                if (saved != Language.PROMELA) {
+                    loadData(configurationFilename, headerFilename, plantModelFilename, controllerModelFilename,
+                            specFilename);
+                }
+                for (CoveragePoint cp : info.coveragePoints) {
+                    if (cp.covered()) {
+                        unknown.remove(cp);
+                        System.out.println("    " + cp);
+                    }
+                }
+            } catch (NumberFormatException ignored) {
+                System.err.println("Warning: invalid --startWithRandom format, ignoring.");
+            }
+        }
 
         System.out.println("Coverage test synthesis...");
 
@@ -89,7 +153,7 @@ public class SynthesizeCoverageTests extends MainArgs {
                         System.out.println("    " + covered);
                     }
                     final TestCase tc = result.testCase();
-                    testSuite.add(tc);
+                    ts.add(tc);
                     System.out.println("    Generated: " + tc);
                 } else {
                     System.out.println("    " + cp);
@@ -103,8 +167,8 @@ public class SynthesizeCoverageTests extends MainArgs {
             }
             unknown.remove(cp);
         }
-        System.out.println(testSuite);
-        testSuite.print(outputFilename);
+        System.out.println(ts);
+        ts.print(outputFilename);
         info.report();
     }
 }

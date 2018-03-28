@@ -1,5 +1,6 @@
 package formal_testing;
 
+import formal_testing.coverage.CoveragePoint;
 import formal_testing.enums.Language;
 import formal_testing.value.Value;
 

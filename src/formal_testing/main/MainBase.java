@@ -53,6 +53,22 @@ abstract class MainBase {
 
     ProblemData data;
 
+    static void fillRandom(TestSuite ts, ProblemData data, Long seed, int length, int number) {
+        final Random random = seed == null ? new Random() : new Random(seed);
+        final List<List<? extends Value>> allValues = data.conf.nondetVars.stream()
+                .map(Variable::values).collect(Collectors.toList());
+        for (int i = 0; i < number; i++) {
+            final TestCase tc = new TestCase(data.conf, false);
+            for (int j = 0; j < length; j++) {
+                for (int k = 0; k < data.conf.nondetVars.size(); k++) {
+                    final Variable<?> var = data.conf.nondetVars.get(k);
+                    tc.addValue(var.indexedName(), allValues.get(k).get(random.nextInt(allValues.get(k).size())));
+                }
+            }
+            ts.add(tc);
+        }
+    }
+
     private void setup() {
         try {
             Settings.LANGUAGE = Language.valueOf(language);
