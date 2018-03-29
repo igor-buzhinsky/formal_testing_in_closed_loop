@@ -100,7 +100,7 @@ public class SynthesizeCoverageTests extends MainArgs {
                 final int length = Integer.parseInt(tokens[1]);
 
                 System.out.println("Generating random tests...");
-                fillRandom(ts, data, seed, number, length);
+                fillRandom(ts, data, seed, length, number);
 
                 System.out.println("Checking coverage of random tests...");
                 // if the tool is run in the NuSMV mode, a temporary switch to Promela is needed

@@ -516,6 +516,9 @@ abstract class MainBase {
             for (int i = 0; i < uncovered.size(); i++) {
                 final CoveragePoint cp = uncovered.get(i);
                 final RunnerResult result = runner.checkCoverage(cp);
+                if (i > 0 && i % 100 == 0) {
+                    System.out.print("\n" + new String(new char[prefix.length()]).replace('\0', ' '));
+                }
                 if (result.outcomes().containsValue(false)) {
                     cp.cover();
                     newCovered++;
@@ -523,8 +526,6 @@ abstract class MainBase {
                 } else {
                     System.out.print("-");
                 }
-                System.out.print(i > 0 && i % 150 == 0 ? ("\n" +
-                        new String(new char[prefix.length()]).replace('\0', ' ')) : "");
             }
             System.out.println();
         }
