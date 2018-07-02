@@ -1,0 +1,76 @@
+VAR_INPUT
+    on_floor: ARRAY[0..1] OF BOOL;
+    door_closed: ARRAY[0..1] OF BOOL;
+    door_open: ARRAY[0..1] OF BOOL;
+    button: ARRAY[0..1] OF BOOL;
+    call: ARRAY[0..1] OF BOOL;
+END_VAR
+VAR_OUTPUT
+    open: ARRAY[0..1] OF BOOL;
+    up: BOOL;
+    down: BOOL;
+END_VAR
+VAR
+    door_timer: INT;
+    // controller temporary variables
+    on_some_floor: BOOL;
+    is_requested: BOOL;
+    timer_set: BOOL;
+    need_stop: BOOL;
+END_VAR
+VAR_CONSTANT
+    // door_state enumeration
+    d_closed: INT := 0;
+    d_opening: INT := 1;
+    d_open: INT := 2;
+    d_closing: INT := 3;
+END_VAR
+
+// controller
+on_some_floor := FALSE;
+is_requested := FALSE;
+timer_set := FALSE;
+IF NOT open[0] AND on_floor[0] AND (button[0] OR call[0]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[1] AND on_floor[1] AND (button[1] OR call[1]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF door_timer > 0 AND NOT timer_set THEN
+    door_timer := door_timer - 1;
+END_IF
+on_some_floor := on_some_floor OR on_floor[0];
+is_requested := is_requested OR button[0] OR call[0];
+open[0] := open[0] AND NOT door_open[0];
+on_some_floor := on_some_floor OR on_floor[1];
+is_requested := is_requested OR button[1] OR call[1];
+open[1] := open[1] AND NOT door_open[1];
+need_stop := FALSE;
+IF NOT on_some_floor THEN
+    ;
+ELSIF NOT is_requested THEN
+    up := FALSE;
+    down := FALSE;
+ELSE
+    need_stop := need_stop OR NOT door_closed[0] OR on_floor[0] AND (button[0] OR call[0]);
+    open[0] := open[0] OR on_floor[0] AND (button[0] OR call[0]);
+    need_stop := need_stop OR NOT door_closed[1] OR on_floor[1] AND (button[1] OR call[1]);
+    open[1] := open[1] OR on_floor[1] AND (button[1] OR call[1]);
+    IF need_stop THEN
+        up := FALSE;
+        down := FALSE;
+    ELSE
+        IF on_floor[1] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[1] OR call[1]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+    END_IF
+END_IF
+open[0] := open[0] OR door_open[0] AND door_timer > 0;
+open[1] := open[1] OR door_open[1] AND door_timer > 0;

@@ -48,19 +48,19 @@ comparison() {
 }
 
 additional_tests() {
-    set_floors 2
+    set_floors 3
 
-    #call_spin closed-loop-verify 
+    call_spin closed-loop-verify 
     #call_nusmv closed-loop-verify 
     #call_spin generate-random --number 2 --length 2 --output test.bin $seed
     #call_spin run --input test.bin --verify --output out.pml $finite --panO 0
-    check_spin "set_floors 2" # takes long
+    #check_spin "set_floors 2" # takes long
     #check_nusmv "set_floors 2" # 16.03 passed
 }
 
-comparison 3 3 false
+#comparison 3 3 false
 #comparison 3 15
-#additional_tests
+additional_tests
 
 #check_nusmv 3
 #set_floors 2

@@ -1,0 +1,200 @@
+VAR_INPUT
+    user_floor_button: ARRAY[0..6] OF BOOL;
+    user_cabin_button: ARRAY[0..6] OF BOOL;
+    up: BOOL;
+    down: BOOL;
+    open: ARRAY[0..6] OF BOOL;
+END_VAR
+VAR_OUTPUT
+    on_floor: ARRAY[0..6] OF BOOL;
+    door_closed: ARRAY[0..6] OF BOOL;
+    door_open: ARRAY[0..6] OF BOOL;
+    button: ARRAY[0..6] OF BOOL;
+    call: ARRAY[0..6] OF BOOL;
+END_VAR
+VAR
+    elevator_pos: INT;
+    door_state: ARRAY[0..6] OF INT;
+END_VAR
+VAR_CONSTANT
+    // door_state enumeration
+    d_closed: INT := 0;
+    d_opening: INT := 1;
+    d_open: INT := 2;
+    d_closing: INT := 3;
+END_VAR
+
+// plant
+IF up THEN
+    elevator_pos := elevator_pos + 1;
+END_IF
+IF down THEN
+    elevator_pos := elevator_pos - 1;
+END_IF
+IF elevator_pos > 18 THEN
+    elevator_pos := 18;
+END_IF
+IF elevator_pos < 0 THEN
+    elevator_pos := 0;
+END_IF
+on_floor[0] := elevator_pos = 0;
+IF open[0] THEN
+    IF door_state[0] = d_closed OR door_state[0] = d_closing THEN
+        door_state[0] := d_opening;
+    ELSE
+        door_state[0] := d_open;
+    END_IF
+ELSE
+    IF door_state[0] = d_open OR door_state[0] = d_opening THEN
+        door_state[0] := d_closing;
+    ELSE
+        door_state[0] := d_closed;
+    END_IF
+END_IF
+door_closed[0] := door_state[0] = d_closed;
+door_open[0] := door_state[0] = d_open;
+IF on_floor[0] AND door_open[0] THEN
+    button[0] := FALSE;
+    call[0] := FALSE;
+ELSE
+    button[0] := button[0] OR user_floor_button[0];
+    call[0] := call[0] OR user_cabin_button[0];
+END_IF
+on_floor[1] := elevator_pos = 3;
+IF open[1] THEN
+    IF door_state[1] = d_closed OR door_state[1] = d_closing THEN
+        door_state[1] := d_opening;
+    ELSE
+        door_state[1] := d_open;
+    END_IF
+ELSE
+    IF door_state[1] = d_open OR door_state[1] = d_opening THEN
+        door_state[1] := d_closing;
+    ELSE
+        door_state[1] := d_closed;
+    END_IF
+END_IF
+door_closed[1] := door_state[1] = d_closed;
+door_open[1] := door_state[1] = d_open;
+IF on_floor[1] AND door_open[1] THEN
+    button[1] := FALSE;
+    call[1] := FALSE;
+ELSE
+    button[1] := button[1] OR user_floor_button[1];
+    call[1] := call[1] OR user_cabin_button[1];
+END_IF
+on_floor[2] := elevator_pos = 6;
+IF open[2] THEN
+    IF door_state[2] = d_closed OR door_state[2] = d_closing THEN
+        door_state[2] := d_opening;
+    ELSE
+        door_state[2] := d_open;
+    END_IF
+ELSE
+    IF door_state[2] = d_open OR door_state[2] = d_opening THEN
+        door_state[2] := d_closing;
+    ELSE
+        door_state[2] := d_closed;
+    END_IF
+END_IF
+door_closed[2] := door_state[2] = d_closed;
+door_open[2] := door_state[2] = d_open;
+IF on_floor[2] AND door_open[2] THEN
+    button[2] := FALSE;
+    call[2] := FALSE;
+ELSE
+    button[2] := button[2] OR user_floor_button[2];
+    call[2] := call[2] OR user_cabin_button[2];
+END_IF
+on_floor[3] := elevator_pos = 9;
+IF open[3] THEN
+    IF door_state[3] = d_closed OR door_state[3] = d_closing THEN
+        door_state[3] := d_opening;
+    ELSE
+        door_state[3] := d_open;
+    END_IF
+ELSE
+    IF door_state[3] = d_open OR door_state[3] = d_opening THEN
+        door_state[3] := d_closing;
+    ELSE
+        door_state[3] := d_closed;
+    END_IF
+END_IF
+door_closed[3] := door_state[3] = d_closed;
+door_open[3] := door_state[3] = d_open;
+IF on_floor[3] AND door_open[3] THEN
+    button[3] := FALSE;
+    call[3] := FALSE;
+ELSE
+    button[3] := button[3] OR user_floor_button[3];
+    call[3] := call[3] OR user_cabin_button[3];
+END_IF
+on_floor[4] := elevator_pos = 12;
+IF open[4] THEN
+    IF door_state[4] = d_closed OR door_state[4] = d_closing THEN
+        door_state[4] := d_opening;
+    ELSE
+        door_state[4] := d_open;
+    END_IF
+ELSE
+    IF door_state[4] = d_open OR door_state[4] = d_opening THEN
+        door_state[4] := d_closing;
+    ELSE
+        door_state[4] := d_closed;
+    END_IF
+END_IF
+door_closed[4] := door_state[4] = d_closed;
+door_open[4] := door_state[4] = d_open;
+IF on_floor[4] AND door_open[4] THEN
+    button[4] := FALSE;
+    call[4] := FALSE;
+ELSE
+    button[4] := button[4] OR user_floor_button[4];
+    call[4] := call[4] OR user_cabin_button[4];
+END_IF
+on_floor[5] := elevator_pos = 15;
+IF open[5] THEN
+    IF door_state[5] = d_closed OR door_state[5] = d_closing THEN
+        door_state[5] := d_opening;
+    ELSE
+        door_state[5] := d_open;
+    END_IF
+ELSE
+    IF door_state[5] = d_open OR door_state[5] = d_opening THEN
+        door_state[5] := d_closing;
+    ELSE
+        door_state[5] := d_closed;
+    END_IF
+END_IF
+door_closed[5] := door_state[5] = d_closed;
+door_open[5] := door_state[5] = d_open;
+IF on_floor[5] AND door_open[5] THEN
+    button[5] := FALSE;
+    call[5] := FALSE;
+ELSE
+    button[5] := button[5] OR user_floor_button[5];
+    call[5] := call[5] OR user_cabin_button[5];
+END_IF
+on_floor[6] := elevator_pos = 18;
+IF open[6] THEN
+    IF door_state[6] = d_closed OR door_state[6] = d_closing THEN
+        door_state[6] := d_opening;
+    ELSE
+        door_state[6] := d_open;
+    END_IF
+ELSE
+    IF door_state[6] = d_open OR door_state[6] = d_opening THEN
+        door_state[6] := d_closing;
+    ELSE
+        door_state[6] := d_closed;
+    END_IF
+END_IF
+door_closed[6] := door_state[6] = d_closed;
+door_open[6] := door_state[6] = d_open;
+IF on_floor[6] AND door_open[6] THEN
+    button[6] := FALSE;
+    call[6] := FALSE;
+ELSE
+    button[6] := button[6] OR user_floor_button[6];
+    call[6] := call[6] OR user_cabin_button[6];
+END_IF
