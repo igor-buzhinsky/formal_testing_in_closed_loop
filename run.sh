@@ -2,7 +2,10 @@
 
 source run-base.sh
 
+verbose=
+
 basedir=elevator
+#basedir=elevator-from-traces ; verbose=--verbose
 #basedir=elevator-st
 
 set_floors() {
@@ -27,7 +30,7 @@ comparison() {
         print_test_suite test-small.bin > /dev/null
         
         # Framework: execution
-        call_spin run --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log; print_log
+        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log; print_log
         
         if [[ "$nomc" == true ]]; then
             continue
@@ -58,11 +61,12 @@ additional_tests() {
     #check_nusmv "set_floors 2" # 16.03 passed
 }
 
-#comparison 3 3 false
+comparison 2 2 true
 #comparison 3 15
-additional_tests
+#additional_tests
 
-#check_nusmv 3
+#check_spin "set_floors 2"
+#check_nusmv "set_floors 2"
 #set_floors 2
 #call_spin synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize
 #call_spin run --input test.bin --verify --output out.pml $finite --panO 0

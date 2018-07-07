@@ -141,7 +141,10 @@ public class SpinRunner extends Runner {
     }
 
     private void createTraceReader(String suffix, boolean inheritIO) throws IOException {
-        final ProcessBuilder pb = new ProcessBuilder("spin", "-k", MODEL_FILENAME + suffix + ".trail", "-pglrs",
+        // -p -B -k enables printing of printf Promela commands
+        // previous arguments: -k -pglrs
+        // run    grep -Pv "^ *[0-9]+:"   to get rid of usual counterexample lines
+        final ProcessBuilder pb = new ProcessBuilder("spin", "-p", "-B", "-k", MODEL_FILENAME + suffix + ".trail",
                 MODEL_FILENAME + suffix).redirectErrorStream(true).directory(new File(dirName));
         if (inheritIO) {
             pb.inheritIO();
