@@ -6,9 +6,11 @@ The temporal specification is checked on the generated test cases during the sec
 
 ## Prerequisites ##
 
-To build the toolset, you need JDK 1.8 (or greater) and [ant](https://ant.apache.org/). The tool is intended to work on Linux. In Windows, a possible solution to run the tool is to use Linux Subsystem.
+To build the toolset, you need JDK 1.8 (or greater) and [ant](https://ant.apache.org/). On the other hand, the precompiled version is already supplied.
 
-To run the toolset, model checkers NuSMV 2.6.0 and SPIN 6 are needed (must be accessible in command line as "NuSMV" and "spin").
+The toolset is intended to work on Linux. In Windows 10, a possible solution to run the toolset is to use Linux Subsystem.
+
+To run the toolset, model checkers [NuSMV](http://nusmv.fbk.eu/) 2.6.0 and [SPIN](http://spinroot.com/) 6 are needed (must be accessible in command line as "NuSMV" and "spin").
 
 ## Included tools ##
 
