@@ -2,7 +2,7 @@
 posperfloor=3
 
 from=2
-to=15
+to=20
 
 plantcomment="// "
 

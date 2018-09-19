@@ -1,0 +1,1168 @@
+VAR_INPUT
+    on_floor: ARRAY[0..15] OF BOOL;
+    door_closed: ARRAY[0..15] OF BOOL;
+    door_open: ARRAY[0..15] OF BOOL;
+    button: ARRAY[0..15] OF BOOL;
+    call: ARRAY[0..15] OF BOOL;
+END_VAR
+VAR_OUTPUT
+    open: ARRAY[0..15] OF BOOL;
+    up: BOOL;
+    down: BOOL;
+END_VAR
+VAR
+    door_timer: INT;
+    // controller temporary variables
+    on_some_floor: BOOL;
+    is_requested: BOOL;
+    timer_set: BOOL;
+    need_stop: BOOL;
+END_VAR
+VAR_CONSTANT
+    // door_state enumeration
+    d_closed: INT := 0;
+    d_opening: INT := 1;
+    d_open: INT := 2;
+    d_closing: INT := 3;
+END_VAR
+
+// controller
+on_some_floor := FALSE;
+is_requested := FALSE;
+timer_set := FALSE;
+IF NOT open[0] AND on_floor[0] AND (button[0] OR call[0]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[1] AND on_floor[1] AND (button[1] OR call[1]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[2] AND on_floor[2] AND (button[2] OR call[2]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[3] AND on_floor[3] AND (button[3] OR call[3]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[4] AND on_floor[4] AND (button[4] OR call[4]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[5] AND on_floor[5] AND (button[5] OR call[5]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[6] AND on_floor[6] AND (button[6] OR call[6]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[7] AND on_floor[7] AND (button[7] OR call[7]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[8] AND on_floor[8] AND (button[8] OR call[8]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[9] AND on_floor[9] AND (button[9] OR call[9]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[10] AND on_floor[10] AND (button[10] OR call[10]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[11] AND on_floor[11] AND (button[11] OR call[11]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[12] AND on_floor[12] AND (button[12] OR call[12]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[13] AND on_floor[13] AND (button[13] OR call[13]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[14] AND on_floor[14] AND (button[14] OR call[14]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF NOT open[15] AND on_floor[15] AND (button[15] OR call[15]) THEN
+    door_timer := 4;
+    timer_set := TRUE;
+END_IF
+IF door_timer > 0 AND NOT timer_set THEN
+    door_timer := door_timer - 1;
+END_IF
+on_some_floor := on_some_floor OR on_floor[0];
+is_requested := is_requested OR button[0] OR call[0];
+open[0] := open[0] AND NOT door_open[0];
+on_some_floor := on_some_floor OR on_floor[1];
+is_requested := is_requested OR button[1] OR call[1];
+open[1] := open[1] AND NOT door_open[1];
+on_some_floor := on_some_floor OR on_floor[2];
+is_requested := is_requested OR button[2] OR call[2];
+open[2] := open[2] AND NOT door_open[2];
+on_some_floor := on_some_floor OR on_floor[3];
+is_requested := is_requested OR button[3] OR call[3];
+open[3] := open[3] AND NOT door_open[3];
+on_some_floor := on_some_floor OR on_floor[4];
+is_requested := is_requested OR button[4] OR call[4];
+open[4] := open[4] AND NOT door_open[4];
+on_some_floor := on_some_floor OR on_floor[5];
+is_requested := is_requested OR button[5] OR call[5];
+open[5] := open[5] AND NOT door_open[5];
+on_some_floor := on_some_floor OR on_floor[6];
+is_requested := is_requested OR button[6] OR call[6];
+open[6] := open[6] AND NOT door_open[6];
+on_some_floor := on_some_floor OR on_floor[7];
+is_requested := is_requested OR button[7] OR call[7];
+open[7] := open[7] AND NOT door_open[7];
+on_some_floor := on_some_floor OR on_floor[8];
+is_requested := is_requested OR button[8] OR call[8];
+open[8] := open[8] AND NOT door_open[8];
+on_some_floor := on_some_floor OR on_floor[9];
+is_requested := is_requested OR button[9] OR call[9];
+open[9] := open[9] AND NOT door_open[9];
+on_some_floor := on_some_floor OR on_floor[10];
+is_requested := is_requested OR button[10] OR call[10];
+open[10] := open[10] AND NOT door_open[10];
+on_some_floor := on_some_floor OR on_floor[11];
+is_requested := is_requested OR button[11] OR call[11];
+open[11] := open[11] AND NOT door_open[11];
+on_some_floor := on_some_floor OR on_floor[12];
+is_requested := is_requested OR button[12] OR call[12];
+open[12] := open[12] AND NOT door_open[12];
+on_some_floor := on_some_floor OR on_floor[13];
+is_requested := is_requested OR button[13] OR call[13];
+open[13] := open[13] AND NOT door_open[13];
+on_some_floor := on_some_floor OR on_floor[14];
+is_requested := is_requested OR button[14] OR call[14];
+open[14] := open[14] AND NOT door_open[14];
+on_some_floor := on_some_floor OR on_floor[15];
+is_requested := is_requested OR button[15] OR call[15];
+open[15] := open[15] AND NOT door_open[15];
+need_stop := FALSE;
+IF NOT on_some_floor THEN
+    ;
+ELSIF NOT is_requested THEN
+    up := FALSE;
+    down := FALSE;
+ELSE
+    need_stop := need_stop OR NOT door_closed[0] OR on_floor[0] AND (button[0] OR call[0]);
+    open[0] := open[0] OR on_floor[0] AND (button[0] OR call[0]);
+    need_stop := need_stop OR NOT door_closed[1] OR on_floor[1] AND (button[1] OR call[1]);
+    open[1] := open[1] OR on_floor[1] AND (button[1] OR call[1]);
+    need_stop := need_stop OR NOT door_closed[2] OR on_floor[2] AND (button[2] OR call[2]);
+    open[2] := open[2] OR on_floor[2] AND (button[2] OR call[2]);
+    need_stop := need_stop OR NOT door_closed[3] OR on_floor[3] AND (button[3] OR call[3]);
+    open[3] := open[3] OR on_floor[3] AND (button[3] OR call[3]);
+    need_stop := need_stop OR NOT door_closed[4] OR on_floor[4] AND (button[4] OR call[4]);
+    open[4] := open[4] OR on_floor[4] AND (button[4] OR call[4]);
+    need_stop := need_stop OR NOT door_closed[5] OR on_floor[5] AND (button[5] OR call[5]);
+    open[5] := open[5] OR on_floor[5] AND (button[5] OR call[5]);
+    need_stop := need_stop OR NOT door_closed[6] OR on_floor[6] AND (button[6] OR call[6]);
+    open[6] := open[6] OR on_floor[6] AND (button[6] OR call[6]);
+    need_stop := need_stop OR NOT door_closed[7] OR on_floor[7] AND (button[7] OR call[7]);
+    open[7] := open[7] OR on_floor[7] AND (button[7] OR call[7]);
+    need_stop := need_stop OR NOT door_closed[8] OR on_floor[8] AND (button[8] OR call[8]);
+    open[8] := open[8] OR on_floor[8] AND (button[8] OR call[8]);
+    need_stop := need_stop OR NOT door_closed[9] OR on_floor[9] AND (button[9] OR call[9]);
+    open[9] := open[9] OR on_floor[9] AND (button[9] OR call[9]);
+    need_stop := need_stop OR NOT door_closed[10] OR on_floor[10] AND (button[10] OR call[10]);
+    open[10] := open[10] OR on_floor[10] AND (button[10] OR call[10]);
+    need_stop := need_stop OR NOT door_closed[11] OR on_floor[11] AND (button[11] OR call[11]);
+    open[11] := open[11] OR on_floor[11] AND (button[11] OR call[11]);
+    need_stop := need_stop OR NOT door_closed[12] OR on_floor[12] AND (button[12] OR call[12]);
+    open[12] := open[12] OR on_floor[12] AND (button[12] OR call[12]);
+    need_stop := need_stop OR NOT door_closed[13] OR on_floor[13] AND (button[13] OR call[13]);
+    open[13] := open[13] OR on_floor[13] AND (button[13] OR call[13]);
+    need_stop := need_stop OR NOT door_closed[14] OR on_floor[14] AND (button[14] OR call[14]);
+    open[14] := open[14] OR on_floor[14] AND (button[14] OR call[14]);
+    need_stop := need_stop OR NOT door_closed[15] OR on_floor[15] AND (button[15] OR call[15]);
+    open[15] := open[15] OR on_floor[15] AND (button[15] OR call[15]);
+    IF need_stop THEN
+        up := FALSE;
+        down := FALSE;
+    ELSE
+        IF on_floor[1] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[2] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[3] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[4] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[5] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[6] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[7] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[0] OR call[0]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[1] OR call[1]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[3] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[4] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[5] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[6] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[7] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[1] OR call[1]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[2] OR call[2]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[2] OR call[2]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[4] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[5] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[6] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[7] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[2] OR call[2]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[3] OR call[3]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[3] OR call[3]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[3] OR call[3]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[5] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[6] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[7] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[3] OR call[3]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[4] OR call[4]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[4] OR call[4]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[4] OR call[4]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[4] OR call[4]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[6] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[7] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[4] OR call[4]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[5] OR call[5]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[5] OR call[5]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[5] OR call[5]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[5] OR call[5]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[5] OR call[5]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[7] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[5] OR call[5]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[6] OR call[6]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[6] OR call[6]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[6] OR call[6]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[6] OR call[6]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[6] OR call[6]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[6] OR call[6]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[8] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[6] OR call[6]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[7] OR call[7]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[9] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[7] OR call[7]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[8] OR call[8]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[10] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[8] OR call[8]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[9] OR call[9]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[10] AND (button[9] OR call[9]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[11] AND (button[9] OR call[9]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[9] OR call[9]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[9] OR call[9]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[9] OR call[9]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[9] OR call[9]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[10] OR call[10]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[11] AND (button[10] OR call[10]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[12] AND (button[10] OR call[10]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[10] OR call[10]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[10] OR call[10]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[10] OR call[10]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[10] AND (button[11] OR call[11]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[12] AND (button[11] OR call[11]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[13] AND (button[11] OR call[11]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[11] OR call[11]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[11] OR call[11]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[10] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[11] AND (button[12] OR call[12]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[13] AND (button[12] OR call[12]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[14] AND (button[12] OR call[12]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[12] OR call[12]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[10] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[11] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[12] AND (button[13] OR call[13]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[14] AND (button[13] OR call[13]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[15] AND (button[13] OR call[13]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[10] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[11] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[12] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[13] AND (button[14] OR call[14]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[15] AND (button[14] OR call[14]) THEN
+            up := FALSE;
+            down := TRUE;
+        END_IF
+        IF on_floor[0] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[1] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[2] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[3] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[4] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[5] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[6] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[7] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[8] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[9] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[10] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[11] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[12] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[13] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+        IF on_floor[14] AND (button[15] OR call[15]) THEN
+            up := TRUE;
+            down := FALSE;
+        END_IF
+    END_IF
+END_IF
+open[0] := open[0] OR door_open[0] AND door_timer > 0;
+open[1] := open[1] OR door_open[1] AND door_timer > 0;
+open[2] := open[2] OR door_open[2] AND door_timer > 0;
+open[3] := open[3] OR door_open[3] AND door_timer > 0;
+open[4] := open[4] OR door_open[4] AND door_timer > 0;
+open[5] := open[5] OR door_open[5] AND door_timer > 0;
+open[6] := open[6] OR door_open[6] AND door_timer > 0;
+open[7] := open[7] OR door_open[7] AND door_timer > 0;
+open[8] := open[8] OR door_open[8] AND door_timer > 0;
+open[9] := open[9] OR door_open[9] AND door_timer > 0;
+open[10] := open[10] OR door_open[10] AND door_timer > 0;
+open[11] := open[11] OR door_open[11] AND door_timer > 0;
+open[12] := open[12] OR door_open[12] AND door_timer > 0;
+open[13] := open[13] OR door_open[13] AND door_timer > 0;
+open[14] := open[14] OR door_open[14] AND door_timer > 0;
+open[15] := open[15] OR door_open[15] AND door_timer > 0;
