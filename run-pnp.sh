@@ -10,7 +10,7 @@ basedir=pick-and-place
 set_complexity() {
     compl=$1
     set_dir "$basedir/pick-and-place-$compl"
-    maxlen=$((compl * 3 + 3)) # TODO replace with a proper BMC bound
+    maxlen=$((compl * 6)) # TODO replace with a proper BMC bound | 12 is sufficient for compl=2
 }
 
 comparison() {
@@ -24,11 +24,11 @@ comparison() {
         echo "==== comparison with complexity=$i, basedir=$basedir ===="
         
         # Framework: synthesis
-        #call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize --coi > log; print_log
-        #print_test_suite test-small.bin > /dev/null
+        call_nusmv synthesize-coverage-tests --maxlen $maxlen --includeInternal --output test-small.bin $finite --minimize --coi > log; print_log
+        print_test_suite test-small.bin > /dev/null
         
         # Framework: execution
-        #call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log; print_log
+        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 #> log; print_log
         
         if [[ "$nomc" == true ]]; then
             continue
@@ -48,4 +48,4 @@ comparison() {
     done
 }
 
-comparison 2 2 false
+comparison 2 2 true

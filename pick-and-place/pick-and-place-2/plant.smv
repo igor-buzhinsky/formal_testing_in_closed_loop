@@ -1,27 +1,24 @@
 ASSIGN
+    next(wp[0]) := next(adding_wp[0]) | wp[0] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 1);
+    next(wp[1]) := next(adding_wp[1]) | wp[1] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 2);
+    next(wp[2]) := next(adding_wp[2]) | wp[2] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 3);
     next(carrying_wp) := case
-            carrying_wp & !suction_on: FALSE;
-            !carrying_wp & vcyl_extended & suction_on & (
-                  hcyl_retracted[0] & hcyl_extended[1] & wp[0]
-                | hcyl_extended[0] & hcyl_retracted[1] & wp[1]
-                | hcyl_extended[0] & hcyl_extended[1] & wp[2]
-                ): TRUE;
-            TRUE: carrying_wp;
-        esac;
-    next(wp_output) := carrying_wp & !next(carrying_wp) & hcyl_retracted[0] & hcyl_retracted[1] & vcyl_extended;
-    next(wp[0]) := next(adding_wp[0]) | wp[0] & !(!carrying_wp & vcyl_extended & suction_on & hcyl_retracted[0] & hcyl_extended[1]);
-    next(wp[1]) := next(adding_wp[1]) | wp[1] & !(!carrying_wp & vcyl_extended & suction_on & hcyl_extended[0] & hcyl_retracted[1]);
-    next(wp[2]) := next(adding_wp[2]) | wp[2] & !(!carrying_wp & vcyl_extended & suction_on & hcyl_extended[0] & hcyl_extended[1]);
+        carrying_wp & !suction_on: FALSE;
+        !carrying_wp & vcyl_extended & suction_on & (HPOS_SUM = 1 & wp[0] | HPOS_SUM = 2 & wp[1] | HPOS_SUM = 3 & wp[2]): TRUE;
+        TRUE: carrying_wp;
+    esac;
+    next(wp_output) := carrying_wp & !next(carrying_wp) & HPOS_SUM = 0 & vcyl_extended;
+    next(hcyl_pos[0]) := hcyl_pos0_3;
+    next(hcyl_pos[1]) := hcyl_pos1_3;
+    next(vcyl_pos) := vcyl_pos_3;
     next(hcyl_retracted[0]) := next(hcyl_pos[0]) = 0;
     next(hcyl_retracted[1]) := next(hcyl_pos[1]) = 0;
     next(vcyl_retracted) := next(vcyl_pos) = 0;
     next(hcyl_extended[0]) := next(hcyl_pos[0]) = HCYL0_MAXPOS;
     next(hcyl_extended[1]) := next(hcyl_pos[1]) = HCYL1_MAXPOS;
     next(vcyl_extended) := next(vcyl_pos) = VCYL_MAXPOS;
-    next(hcyl_pos[0]) := hcyl_pos0_3;
-    next(hcyl_pos[1]) := hcyl_pos1_3;
-    next(vcyl_pos) := vcyl_pos_3;
 DEFINE
+    HPOS_SUM := hcyl_pos[0] + hcyl_pos[1];
     HCYL0_MAXPOS := 2;
     HCYL1_MAXPOS := 1;
     VCYL_MAXPOS := 2;
