@@ -1,0 +1,27 @@
+--true
+
+CTLSPEC AX( AG(wp[0] -> AF(vcyl_extended & suction_on & carrying_wp & AF(wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & AF(vcyl_retracted & hcyl_retracted[0] & hcyl_retracted[1])))) )
+CTLSPEC AX( AG(wp[1] -> AF(vcyl_extended & suction_on & carrying_wp & AF(wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & AF(vcyl_retracted & hcyl_retracted[0] & hcyl_retracted[1])))) )
+CTLSPEC AX( AG(wp[2] -> AF(vcyl_extended & suction_on & carrying_wp & AF(wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & AF(vcyl_retracted & hcyl_retracted[0] & hcyl_retracted[1])))) )
+
+CTLSPEC AX( AG((wp[0] & !adding_wp[0]) -> AF(!wp[0] | adding_wp[0])) )
+CTLSPEC AX( AG((wp[1] & !adding_wp[1]) -> AF(!wp[1] | adding_wp[0] | adding_wp[1])) )
+CTLSPEC AX( AG((wp[2] & !adding_wp[2]) -> AF(!wp[2] | adding_wp[0] | adding_wp[1] | adding_wp[2])) )
+
+CTLSPEC AX( AG(carrying_wp -> AF(wp_output & !suction_on)) )
+CTLSPEC AX( AG(suction_on -> (carrying_wp | wp[0] | wp[1] | wp[2])) )
+CTLSPEC AX( AG(suction_on -> AF !suction_on) )
+
+-- false
+
+CTLSPEC AX( AG(wp[0] -> AF(vcyl_extended & suction_on & carrying_wp & AF(wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & AF(vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1]))))) )
+CTLSPEC AX( AG(wp[1] -> AF(vcyl_extended & suction_on & carrying_wp & AF(wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & AF(vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1]))))) )
+CTLSPEC AX( AG(wp[2] -> AF(vcyl_extended & suction_on & carrying_wp & AF(wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & AF(vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1]))))) )
+
+CTLSPEC AX( AG((wp[0] & !adding_wp[0]) -> AF !wp[0]) )
+CTLSPEC AX( AG((wp[1] & !adding_wp[1]) -> AF !wp[1]) )
+CTLSPEC AX( AG((wp[2] & !adding_wp[2]) -> AF !wp[2]) )
+
+CTLSPEC AX( AG(carrying_wp -> suction_on) )
+CTLSPEC AX( AG(suction_on -> carrying_wp) )
+CTLSPEC AX( AG(suction_on -> wp[0] | wp[1] | wp[2]) )
