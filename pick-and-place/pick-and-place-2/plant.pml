@@ -1,39 +1,44 @@
 // Plant execution
-#define HCYL0_MAXPOS 2
-#define HCYL1_MAXPOS 1
 #define VCYL_MAXPOS 2
 
 d_step {
-    int hpos_sum = hcyl_pos[0] + hcyl_pos[1];
+    int i;
+
+    int hpos_sum = 0;
+    for (i : 0..(HCYL_NUM - 1)) {
+        hpos_sum = hpos_sum + hcyl_pos[i];
+    }
     
     bool prev_carrying_wp = carrying_wp;
+    
+    bool carry_condition = 0;
+    for (i : 0..(WP_NUM - 1)) {
+        carry_condition = carry_condition || (hpos_sum == i + 1) && wp[i];
+    }
+    
     if
     :: carrying_wp && !suction_on -> carrying_wp = 0;
-    :: !carrying_wp && vcyl_extended && suction_on && ((hpos_sum == 1) && wp[0] || (hpos_sum == 2) && wp[1] || (hpos_sum == 3) && wp[2]) -> carrying_wp = 1;
+    :: !carrying_wp && vcyl_extended && suction_on && carry_condition -> carrying_wp = 1;
     :: else -> ;
     fi
     
     wp_output = prev_carrying_wp && !carrying_wp && (hpos_sum == 0) && vcyl_extended;
-    wp[0] = adding_wp[0] | wp[0] && !(!carrying_wp && vcyl_extended && suction_on && (hpos_sum == 1));
-    wp[1] = adding_wp[1] | wp[1] && !(!carrying_wp && vcyl_extended && suction_on && (hpos_sum == 2));
-    wp[2] = adding_wp[2] | wp[2] && !(!carrying_wp && vcyl_extended && suction_on && (hpos_sum == 3));
+    for (i : 0..(WP_NUM - 1)) {
+        wp[i] = adding_wp[i] | wp[i] && !(!carrying_wp && vcyl_extended && suction_on && (hpos_sum == i + 1));
+    }
     
-    hcyl_pos[0] = hcyl_pos[0] + (hcyl_extend[0] -> 1 : -1);
-    hcyl_pos[0] = (hcyl_pos[0] > HCYL0_MAXPOS -> HCYL0_MAXPOS : hcyl_pos[0]);
-    hcyl_pos[0] = (hcyl_pos[0] < 0 -> 0 : hcyl_pos[0]);
-    
-    hcyl_pos[1] = hcyl_pos[1] + (hcyl_extend[1] -> 1 : -1);
-    hcyl_pos[1] = (hcyl_pos[1] > HCYL1_MAXPOS -> HCYL1_MAXPOS : hcyl_pos[1]);
-    hcyl_pos[1] = (hcyl_pos[1] < 0 -> 0 : hcyl_pos[1]);
+    for (i : 0..(HCYL_NUM - 1)) {
+        int maxpos = 1 << (HCYL_NUM - 1 - i);
+        hcyl_pos[i] = hcyl_pos[i] + (hcyl_extend[i] -> 1 : -1);
+        hcyl_pos[i] = (hcyl_pos[i] > maxpos -> maxpos : hcyl_pos[i]);
+        hcyl_pos[i] = (hcyl_pos[i] < 0 -> 0 : hcyl_pos[i]);
+        hcyl_retracted[i] = hcyl_pos[i] == 0;
+        hcyl_extended[i] = hcyl_pos[i] == maxpos;
+    }
     
     vcyl_pos = vcyl_pos + (vcyl_extend -> 1 : -1);
     vcyl_pos = (vcyl_pos > VCYL_MAXPOS -> VCYL_MAXPOS : vcyl_pos);
     vcyl_pos = (vcyl_pos < 0 -> 0 : vcyl_pos);
-
-    hcyl_retracted[0] = hcyl_pos[0] == 0;
-    hcyl_retracted[1] = hcyl_pos[1] == 0;
     vcyl_retracted = vcyl_pos == 0;
-    hcyl_extended[0] = hcyl_pos[0] == HCYL0_MAXPOS;
-    hcyl_extended[1] = hcyl_pos[1] == HCYL1_MAXPOS;
     vcyl_extended = vcyl_pos == VCYL_MAXPOS;
 }
