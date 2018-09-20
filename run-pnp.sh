@@ -10,7 +10,7 @@ basedir=pick-and-place
 set_complexity() {
     compl=$1
     set_dir "$basedir/pick-and-place-$compl"
-    maxlen=$((compl * 6)) # TODO replace with a proper BMC bound | 12 is sufficient for compl=2
+    maxlen=$((compl * 6)) # TODO proper generalization | 12 is sufficient for compl=2
 }
 
 comparison() {
@@ -28,24 +28,24 @@ comparison() {
         print_test_suite test-small.bin > /dev/null
         
         # Framework: execution
-        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 #> log; print_log
+        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log; print_log
         
         if [[ "$nomc" == true ]]; then
             continue
         fi
 
         # BMC
-        #bmc_verification "set_complexity $compl" $(((compl * 3 + 5) / 2))
-        #bmc_verification "set_complexity $compl" $((compl * 3 + 5))
+        bmc_verification "set_complexity $compl" $(((compl * 8) / 2))
+        bmc_verification "set_complexity $compl" $((compl * 8)) # TODO proper generalization | 16 is sufficient for compl=2
         
         # BDD-based LTL MC 
         nusmv_spec_file=spec-ltl.smv
-        call_nusmv closed-loop-verify --verbose --dynamic --coi #> log; print_log
+        call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
         nusmv_spec_file=spec.smv
         
         # BDD-based CTL MC
-        call_nusmv closed-loop-verify --verbose --dynamic --coi #> log; print_log
+        call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
     done
 }
 
-comparison 2 2 true
+comparison 2 2 false
