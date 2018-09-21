@@ -19,5 +19,5 @@ ltl disappear1_MUST_BE_FALSE { X( []((wp[1] && !adding_wp[1]) -> <> !wp[1]) ) }
 ltl disappear2_MUST_BE_FALSE { X( []((wp[2] && !adding_wp[2]) -> <> !wp[2]) ) }
 
 ltl additional0_MUST_BE_FALSE { X( [](carrying_wp -> suction_on) ) }
-ltl additional1_MUST_BE_FALSE { X( [](suction_on -> (wp[0] || wp[1])) ) }
+ltl additional1_MUST_BE_FALSE { X( [](suction_on -> (wp[0] || wp[1] || wp[2])) ) }
 ltl additional2_MUST_BE_FALSE { X( [](suction_on -> carrying_wp) ) }

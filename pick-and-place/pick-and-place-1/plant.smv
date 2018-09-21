@@ -1,0 +1,24 @@
+ASSIGN
+    next(carrying_wp) := case
+        carrying_wp & !suction_on: FALSE;
+        !carrying_wp & vcyl_extended & suction_on & (HPOS_SUM = 1 & wp[0]): TRUE;
+        TRUE: carrying_wp;
+    esac;
+    next(wp_output) := carrying_wp & !next(carrying_wp) & HPOS_SUM = 0 & vcyl_extended;
+    next(wp[0]) := next(adding_wp[0]) | wp[0] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 1);
+    next(hcyl_pos[0]) := hcyl_pos0_3;
+    next(vcyl_pos) := vcyl_pos_3;
+    next(hcyl_retracted[0]) := next(hcyl_pos[0]) = 0;
+    next(vcyl_retracted) := next(vcyl_pos) = 0;
+    next(hcyl_extended[0]) := next(hcyl_pos[0]) = HCYL0_MAXPOS;
+    next(vcyl_extended) := next(vcyl_pos) = VCYL_MAXPOS;
+DEFINE
+    HPOS_SUM := hcyl_pos[0];
+    HCYL0_MAXPOS := 1;
+    VCYL_MAXPOS := 2;
+    hcyl_pos0_1 := hcyl_pos[0] + (hcyl_extend[0] ? 1 : -1);
+    hcyl_pos0_2 := hcyl_pos0_1 > HCYL0_MAXPOS ? HCYL0_MAXPOS : hcyl_pos0_1;
+    hcyl_pos0_3 := hcyl_pos0_2 < 0 ? 0 : hcyl_pos0_2;
+    vcyl_pos_1 := vcyl_pos + (vcyl_extend ? 1 : -1);
+    vcyl_pos_2 := vcyl_pos_1 > VCYL_MAXPOS ? VCYL_MAXPOS : vcyl_pos_1;
+    vcyl_pos_3 := vcyl_pos_2 < 0 ? 0 : vcyl_pos_2;

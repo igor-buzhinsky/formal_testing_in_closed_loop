@@ -141,7 +141,7 @@ for ((compl = from; compl <= to; compl++)); do
     echo >> tmp
     
     echo "ltl additional0_MUST_BE_FALSE { X( [](carrying_wp -> suction_on) ) }" >> tmp
-    echo "ltl additional1_MUST_BE_FALSE { X( [](suction_on -> (wp[0]"$(for ((i = 1; i < $compl; i++)); do echo -n " || wp[$i]"; done)")) ) }" >> tmp
+    echo "ltl additional1_MUST_BE_FALSE { X( [](suction_on -> (wp[0]"$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)")) ) }" >> tmp
     echo "ltl additional2_MUST_BE_FALSE { X( [](suction_on -> carrying_wp) ) }" >> tmp
 
     cat tmp | sed 's/<>/AF /g; s/\[\]/AG /g; s/X(/AX(/g; s/||/|/g; s/\&\&/\&/g; s/==/=/g; s/^ltl \w\+ { /CTLSPEC /g; s/}//g; s/\/\//--/g' > $dir/spec.smv

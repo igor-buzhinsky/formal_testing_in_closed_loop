@@ -67,5 +67,5 @@ CTLSPEC AX( AG ((wp[13] & !adding_wp[13]) -> AF  !wp[13]) )
 CTLSPEC AX( AG ((wp[14] & !adding_wp[14]) -> AF  !wp[14]) ) 
 
 CTLSPEC AX( AG (carrying_wp -> suction_on) ) 
-CTLSPEC AX( AG (suction_on -> (wp[0] | wp[1] | wp[2] | wp[3])) ) 
+CTLSPEC AX( AG (suction_on -> (wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) ) 
 CTLSPEC AX( AG (suction_on -> carrying_wp) ) 

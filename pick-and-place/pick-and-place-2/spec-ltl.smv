@@ -19,5 +19,5 @@ LTLSPEC X( G ((wp[1] & !adding_wp[1]) -> F  !wp[1]) )
 LTLSPEC X( G ((wp[2] & !adding_wp[2]) -> F  !wp[2]) ) 
 
 LTLSPEC X( G (carrying_wp -> suction_on) ) 
-LTLSPEC X( G (suction_on -> (wp[0] | wp[1])) ) 
+LTLSPEC X( G (suction_on -> (wp[0] | wp[1] | wp[2])) ) 
 LTLSPEC X( G (suction_on -> carrying_wp) ) 
