@@ -28,7 +28,7 @@ comparison() {
         print_test_suite test-small.bin > /dev/null
         
         # Framework: execution
-        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log; print_log
+        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 #> log; print_log
         
         if [[ "$nomc" == true ]]; then
             continue

@@ -16,12 +16,12 @@ ASSIGN
         TRUE: suction_on;
     esac;
     next(hcyl_extend[0]) := case
-        next(state) = s_h_extend: (minimum_wp / 2) mod 2 = 1; -- second binary digit
+        next(state) = s_h_extend: (minimum_wp / 2) mod 2 = 1; -- binary digit
         next(state) = s_h_retract: FALSE;
         TRUE: hcyl_extend[0];
     esac;
     next(hcyl_extend[1]) := case
-        next(state) = s_h_extend: (minimum_wp / 1) mod 2 = 1; -- first binary digit
+        next(state) = s_h_extend: (minimum_wp / 1) mod 2 = 1; -- binary digit
         next(state) = s_h_retract: FALSE;
         TRUE: hcyl_extend[1];
     esac;
@@ -35,4 +35,3 @@ DEFINE
     hcyl_target_wp1 := next(wp[1]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]);
     hcyl_target_wp2 := next(wp[2]) & next(hcyl_extended[0]) & next(hcyl_extended[1]);
     minimum_wp := next(wp[0]) ? 1 : next(wp[1]) ? 2 : next(wp[2]) ? 3 : 0;
-    
