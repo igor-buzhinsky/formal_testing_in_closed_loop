@@ -1,0 +1,80 @@
+ASSIGN
+    next(state) := case
+        state = s_v_retract_output & next(vcyl_retracted) & (next(wp[0]) | next(wp[1]) | next(wp[2]) | next(wp[3]) | next(wp[4]) | next(wp[5]) | next(wp[6]) | next(wp[7]) | next(wp[8]) | next(wp[9]) | next(wp[10]) | next(wp[11]) | next(wp[12]) | next(wp[13]) | next(wp[14]) | next(wp[15]) | next(wp[16]) | next(wp[17]) | next(wp[18]) | next(wp[19]) | next(wp[20]) | next(wp[21]) | next(wp[22]) | next(wp[23]) | next(wp[24]) | next(wp[25]) | next(wp[26]) | next(wp[27]) | next(wp[28]) | next(wp[29]) | next(wp[30])): s_h_extend;
+        state = s_h_extend & (hcyl_target_wp0 | hcyl_target_wp1 | hcyl_target_wp2 | hcyl_target_wp3 | hcyl_target_wp4 | hcyl_target_wp5 | hcyl_target_wp6 | hcyl_target_wp7 | hcyl_target_wp8 | hcyl_target_wp9 | hcyl_target_wp10 | hcyl_target_wp11 | hcyl_target_wp12 | hcyl_target_wp13 | hcyl_target_wp14 | hcyl_target_wp15 | hcyl_target_wp16 | hcyl_target_wp17 | hcyl_target_wp18 | hcyl_target_wp19 | hcyl_target_wp20 | hcyl_target_wp21 | hcyl_target_wp22 | hcyl_target_wp23 | hcyl_target_wp24 | hcyl_target_wp25 | hcyl_target_wp26 | hcyl_target_wp27 | hcyl_target_wp28 | hcyl_target_wp29 | hcyl_target_wp30): s_v_extend;
+        state = s_v_extend & next(vcyl_extended): s_suction_on;
+        state = s_suction_on: s_v_retract;
+        state = s_v_retract & next(vcyl_retracted): s_h_retract;
+        state = s_h_retract & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]): s_v_extend_output;
+        state = s_v_extend_output & next(vcyl_extended): s_suction_off;
+        state = s_suction_off: s_v_retract_output;
+        TRUE: state;
+    esac;
+    next(suction_on) := case
+        next(state) = s_suction_on: TRUE;
+        next(state) = s_suction_off: FALSE;
+        TRUE: suction_on;
+    esac;
+    next(hcyl_extend[0]) := case
+        next(state) = s_h_extend: (minimum_wp / 16) mod 2 = 1; -- binary digit
+        next(state) = s_h_retract: FALSE;
+        TRUE: hcyl_extend[0];
+    esac;
+    next(hcyl_extend[1]) := case
+        next(state) = s_h_extend: (minimum_wp / 8) mod 2 = 1; -- binary digit
+        next(state) = s_h_retract: FALSE;
+        TRUE: hcyl_extend[1];
+    esac;
+    next(hcyl_extend[2]) := case
+        next(state) = s_h_extend: (minimum_wp / 4) mod 2 = 1; -- binary digit
+        next(state) = s_h_retract: FALSE;
+        TRUE: hcyl_extend[2];
+    esac;
+    next(hcyl_extend[3]) := case
+        next(state) = s_h_extend: (minimum_wp / 2) mod 2 = 1; -- binary digit
+        next(state) = s_h_retract: FALSE;
+        TRUE: hcyl_extend[3];
+    esac;
+    next(hcyl_extend[4]) := case
+        next(state) = s_h_extend: (minimum_wp / 1) mod 2 = 1; -- binary digit
+        next(state) = s_h_retract: FALSE;
+        TRUE: hcyl_extend[4];
+    esac;
+    next(vcyl_extend) := case
+        next(state) in {s_v_extend, s_v_extend_output}: TRUE;
+        next(state) in {s_v_retract, s_v_retract_output}: FALSE;
+        TRUE: vcyl_extend;
+    esac;
+DEFINE
+    hcyl_target_wp0 := next(wp[0]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp1 := next(wp[1]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp2 := next(wp[2]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp3 := next(wp[3]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp4 := next(wp[4]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp5 := next(wp[5]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp6 := next(wp[6]) & next(hcyl_retracted[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp7 := next(wp[7]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp8 := next(wp[8]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp9 := next(wp[9]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp10 := next(wp[10]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp11 := next(wp[11]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp12 := next(wp[12]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp13 := next(wp[13]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp14 := next(wp[14]) & next(hcyl_retracted[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp15 := next(wp[15]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp16 := next(wp[16]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp17 := next(wp[17]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp18 := next(wp[18]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp19 := next(wp[19]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp20 := next(wp[20]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp21 := next(wp[21]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp22 := next(wp[22]) & next(hcyl_extended[0]) & next(hcyl_retracted[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp23 := next(wp[23]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp24 := next(wp[24]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp25 := next(wp[25]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp26 := next(wp[26]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_retracted[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp27 := next(wp[27]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp28 := next(wp[28]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_retracted[3]) & next(hcyl_extended[4]);
+    hcyl_target_wp29 := next(wp[29]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_retracted[4]);
+    hcyl_target_wp30 := next(wp[30]) & next(hcyl_extended[0]) & next(hcyl_extended[1]) & next(hcyl_extended[2]) & next(hcyl_extended[3]) & next(hcyl_extended[4]);
+    minimum_wp := next(wp[0]) ? 1 : next(wp[1]) ? 2 : next(wp[2]) ? 3 : next(wp[3]) ? 4 : next(wp[4]) ? 5 : next(wp[5]) ? 6 : next(wp[6]) ? 7 : next(wp[7]) ? 8 : next(wp[8]) ? 9 : next(wp[9]) ? 10 : next(wp[10]) ? 11 : next(wp[11]) ? 12 : next(wp[12]) ? 13 : next(wp[13]) ? 14 : next(wp[14]) ? 15 : next(wp[15]) ? 16 : next(wp[16]) ? 17 : next(wp[17]) ? 18 : next(wp[18]) ? 19 : next(wp[19]) ? 20 : next(wp[20]) ? 21 : next(wp[21]) ? 22 : next(wp[22]) ? 23 : next(wp[23]) ? 24 : next(wp[24]) ? 25 : next(wp[25]) ? 26 : next(wp[26]) ? 27 : next(wp[27]) ? 28 : next(wp[28]) ? 29 : next(wp[29]) ? 30 : next(wp[30]) ? 31 : 0;
