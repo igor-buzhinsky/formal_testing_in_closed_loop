@@ -10,6 +10,7 @@ ASSIGN
     next(wp[2]) := next(adding_wp[2]) | wp[2] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 3);
     next(hcyl_pos[0]) := hcyl_pos0_3;
     next(hcyl_pos[1]) := hcyl_pos1_3;
+    next(total_hcyl_pos) := next(hcyl_pos[0]) + next(hcyl_pos[1]);
     next(vcyl_pos) := vcyl_pos_3;
     next(hcyl_retracted[0]) := next(hcyl_pos[0]) = 0;
     next(hcyl_retracted[1]) := next(hcyl_pos[1]) = 0;

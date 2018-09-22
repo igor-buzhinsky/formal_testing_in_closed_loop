@@ -10,7 +10,13 @@ basedir=pick-and-place
 set_complexity() {
     compl=$1
     set_dir "$basedir/pick-and-place-$compl"
-    maxlen=$((compl * 6)) # TODO proper generalization | 12 is sufficient for compl=2
+    if (( compl <= 4 )); then
+        maxlen=11 # proven
+    elif (( compl == 5 )); then
+        maxlen=17 # proven (437/487)
+    else
+        eval "maxlen=$(((1 << (compl - 1)) + 1))" # hypothesis
+    fi
 }
 
 comparison() {
@@ -28,24 +34,27 @@ comparison() {
         print_test_suite test-small.bin > /dev/null
         
         # Framework: execution
-        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 #> log; print_log
+        call_spin run $verbose --input test-small.bin --verify --output out-small.pml $finite --panO 0 > log; print_log
         
         if [[ "$nomc" == true ]]; then
             continue
         fi
 
         # BMC
-        bmc_verification "set_complexity $compl" $(((compl * 8) / 2))
-        bmc_verification "set_complexity $compl" $((compl * 8)) # TODO proper generalization | 16 is sufficient for compl=2
+        eval "bmc_k=$(((1 << compl) + 12))" # checked for compl <= 4
+        bmc_verification "set_complexity $compl" $((bmc_k / 4))
+        bmc_verification "set_complexity $compl" $((bmc_k / 3))
+        bmc_verification "set_complexity $compl" $((bmc_k / 2))
+        #bmc_verification "set_complexity $compl" $bmc_k
         
-        # BDD-based LTL MC 
-        nusmv_spec_file=spec-ltl.smv
-        call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
-        nusmv_spec_file=spec.smv
+        # BDD-based LTL MC
+        #nusmv_spec_file=spec-ltl.smv
+        #call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
+        #nusmv_spec_file=spec.smv
         
         # BDD-based CTL MC
-        call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
+        #call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
     done
 }
 
-comparison 2 2 false
+comparison 3 4 false

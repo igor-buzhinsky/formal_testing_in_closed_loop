@@ -1,8 +1,42 @@
 #!/bin/bash
-from=1
-to=5
+from=2
+to=6
 
-plantcomment="// "
+init_specs() {
+    echo -n > $dir/spec.pml
+    echo -n > $dir/spec-ltl.smv
+    echo -n > $dir/spec.smv
+}
+
+blank_line() {
+    echo >> $dir/spec.pml
+    echo >> $dir/spec-ltl.smv
+    echo >> $dir/spec.smv
+}
+
+usual_spec() {
+    name="$1"
+    x="$2"
+    nusmv_ltl_script='s/<>/F /g; s/\[\]/G /g; s/||/|/g; s/\&\&/\&/g; s/==/=/g'
+    nusmv_ctl_script='s/<>/AF /g; s/\[\]/AG /g; s/X(/AX(/g; s/||/|/g; s/\&\&/\&/g; s/==/=/g'
+    x_ltl=$(echo "$x" | sed "$nusmv_ltl_script")
+    x_ctl=$(echo "$x" | sed "$nusmv_ctl_script")
+    echo "ltl $name { X( $x ) }" >> $dir/spec.pml
+    echo "LTLSPEC X( $x_ltl )" >> $dir/spec-ltl.smv
+    echo "CTLSPEC AX( $x_ctl )" >> $dir/spec.smv
+}
+
+lack_of_spurious_actuation_spec() {
+    name="$1"
+    q="($2)"
+    p="($3)"
+    nusmv_script='s/||/|/g; s/\&\&/\&/g; s/==/=/g'
+    q_nusmv=$(echo "$q" | sed "$nusmv_script")
+    p_nusmv=$(echo "$p" | sed "$nusmv_script")
+    echo "ltl $name { X( (!$q U $p) || ([] !$q) ) }" >> $dir/spec.pml
+    echo "LTLSPEC X( (!$q_nusmv U $p_nusmv) | (G !$q_nusmv) )" >> $dir/spec-ltl.smv
+    echo "CTLSPEC AX( !E[(!$p_nusmv) U (!$p_nusmv & $q_nusmv)] )" >> $dir/spec.smv
+}
 
 for ((compl = from; compl <= to; compl++)); do
     dir="pick-and-place-$compl"
@@ -17,7 +51,7 @@ for ((compl = from; compl <= to; compl++)); do
 
     cp controller.pml plant.pml $dir
 
-    cat pick-and-place.conf | sed "s/__1/$compl/g; s/__2/$wp_num/g; s/__3/$hcyl_maxlen/g" > tmp
+    cat pick-and-place.conf | sed "s/__1/$compl/g; s/__2/$wp_num/g; s/__3/$hcyl_maxlen/g; s/__4/$((hcyl_maxlen * 2 - 1))/g" > tmp
     mv tmp $dir/pick-and-place.conf
 
     # NuSMV
@@ -35,6 +69,7 @@ for ((compl = from; compl <= to; compl++)); do
     for ((i = 0; i < $compl; i++)); do
         echo "    next(hcyl_pos[$i]) := hcyl_pos${i}_3;" >> tmp
     done
+    echo "    next(total_hcyl_pos) := next(hcyl_pos[0])$(for ((i = 1; i < $compl; i++)); do echo -n " + next(hcyl_pos[$i])"; done);" >> tmp
     echo "    next(vcyl_pos) := vcyl_pos_3;" >> tmp
     for ((i = 0; i < $compl; i++)); do
         echo "    next(hcyl_retracted[$i]) := next(hcyl_pos[$i]) = 0;" >> tmp
@@ -106,45 +141,57 @@ for ((compl = from; compl <= to; compl++)); do
     mv tmp $dir/controller.smv
     
     # Promela (only requirements: the rest is copied from plant.pml and controller.pml)
+    init_specs
+    
     all_retracted="hcyl_retracted[0]"$(for ((i = 1; i < $compl; i++)); do echo -n " && hcyl_retracted[$i]"; done)
     for ((i = 0; i < $wp_num; i++)); do
-        echo "ltl order${i}_MUST_BE_TRUE { X( [](wp[$i] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && $all_retracted && <>(vcyl_retracted && $all_retracted)))) ) }" >> tmp
+        usual_spec "order${i}_MUST_BE_TRUE" "[](wp[$i] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && $all_retracted && <>(vcyl_retracted && $all_retracted))))"
     done
     
-    echo >> tmp
+    blank_line
     
     adding_condition="adding_wp[0]"
     for ((i = 0; i < $wp_num; i++)); do
-        echo "ltl disappear${i}_MUST_BE_TRUE { X( []((wp[$i] && !adding_wp[$i]) -> <>(!wp[$i] || $adding_condition)) ) }" >> tmp
+        usual_spec "disappear${i}_MUST_BE_TRUE" "[]((wp[$i] && !adding_wp[$i]) -> <>(!wp[$i] || $adding_condition))"
         adding_condition="$adding_condition || adding_wp[$((i + 1))]"
     done
     
-    echo >> tmp
+    blank_line
     
-    echo "ltl additional0_MUST_BE_TRUE { X( [](carrying_wp -> <>(wp_output && !suction_on)) ) }" >> tmp
-    echo "ltl additional1_MUST_BE_TRUE { X( [](suction_on -> (carrying_wp"$(for ((i = 0; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)")) ) }" >> tmp
-    echo "ltl additional2_MUST_BE_TRUE { X( [](suction_on -> <> !suction_on) ) }" >> tmp
+    for ((i = 0; i < $wp_num; i++)); do
+        lack_of_spurious_actuation_spec "spurious${i}_MUST_BE_TRUE" "!vcyl_retracted && (total_hcyl_pos == $((i + 1)))" "wp[$i]"
+    done
     
-    echo >> tmp
+    blank_line
+    
+    usual_spec "additional0_MUST_BE_TRUE" "[](carrying_wp -> <>(wp_output && !suction_on))"
+    usual_spec "additional1_MUST_BE_TRUE" "[](suction_on -> (carrying_wp$(for ((i = 0; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)))"
+    usual_spec "additional2_MUST_BE_TRUE" "[](suction_on -> <> !suction_on)"
+    lack_of_spurious_actuation_spec "additional3_MUST_BE_TRUE" "vcyl_extend || vcyl_extended || suction_on" "wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)"
+    
+    blank_line
     
     any_extended="hcyl_extended[0]"$(for ((i = 1; i < $compl; i++)); do echo -n " || hcyl_extended[$i]"; done)
     for ((i = 0; i < $wp_num; i++)); do
-        echo "ltl order${i}_MUST_BE_FALSE { X( [](wp[$i] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && $all_retracted && <>(vcyl_retracted && ($any_extended))))) ) }" >> tmp
+        usual_spec "order${i}_MUST_BE_FALSE" "[](wp[$i] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && $all_retracted && <>(vcyl_retracted && ($any_extended)))))"
     done
     
-    echo >> tmp
+    blank_line
     
     for ((i = 0; i < $wp_num; i++)); do
-        echo "ltl disappear${i}_MUST_BE_FALSE { X( []((wp[$i] && !adding_wp[$i]) -> <> !wp[$i]) ) }" >> tmp
+        usual_spec "disappear${i}_MUST_BE_FALSE" "[]((wp[$i] && !adding_wp[$i]) -> <> !wp[$i])"
     done
     
-    echo >> tmp
+    blank_line
     
-    echo "ltl additional0_MUST_BE_FALSE { X( [](carrying_wp -> suction_on) ) }" >> tmp
-    echo "ltl additional1_MUST_BE_FALSE { X( [](suction_on -> (wp[0]"$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)")) ) }" >> tmp
-    echo "ltl additional2_MUST_BE_FALSE { X( [](suction_on -> carrying_wp) ) }" >> tmp
-
-    cat tmp | sed 's/<>/AF /g; s/\[\]/AG /g; s/X(/AX(/g; s/||/|/g; s/\&\&/\&/g; s/==/=/g; s/^ltl \w\+ { /CTLSPEC /g; s/}//g; s/\/\//--/g' > $dir/spec.smv
-    cat tmp | sed 's/<>/F /g; s/\[\]/G /g; s/||/|/g; s/\&\&/\&/g; s/==/=/g; s/^ltl \w\+ { /LTLSPEC /g; s/}//g; s/\/\//--/g' > $dir/spec-ltl.smv
-    mv tmp $dir/spec.pml
+    for ((i = 0; i < $((wp_num - 1)); i++)); do # the last spec is actually true, so do not generate it
+        lack_of_spurious_actuation_spec "spurious${i}_MUST_BE_FALSE" "total_hcyl_pos == $((i + 1))" "wp[$i]"
+    done
+    
+    blank_line
+    
+    usual_spec "additional0_MUST_BE_FALSE" "[](carrying_wp -> suction_on)"
+    usual_spec "additional1_MUST_BE_FALSE" "[](suction_on -> (wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)))"
+    usual_spec "additional2_MUST_BE_FALSE" "[](suction_on -> carrying_wp)"
+    lack_of_spurious_actuation_spec "additional3_MUST_BE_FALSE" "vcyl_extend || vcyl_extended || suction_on" "wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " && wp[$i]"; done)"
 done

@@ -36,6 +36,11 @@ d_step {
         hcyl_extended[i] = hcyl_pos[i] == maxpos;
     }
     
+    total_hcyl_pos = 0;
+    for (i : 0..(HCYL_NUM - 1)) {
+        total_hcyl_pos = total_hcyl_pos + hcyl_pos[i];
+    }
+    
     vcyl_pos = vcyl_pos + (vcyl_extend -> 1 : -1);
     vcyl_pos = (vcyl_pos > VCYL_MAXPOS -> VCYL_MAXPOS : vcyl_pos);
     vcyl_pos = (vcyl_pos < 0 -> 0 : vcyl_pos);
