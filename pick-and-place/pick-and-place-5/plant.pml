@@ -4,16 +4,12 @@
 d_step {
     int i;
 
-    int hpos_sum = 0;
-    for (i : 0..(HCYL_NUM - 1)) {
-        hpos_sum = hpos_sum + hcyl_pos[i];
-    }
-    
+    int prev_total_hcyl_pos = total_hcyl_pos;
     bool prev_carrying_wp = carrying_wp;
     
     bool carry_condition = 0;
     for (i : 0..(WP_NUM - 1)) {
-        carry_condition = carry_condition || (hpos_sum == i + 1) && wp[i];
+        carry_condition = carry_condition || (prev_total_hcyl_pos == i + 1) && wp[i];
     }
     
     if
@@ -22,9 +18,9 @@ d_step {
     :: else -> ;
     fi
     
-    wp_output = prev_carrying_wp && !carrying_wp && (hpos_sum == 0) && vcyl_extended;
+    wp_output = prev_carrying_wp && !carrying_wp && (prev_total_hcyl_pos == 0) && vcyl_extended;
     for (i : 0..(WP_NUM - 1)) {
-        wp[i] = adding_wp[i] | wp[i] && !(!carrying_wp && vcyl_extended && suction_on && (hpos_sum == i + 1));
+        wp[i] = adding_wp[i] | wp[i] && !(!carrying_wp && vcyl_extended && suction_on && (prev_total_hcyl_pos == i + 1));
     }
     
     for (i : 0..(HCYL_NUM - 1)) {
@@ -36,7 +32,11 @@ d_step {
         hcyl_extended[i] = hcyl_pos[i] == maxpos;
     }
     
-    total_hcyl_pos = hpos_sum;
+    total_hcyl_pos = 0;
+    for (i : 0..(HCYL_NUM - 1)) {
+        total_hcyl_pos = total_hcyl_pos + hcyl_pos[i];
+    }
+    
     vcyl_pos = vcyl_pos + (vcyl_extend -> 1 : -1);
     vcyl_pos = (vcyl_pos > VCYL_MAXPOS -> VCYL_MAXPOS : vcyl_pos);
     vcyl_pos = (vcyl_pos < 0 -> 0 : vcyl_pos);
