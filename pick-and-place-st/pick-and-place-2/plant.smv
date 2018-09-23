@@ -4,9 +4,9 @@ DEFINE
     carrying_wp__1 := __COND_0 ? FALSE : carrying_wp;
     carrying_wp__2 := !__COND_0 & __COND_1 ? TRUE : carrying_wp__1;
     wp_output__1 := (((prev_carrying_wp__1 & !(carrying_wp__2)) & (total_hcyl_pos = 0)) & vcyl_extended);
-    wp__0__1 := (next(adding_wp[0]) | (wp[0] & !((((!(carrying_wp__2) & vcyl_extended) & suction_on) & (total_hcyl_pos = 1)))));
-    wp__1__1 := (next(adding_wp[1]) | (wp[1] & !((((!(carrying_wp__2) & vcyl_extended) & suction_on) & (total_hcyl_pos = 2)))));
-    wp__2__1 := (next(adding_wp[2]) | (wp[2] & !((((!(carrying_wp__2) & vcyl_extended) & suction_on) & (total_hcyl_pos = 3)))));
+    wp__0__1 := (next(adding_wp[0]) | (wp[0] & !((((!(prev_carrying_wp__1) & vcyl_extended) & suction_on) & (total_hcyl_pos = 1)))));
+    wp__1__1 := (next(adding_wp[1]) | (wp[1] & !((((!(prev_carrying_wp__1) & vcyl_extended) & suction_on) & (total_hcyl_pos = 2)))));
+    wp__2__1 := (next(adding_wp[2]) | (wp[2] & !((((!(prev_carrying_wp__1) & vcyl_extended) & suction_on) & (total_hcyl_pos = 3)))));
     hcyl_pos__0__1 := __COND_2 ? (hcyl_pos[0] + 1) : hcyl_pos[0];
     hcyl_pos__0__2 := !__COND_2 ? (hcyl_pos__0__1 - 1) : hcyl_pos__0__1;
     hcyl_pos__0__3 := __COND_3 ? 2 : hcyl_pos__0__2;

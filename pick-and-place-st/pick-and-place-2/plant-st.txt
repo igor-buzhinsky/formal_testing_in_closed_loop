@@ -31,9 +31,9 @@ ELSIF NOT carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 1 A
     carrying_wp := TRUE;
 END_IF
 wp_output := prev_carrying_wp AND NOT carrying_wp AND (total_hcyl_pos = 0) AND vcyl_extended;
-wp[0] := adding_wp[0] OR wp[0] AND NOT(NOT carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 1));
-wp[1] := adding_wp[1] OR wp[1] AND NOT(NOT carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 2));
-wp[2] := adding_wp[2] OR wp[2] AND NOT(NOT carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 3));
+wp[0] := adding_wp[0] OR wp[0] AND NOT(NOT prev_carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 1));
+wp[1] := adding_wp[1] OR wp[1] AND NOT(NOT prev_carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 2));
+wp[2] := adding_wp[2] OR wp[2] AND NOT(NOT prev_carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = 3));
 IF hcyl_extend[0] THEN
     hcyl_pos[0] := hcyl_pos[0] + 1;
 ELSE

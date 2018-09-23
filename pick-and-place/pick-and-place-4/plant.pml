@@ -19,7 +19,7 @@ d_step {
     
     wp_output = prev_carrying_wp && !carrying_wp && (total_hcyl_pos == 0) && vcyl_extended;
     for (i : 0..(WP_NUM - 1)) {
-        wp[i] = adding_wp[i] | wp[i] && !(!carrying_wp && vcyl_extended && suction_on && (total_hcyl_pos == i + 1));
+        wp[i] = adding_wp[i] | wp[i] && !(!prev_carrying_wp && vcyl_extended && suction_on && (total_hcyl_pos == i + 1));
     }
     
     for (i : 0..(HCYL_NUM - 1)) {

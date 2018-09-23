@@ -60,7 +60,7 @@ for ((compl = from; compl <= to; compl++)); do
     
     echo "wp_output := prev_carrying_wp AND NOT carrying_wp AND (total_hcyl_pos = 0) AND vcyl_extended;" >> tmp
     for ((i = 0; i < $wp_num; i++)); do
-        echo "wp[$i] := adding_wp[$i] OR wp[$i] AND NOT(NOT carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = $((i + 1))));" >> tmp
+        echo "wp[$i] := adding_wp[$i] OR wp[$i] AND NOT(NOT prev_carrying_wp AND vcyl_extended AND suction_on AND (total_hcyl_pos = $((i + 1))));" >> tmp
     done
     
     for ((i = 0; i < $compl; i++)); do

@@ -10,9 +10,9 @@ d_step {
     :: else -> ;
     fi
     wp_output = (((prev_carrying_wp && !(carrying_wp)) && (total_hcyl_pos == 0)) && vcyl_extended);
-    wp[0] = (adding_wp[0] || (wp[0] && !((((!(carrying_wp) && vcyl_extended) && suction_on) && (total_hcyl_pos == 1)))));
-    wp[1] = (adding_wp[1] || (wp[1] && !((((!(carrying_wp) && vcyl_extended) && suction_on) && (total_hcyl_pos == 2)))));
-    wp[2] = (adding_wp[2] || (wp[2] && !((((!(carrying_wp) && vcyl_extended) && suction_on) && (total_hcyl_pos == 3)))));
+    wp[0] = (adding_wp[0] || (wp[0] && !((((!(prev_carrying_wp) && vcyl_extended) && suction_on) && (total_hcyl_pos == 1)))));
+    wp[1] = (adding_wp[1] || (wp[1] && !((((!(prev_carrying_wp) && vcyl_extended) && suction_on) && (total_hcyl_pos == 2)))));
+    wp[2] = (adding_wp[2] || (wp[2] && !((((!(prev_carrying_wp) && vcyl_extended) && suction_on) && (total_hcyl_pos == 3)))));
     if
     :: hcyl_extend[0] -> 
         hcyl_pos[0] = (hcyl_pos[0] + 1);
