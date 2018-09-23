@@ -45,16 +45,16 @@ comparison() {
         bmc_verification "set_complexity $compl" $((bmc_k / 4))
         bmc_verification "set_complexity $compl" $((bmc_k / 3))
         bmc_verification "set_complexity $compl" $((bmc_k / 2))
-        #bmc_verification "set_complexity $compl" $bmc_k
+        bmc_verification "set_complexity $compl" $bmc_k
         
         # BDD-based LTL MC
-        #nusmv_spec_file=spec-ltl.smv
-        #call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
-        #nusmv_spec_file=spec.smv
+        nusmv_spec_file=spec-ltl.smv
+        call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
+        nusmv_spec_file=spec.smv
         
         # BDD-based CTL MC
-        #call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
+        call_nusmv closed-loop-verify --verbose --dynamic --coi > log; print_log
     done
 }
 
-comparison 3 4 false
+comparison 2 2 false

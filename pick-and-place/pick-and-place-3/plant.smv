@@ -1,21 +1,21 @@
 ASSIGN
     next(carrying_wp) := case
         carrying_wp & !suction_on: FALSE;
-        !carrying_wp & vcyl_extended & suction_on & (HPOS_SUM = 1 & wp[0] | HPOS_SUM = 2 & wp[1] | HPOS_SUM = 3 & wp[2] | HPOS_SUM = 4 & wp[3] | HPOS_SUM = 5 & wp[4] | HPOS_SUM = 6 & wp[5] | HPOS_SUM = 7 & wp[6]): TRUE;
+        !carrying_wp & vcyl_extended & suction_on & (total_hcyl_pos = 1 & wp[0] | total_hcyl_pos = 2 & wp[1] | total_hcyl_pos = 3 & wp[2] | total_hcyl_pos = 4 & wp[3] | total_hcyl_pos = 5 & wp[4] | total_hcyl_pos = 6 & wp[5] | total_hcyl_pos = 7 & wp[6]): TRUE;
         TRUE: carrying_wp;
     esac;
-    next(wp_output) := carrying_wp & !next(carrying_wp) & HPOS_SUM = 0 & vcyl_extended;
-    next(wp[0]) := next(adding_wp[0]) | wp[0] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 1);
-    next(wp[1]) := next(adding_wp[1]) | wp[1] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 2);
-    next(wp[2]) := next(adding_wp[2]) | wp[2] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 3);
-    next(wp[3]) := next(adding_wp[3]) | wp[3] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 4);
-    next(wp[4]) := next(adding_wp[4]) | wp[4] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 5);
-    next(wp[5]) := next(adding_wp[5]) | wp[5] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 6);
-    next(wp[6]) := next(adding_wp[6]) | wp[6] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = 7);
+    next(wp_output) := carrying_wp & !next(carrying_wp) & total_hcyl_pos = 0 & vcyl_extended;
+    next(wp[0]) := next(adding_wp[0]) | wp[0] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 1);
+    next(wp[1]) := next(adding_wp[1]) | wp[1] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 2);
+    next(wp[2]) := next(adding_wp[2]) | wp[2] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 3);
+    next(wp[3]) := next(adding_wp[3]) | wp[3] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 4);
+    next(wp[4]) := next(adding_wp[4]) | wp[4] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 5);
+    next(wp[5]) := next(adding_wp[5]) | wp[5] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 6);
+    next(wp[6]) := next(adding_wp[6]) | wp[6] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = 7);
     next(hcyl_pos[0]) := hcyl_pos0_3;
     next(hcyl_pos[1]) := hcyl_pos1_3;
     next(hcyl_pos[2]) := hcyl_pos2_3;
-    next(total_hcyl_pos) := next(hcyl_pos[0]) + next(hcyl_pos[1]) + next(hcyl_pos[2]);
+    next(total_hcyl_pos) := HPOS_SUM <= 7 ? HPOS_SUM : 7;
     next(vcyl_pos) := vcyl_pos_3;
     next(hcyl_retracted[0]) := next(hcyl_pos[0]) = 0;
     next(hcyl_retracted[1]) := next(hcyl_pos[1]) = 0;
@@ -26,7 +26,7 @@ ASSIGN
     next(hcyl_extended[2]) := next(hcyl_pos[2]) = HCYL2_MAXPOS;
     next(vcyl_extended) := next(vcyl_pos) = VCYL_MAXPOS;
 DEFINE
-    HPOS_SUM := hcyl_pos[0] + hcyl_pos[1] + hcyl_pos[2];
+    HPOS_SUM := next(hcyl_pos[0]) + next(hcyl_pos[1]) + next(hcyl_pos[2]);
     HCYL0_MAXPOS := 4;
     HCYL1_MAXPOS := 2;
     HCYL2_MAXPOS := 1;

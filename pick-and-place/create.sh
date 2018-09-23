@@ -44,6 +44,7 @@ for ((compl = from; compl <= to; compl++)); do
 
     eval "wp_num=$(( (1 << compl) - 1 ))"
     eval "hcyl_maxlen=$(( 1 << (compl - 1) ))"
+    max_hpos_sum=$(( hcyl_maxlen * 2 - 1 ))
     
     cat header | sed "s/__1/$compl/g; s/__2/$wp_num/g" > tmp
     cp tmp $dir/header.smv
@@ -51,7 +52,7 @@ for ((compl = from; compl <= to; compl++)); do
 
     cp controller.pml plant.pml $dir
 
-    cat pick-and-place.conf | sed "s/__1/$compl/g; s/__2/$wp_num/g; s/__3/$hcyl_maxlen/g; s/__4/$((hcyl_maxlen * 2 - 1))/g" > tmp
+    cat pick-and-place.conf | sed "s/__1/$compl/g; s/__2/$wp_num/g; s/__3/$hcyl_maxlen/g; s/__4/$max_hpos_sum/g" > tmp
     mv tmp $dir/pick-and-place.conf
 
     # NuSMV
@@ -59,17 +60,17 @@ for ((compl = from; compl <= to; compl++)); do
     
     echo "    next(carrying_wp) := case" >> tmp
     echo "        carrying_wp & !suction_on: FALSE;" >> tmp
-    echo "        !carrying_wp & vcyl_extended & suction_on & (HPOS_SUM = 1 & wp[0]"$(for ((i = 1; i < $wp_num; i++)); do echo -n " | HPOS_SUM = $((i + 1)) & wp[$i]"; done)"): TRUE;" >> tmp
+    echo "        !carrying_wp & vcyl_extended & suction_on & (total_hcyl_pos = 1 & wp[0]"$(for ((i = 1; i < $wp_num; i++)); do echo -n " | total_hcyl_pos = $((i + 1)) & wp[$i]"; done)"): TRUE;" >> tmp
     echo "        TRUE: carrying_wp;" >> tmp
     echo "    esac;" >> tmp
-    echo "    next(wp_output) := carrying_wp & !next(carrying_wp) & HPOS_SUM = 0 & vcyl_extended;" >> tmp
+    echo "    next(wp_output) := carrying_wp & !next(carrying_wp) & total_hcyl_pos = 0 & vcyl_extended;" >> tmp
     for ((i = 0; i < $wp_num; i++)); do
-        echo "    next(wp[$i]) := next(adding_wp[$i]) | wp[$i] & !(!carrying_wp & vcyl_extended & suction_on & HPOS_SUM = $((i + 1)));" >> tmp
+        echo "    next(wp[$i]) := next(adding_wp[$i]) | wp[$i] & !(!carrying_wp & vcyl_extended & suction_on & total_hcyl_pos = $((i + 1)));" >> tmp
     done
     for ((i = 0; i < $compl; i++)); do
         echo "    next(hcyl_pos[$i]) := hcyl_pos${i}_3;" >> tmp
     done
-    echo "    next(total_hcyl_pos) := next(hcyl_pos[0])$(for ((i = 1; i < $compl; i++)); do echo -n " + next(hcyl_pos[$i])"; done);" >> tmp
+    echo "    next(total_hcyl_pos) := HPOS_SUM <= $max_hpos_sum ? HPOS_SUM : $max_hpos_sum;" >> tmp
     echo "    next(vcyl_pos) := vcyl_pos_3;" >> tmp
     for ((i = 0; i < $compl; i++)); do
         echo "    next(hcyl_retracted[$i]) := next(hcyl_pos[$i]) = 0;" >> tmp
@@ -82,7 +83,7 @@ for ((compl = from; compl <= to; compl++)); do
     
     echo "DEFINE" >> tmp
     
-    echo "    HPOS_SUM := hcyl_pos[0]"$(for ((i = 1; i < $compl; i++)); do echo -n " + hcyl_pos[$i]"; done)";" >> tmp
+    echo "    HPOS_SUM := next(hcyl_pos[0])$(for ((i = 1; i < $compl; i++)); do echo -n " + next(hcyl_pos[$i])"; done);" >> tmp
     for ((i = 0; i < $compl; i++)); do
         eval "maxpos=$((1 << ($compl - 1 - i)))"
         echo "    HCYL${i}_MAXPOS := $maxpos;" >> tmp
