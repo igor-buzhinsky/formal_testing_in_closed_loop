@@ -1,0 +1,265 @@
+VAR_INPUT
+    wp: ARRAY[0..62] OF BOOL;
+    wp_output: BOOL;
+    hcyl_retracted: ARRAY[0..5] OF BOOL;
+    hcyl_extended: ARRAY[0..5] OF BOOL;
+    vcyl_retracted: BOOL;
+    vcyl_extended: BOOL;
+END_VAR
+VAR_OUTPUT
+    suction_on: BOOL;
+    vcyl_extend: BOOL;
+    hcyl_extend: ARRAY[0..5] OF BOOL;
+END_VAR
+VAR
+    state: INT;
+    // controller temporary variables
+    target_condition: BOOL;
+    minimum_wp: INT;
+END_VAR
+VAR_CONSTANT
+    // state enumeration
+    s_h_extend: INT := 0;
+    s_v_extend: INT := 1;
+    s_suction_on: INT := 2;
+    s_v_retract: INT := 3;
+    s_h_retract: INT := 4;
+    s_v_extend_output: INT := 5;
+    s_suction_off: INT := 6;
+    s_v_retract_output: INT := 7;
+END_VAR
+
+// controller
+target_condition := FALSE;
+target_condition := target_condition OR wp[0] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[1] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[2] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[3] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[4] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[5] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[6] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[7] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[8] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[9] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[10] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[11] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[12] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[13] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[14] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[15] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[16] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[17] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[18] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[19] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[20] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[21] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[22] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[23] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[24] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[25] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[26] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[27] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[28] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[29] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[30] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[31] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[32] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[33] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[34] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[35] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[36] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[37] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[38] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[39] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[40] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[41] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[42] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[43] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[44] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[45] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[46] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[47] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[48] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[49] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[50] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[51] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[52] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[53] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[54] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[55] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[56] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[57] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[58] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_retracted[3] AND hcyl_extended[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[59] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[60] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_retracted[4] AND hcyl_extended[5];
+target_condition := target_condition OR wp[61] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_retracted[5];
+target_condition := target_condition OR wp[62] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2] AND hcyl_extended[3] AND hcyl_extended[4] AND hcyl_extended[5];
+IF state = s_v_retract_output AND vcyl_retracted AND (wp[0] OR wp[1] OR wp[2] OR wp[3] OR wp[4] OR wp[5] OR wp[6] OR wp[7] OR wp[8] OR wp[9] OR wp[10] OR wp[11] OR wp[12] OR wp[13] OR wp[14] OR wp[15] OR wp[16] OR wp[17] OR wp[18] OR wp[19] OR wp[20] OR wp[21] OR wp[22] OR wp[23] OR wp[24] OR wp[25] OR wp[26] OR wp[27] OR wp[28] OR wp[29] OR wp[30] OR wp[31] OR wp[32] OR wp[33] OR wp[34] OR wp[35] OR wp[36] OR wp[37] OR wp[38] OR wp[39] OR wp[40] OR wp[41] OR wp[42] OR wp[43] OR wp[44] OR wp[45] OR wp[46] OR wp[47] OR wp[48] OR wp[49] OR wp[50] OR wp[51] OR wp[52] OR wp[53] OR wp[54] OR wp[55] OR wp[56] OR wp[57] OR wp[58] OR wp[59] OR wp[60] OR wp[61] OR wp[62]) THEN
+    state := s_h_extend;
+ELSIF state = s_h_extend AND target_condition THEN
+    state := s_v_extend;
+ELSIF state = s_v_extend AND vcyl_extended THEN
+    state := s_suction_on;
+ELSIF state = s_suction_on THEN
+    state := s_v_retract;
+ELSIF state = s_v_retract AND vcyl_retracted THEN
+    state := s_h_retract;
+ELSIF state = s_h_retract AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] AND hcyl_retracted[3] AND hcyl_retracted[4] AND hcyl_retracted[5] THEN
+    state := s_v_extend_output;
+ELSIF state = s_v_extend_output AND vcyl_extended THEN
+    state := s_suction_off;
+ELSIF state = s_suction_off THEN
+    state := s_v_retract_output;
+END_IF
+IF wp[0] THEN
+    minimum_wp := 1;
+ELSIF wp[1] THEN
+    minimum_wp := 2;
+ELSIF wp[2] THEN
+    minimum_wp := 3;
+ELSIF wp[3] THEN
+    minimum_wp := 4;
+ELSIF wp[4] THEN
+    minimum_wp := 5;
+ELSIF wp[5] THEN
+    minimum_wp := 6;
+ELSIF wp[6] THEN
+    minimum_wp := 7;
+ELSIF wp[7] THEN
+    minimum_wp := 8;
+ELSIF wp[8] THEN
+    minimum_wp := 9;
+ELSIF wp[9] THEN
+    minimum_wp := 10;
+ELSIF wp[10] THEN
+    minimum_wp := 11;
+ELSIF wp[11] THEN
+    minimum_wp := 12;
+ELSIF wp[12] THEN
+    minimum_wp := 13;
+ELSIF wp[13] THEN
+    minimum_wp := 14;
+ELSIF wp[14] THEN
+    minimum_wp := 15;
+ELSIF wp[15] THEN
+    minimum_wp := 16;
+ELSIF wp[16] THEN
+    minimum_wp := 17;
+ELSIF wp[17] THEN
+    minimum_wp := 18;
+ELSIF wp[18] THEN
+    minimum_wp := 19;
+ELSIF wp[19] THEN
+    minimum_wp := 20;
+ELSIF wp[20] THEN
+    minimum_wp := 21;
+ELSIF wp[21] THEN
+    minimum_wp := 22;
+ELSIF wp[22] THEN
+    minimum_wp := 23;
+ELSIF wp[23] THEN
+    minimum_wp := 24;
+ELSIF wp[24] THEN
+    minimum_wp := 25;
+ELSIF wp[25] THEN
+    minimum_wp := 26;
+ELSIF wp[26] THEN
+    minimum_wp := 27;
+ELSIF wp[27] THEN
+    minimum_wp := 28;
+ELSIF wp[28] THEN
+    minimum_wp := 29;
+ELSIF wp[29] THEN
+    minimum_wp := 30;
+ELSIF wp[30] THEN
+    minimum_wp := 31;
+ELSIF wp[31] THEN
+    minimum_wp := 32;
+ELSIF wp[32] THEN
+    minimum_wp := 33;
+ELSIF wp[33] THEN
+    minimum_wp := 34;
+ELSIF wp[34] THEN
+    minimum_wp := 35;
+ELSIF wp[35] THEN
+    minimum_wp := 36;
+ELSIF wp[36] THEN
+    minimum_wp := 37;
+ELSIF wp[37] THEN
+    minimum_wp := 38;
+ELSIF wp[38] THEN
+    minimum_wp := 39;
+ELSIF wp[39] THEN
+    minimum_wp := 40;
+ELSIF wp[40] THEN
+    minimum_wp := 41;
+ELSIF wp[41] THEN
+    minimum_wp := 42;
+ELSIF wp[42] THEN
+    minimum_wp := 43;
+ELSIF wp[43] THEN
+    minimum_wp := 44;
+ELSIF wp[44] THEN
+    minimum_wp := 45;
+ELSIF wp[45] THEN
+    minimum_wp := 46;
+ELSIF wp[46] THEN
+    minimum_wp := 47;
+ELSIF wp[47] THEN
+    minimum_wp := 48;
+ELSIF wp[48] THEN
+    minimum_wp := 49;
+ELSIF wp[49] THEN
+    minimum_wp := 50;
+ELSIF wp[50] THEN
+    minimum_wp := 51;
+ELSIF wp[51] THEN
+    minimum_wp := 52;
+ELSIF wp[52] THEN
+    minimum_wp := 53;
+ELSIF wp[53] THEN
+    minimum_wp := 54;
+ELSIF wp[54] THEN
+    minimum_wp := 55;
+ELSIF wp[55] THEN
+    minimum_wp := 56;
+ELSIF wp[56] THEN
+    minimum_wp := 57;
+ELSIF wp[57] THEN
+    minimum_wp := 58;
+ELSIF wp[58] THEN
+    minimum_wp := 59;
+ELSIF wp[59] THEN
+    minimum_wp := 60;
+ELSIF wp[60] THEN
+    minimum_wp := 61;
+ELSIF wp[61] THEN
+    minimum_wp := 62;
+ELSIF wp[62] THEN
+    minimum_wp := 63;
+ELSE
+    minimum_wp := 0;
+END_IF
+IF state = s_suction_on THEN
+    suction_on := TRUE;
+ELSIF state = s_suction_off THEN
+    suction_on := FALSE;
+ELSIF state = s_h_extend THEN
+    hcyl_extend[0] := (minimum_wp / 32) MOD 2 = 1;
+    hcyl_extend[1] := (minimum_wp / 16) MOD 2 = 1;
+    hcyl_extend[2] := (minimum_wp / 8) MOD 2 = 1;
+    hcyl_extend[3] := (minimum_wp / 4) MOD 2 = 1;
+    hcyl_extend[4] := (minimum_wp / 2) MOD 2 = 1;
+    hcyl_extend[5] := (minimum_wp / 1) MOD 2 = 1;
+ELSIF state = s_h_retract THEN
+    hcyl_extend[0] := FALSE;
+    hcyl_extend[1] := FALSE;
+    hcyl_extend[2] := FALSE;
+    hcyl_extend[3] := FALSE;
+    hcyl_extend[4] := FALSE;
+    hcyl_extend[5] := FALSE;
+ELSIF state = s_v_extend OR state = s_v_extend_output THEN
+    vcyl_extend := TRUE;
+ELSIF state = s_v_retract OR state = s_v_retract_output THEN
+    vcyl_extend := FALSE;
+END_IF

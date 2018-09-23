@@ -4,12 +4,11 @@
 d_step {
     int i;
 
-    int prev_total_hcyl_pos = total_hcyl_pos;
     bool prev_carrying_wp = carrying_wp;
     
     bool carry_condition = 0;
     for (i : 0..(WP_NUM - 1)) {
-        carry_condition = carry_condition || (prev_total_hcyl_pos == i + 1) && wp[i];
+        carry_condition = carry_condition || (total_hcyl_pos == i + 1) && wp[i];
     }
     
     if
@@ -18,9 +17,9 @@ d_step {
     :: else -> ;
     fi
     
-    wp_output = prev_carrying_wp && !carrying_wp && (prev_total_hcyl_pos == 0) && vcyl_extended;
+    wp_output = prev_carrying_wp && !carrying_wp && (total_hcyl_pos == 0) && vcyl_extended;
     for (i : 0..(WP_NUM - 1)) {
-        wp[i] = adding_wp[i] | wp[i] && !(!carrying_wp && vcyl_extended && suction_on && (prev_total_hcyl_pos == i + 1));
+        wp[i] = adding_wp[i] | wp[i] && !(!carrying_wp && vcyl_extended && suction_on && (total_hcyl_pos == i + 1));
     }
     
     for (i : 0..(HCYL_NUM - 1)) {

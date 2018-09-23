@@ -1,0 +1,91 @@
+VAR_INPUT
+    wp: ARRAY[0..6] OF BOOL;
+    wp_output: BOOL;
+    hcyl_retracted: ARRAY[0..2] OF BOOL;
+    hcyl_extended: ARRAY[0..2] OF BOOL;
+    vcyl_retracted: BOOL;
+    vcyl_extended: BOOL;
+END_VAR
+VAR_OUTPUT
+    suction_on: BOOL;
+    vcyl_extend: BOOL;
+    hcyl_extend: ARRAY[0..2] OF BOOL;
+END_VAR
+VAR
+    state: INT;
+    // controller temporary variables
+    target_condition: BOOL;
+    minimum_wp: INT;
+END_VAR
+VAR_CONSTANT
+    // state enumeration
+    s_h_extend: INT := 0;
+    s_v_extend: INT := 1;
+    s_suction_on: INT := 2;
+    s_v_retract: INT := 3;
+    s_h_retract: INT := 4;
+    s_v_extend_output: INT := 5;
+    s_suction_off: INT := 6;
+    s_v_retract_output: INT := 7;
+END_VAR
+
+// controller
+target_condition := FALSE;
+target_condition := target_condition OR wp[0] AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_extended[2];
+target_condition := target_condition OR wp[1] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_retracted[2];
+target_condition := target_condition OR wp[2] AND hcyl_retracted[0] AND hcyl_extended[1] AND hcyl_extended[2];
+target_condition := target_condition OR wp[3] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_retracted[2];
+target_condition := target_condition OR wp[4] AND hcyl_extended[0] AND hcyl_retracted[1] AND hcyl_extended[2];
+target_condition := target_condition OR wp[5] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_retracted[2];
+target_condition := target_condition OR wp[6] AND hcyl_extended[0] AND hcyl_extended[1] AND hcyl_extended[2];
+IF state = s_v_retract_output AND vcyl_retracted AND (wp[0] OR wp[1] OR wp[2] OR wp[3] OR wp[4] OR wp[5] OR wp[6]) THEN
+    state := s_h_extend;
+ELSIF state = s_h_extend AND target_condition THEN
+    state := s_v_extend;
+ELSIF state = s_v_extend AND vcyl_extended THEN
+    state := s_suction_on;
+ELSIF state = s_suction_on THEN
+    state := s_v_retract;
+ELSIF state = s_v_retract AND vcyl_retracted THEN
+    state := s_h_retract;
+ELSIF state = s_h_retract AND hcyl_retracted[0] AND hcyl_retracted[1] AND hcyl_retracted[2] THEN
+    state := s_v_extend_output;
+ELSIF state = s_v_extend_output AND vcyl_extended THEN
+    state := s_suction_off;
+ELSIF state = s_suction_off THEN
+    state := s_v_retract_output;
+END_IF
+IF wp[0] THEN
+    minimum_wp := 1;
+ELSIF wp[1] THEN
+    minimum_wp := 2;
+ELSIF wp[2] THEN
+    minimum_wp := 3;
+ELSIF wp[3] THEN
+    minimum_wp := 4;
+ELSIF wp[4] THEN
+    minimum_wp := 5;
+ELSIF wp[5] THEN
+    minimum_wp := 6;
+ELSIF wp[6] THEN
+    minimum_wp := 7;
+ELSE
+    minimum_wp := 0;
+END_IF
+IF state = s_suction_on THEN
+    suction_on := TRUE;
+ELSIF state = s_suction_off THEN
+    suction_on := FALSE;
+ELSIF state = s_h_extend THEN
+    hcyl_extend[0] := (minimum_wp / 4) MOD 2 = 1;
+    hcyl_extend[1] := (minimum_wp / 2) MOD 2 = 1;
+    hcyl_extend[2] := (minimum_wp / 1) MOD 2 = 1;
+ELSIF state = s_h_retract THEN
+    hcyl_extend[0] := FALSE;
+    hcyl_extend[1] := FALSE;
+    hcyl_extend[2] := FALSE;
+ELSIF state = s_v_extend OR state = s_v_extend_output THEN
+    vcyl_extend := TRUE;
+ELSIF state = s_v_retract OR state = s_v_retract_output THEN
+    vcyl_extend := FALSE;
+END_IF
