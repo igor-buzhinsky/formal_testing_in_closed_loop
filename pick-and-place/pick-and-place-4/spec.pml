@@ -46,11 +46,6 @@ ltl spurious12_MUST_BE_TRUE { X( (!(!vcyl_retracted && (total_hcyl_pos == 13)) U
 ltl spurious13_MUST_BE_TRUE { X( (!(!vcyl_retracted && (total_hcyl_pos == 14)) U (wp[13])) || ([] !(!vcyl_retracted && (total_hcyl_pos == 14))) ) }
 ltl spurious14_MUST_BE_TRUE { X( (!(!vcyl_retracted && (total_hcyl_pos == 15)) U (wp[14])) || ([] !(!vcyl_retracted && (total_hcyl_pos == 15))) ) }
 
-ltl additional0_MUST_BE_TRUE { X( [](carrying_wp -> <>(wp_output && !suction_on)) ) }
-ltl additional1_MUST_BE_TRUE { X( [](suction_on -> (carrying_wp || wp[0] || wp[1] || wp[2] || wp[3] || wp[4] || wp[5] || wp[6] || wp[7] || wp[8] || wp[9] || wp[10] || wp[11] || wp[12] || wp[13] || wp[14])) ) }
-ltl additional2_MUST_BE_TRUE { X( [](suction_on -> <> !suction_on) ) }
-ltl additional3_MUST_BE_TRUE { X( (!(vcyl_extend || vcyl_extended || suction_on) U (wp[0] || wp[1] || wp[2] || wp[3] || wp[4] || wp[5] || wp[6] || wp[7] || wp[8] || wp[9] || wp[10] || wp[11] || wp[12] || wp[13] || wp[14])) || ([] !(vcyl_extend || vcyl_extended || suction_on)) ) }
-
 ltl order0_MUST_BE_FALSE { X( [](wp[0] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && hcyl_retracted[0] && hcyl_retracted[1] && hcyl_retracted[2] && hcyl_retracted[3] && <>(vcyl_retracted && (hcyl_extended[0] || hcyl_extended[1] || hcyl_extended[2] || hcyl_extended[3]))))) ) }
 ltl order1_MUST_BE_FALSE { X( [](wp[1] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && hcyl_retracted[0] && hcyl_retracted[1] && hcyl_retracted[2] && hcyl_retracted[3] && <>(vcyl_retracted && (hcyl_extended[0] || hcyl_extended[1] || hcyl_extended[2] || hcyl_extended[3]))))) ) }
 ltl order2_MUST_BE_FALSE { X( [](wp[2] -> <>(vcyl_extended && suction_on && carrying_wp && <>(wp_output && vcyl_extended && hcyl_retracted[0] && hcyl_retracted[1] && hcyl_retracted[2] && hcyl_retracted[3] && <>(vcyl_retracted && (hcyl_extended[0] || hcyl_extended[1] || hcyl_extended[2] || hcyl_extended[3]))))) ) }
@@ -97,8 +92,3 @@ ltl spurious10_MUST_BE_FALSE { X( (!(total_hcyl_pos == 11) U (wp[10])) || ([] !(
 ltl spurious11_MUST_BE_FALSE { X( (!(total_hcyl_pos == 12) U (wp[11])) || ([] !(total_hcyl_pos == 12)) ) }
 ltl spurious12_MUST_BE_FALSE { X( (!(total_hcyl_pos == 13) U (wp[12])) || ([] !(total_hcyl_pos == 13)) ) }
 ltl spurious13_MUST_BE_FALSE { X( (!(total_hcyl_pos == 14) U (wp[13])) || ([] !(total_hcyl_pos == 14)) ) }
-
-ltl additional0_MUST_BE_FALSE { X( [](carrying_wp -> suction_on) ) }
-ltl additional1_MUST_BE_FALSE { X( [](suction_on -> (wp[0] || wp[1] || wp[2] || wp[3] || wp[4] || wp[5] || wp[6] || wp[7] || wp[8] || wp[9] || wp[10] || wp[11] || wp[12] || wp[13] || wp[14])) ) }
-ltl additional2_MUST_BE_FALSE { X( [](suction_on -> carrying_wp) ) }
-ltl additional3_MUST_BE_FALSE { X( (!(vcyl_extend || vcyl_extended || suction_on) U (wp[0] && wp[1] && wp[2] && wp[3] && wp[4] && wp[5] && wp[6] && wp[7] && wp[8] && wp[9] && wp[10] && wp[11] && wp[12] && wp[13] && wp[14])) || ([] !(vcyl_extend || vcyl_extended || suction_on)) ) }

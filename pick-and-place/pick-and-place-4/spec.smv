@@ -46,11 +46,6 @@ CTLSPEC AX( !E[(!(wp[12])) U (!(wp[12]) & (!vcyl_retracted & (total_hcyl_pos = 1
 CTLSPEC AX( !E[(!(wp[13])) U (!(wp[13]) & (!vcyl_retracted & (total_hcyl_pos = 14)))] )
 CTLSPEC AX( !E[(!(wp[14])) U (!(wp[14]) & (!vcyl_retracted & (total_hcyl_pos = 15)))] )
 
-CTLSPEC AX( AG (carrying_wp -> AF (wp_output & !suction_on)) )
-CTLSPEC AX( AG (suction_on -> (carrying_wp | wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) )
-CTLSPEC AX( AG (suction_on -> AF  !suction_on) )
-CTLSPEC AX( !E[(!(wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) U (!(wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14]) & (vcyl_extend | vcyl_extended | suction_on))] )
-
 CTLSPEC AX( AG (wp[0] -> AF (vcyl_extended & suction_on & carrying_wp & AF (wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & hcyl_retracted[2] & hcyl_retracted[3] & AF (vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1] | hcyl_extended[2] | hcyl_extended[3]))))) )
 CTLSPEC AX( AG (wp[1] -> AF (vcyl_extended & suction_on & carrying_wp & AF (wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & hcyl_retracted[2] & hcyl_retracted[3] & AF (vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1] | hcyl_extended[2] | hcyl_extended[3]))))) )
 CTLSPEC AX( AG (wp[2] -> AF (vcyl_extended & suction_on & carrying_wp & AF (wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & hcyl_retracted[2] & hcyl_retracted[3] & AF (vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1] | hcyl_extended[2] | hcyl_extended[3]))))) )
@@ -97,8 +92,3 @@ CTLSPEC AX( !E[(!(wp[10])) U (!(wp[10]) & (total_hcyl_pos = 11))] )
 CTLSPEC AX( !E[(!(wp[11])) U (!(wp[11]) & (total_hcyl_pos = 12))] )
 CTLSPEC AX( !E[(!(wp[12])) U (!(wp[12]) & (total_hcyl_pos = 13))] )
 CTLSPEC AX( !E[(!(wp[13])) U (!(wp[13]) & (total_hcyl_pos = 14))] )
-
-CTLSPEC AX( AG (carrying_wp -> suction_on) )
-CTLSPEC AX( AG (suction_on -> (wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) )
-CTLSPEC AX( AG (suction_on -> carrying_wp) )
-CTLSPEC AX( !E[(!(wp[0] & wp[1] & wp[2] & wp[3] & wp[4] & wp[5] & wp[6] & wp[7] & wp[8] & wp[9] & wp[10] & wp[11] & wp[12] & wp[13] & wp[14])) U (!(wp[0] & wp[1] & wp[2] & wp[3] & wp[4] & wp[5] & wp[6] & wp[7] & wp[8] & wp[9] & wp[10] & wp[11] & wp[12] & wp[13] & wp[14]) & (vcyl_extend | vcyl_extended | suction_on))] )

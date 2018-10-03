@@ -42,8 +42,8 @@ comparison() {
 
         # BMC
         eval "bmc_k=$(((1 << compl) + 12))" # checked for compl <= 4
-        bmc_verification "set_complexity $compl" $((bmc_k / 4))
-        bmc_verification "set_complexity $compl" $((bmc_k / 3))
+        #bmc_verification "set_complexity $compl" $((bmc_k / 4))
+        #bmc_verification "set_complexity $compl" $((bmc_k / 3))
         bmc_verification "set_complexity $compl" $((bmc_k / 2))
         bmc_verification "set_complexity $compl" $bmc_k
         
@@ -57,4 +57,4 @@ comparison() {
     done
 }
 
-comparison 2 2 false
+comparison 2 5 false

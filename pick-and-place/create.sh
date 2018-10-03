@@ -163,12 +163,12 @@ for ((compl = from; compl <= to; compl++)); do
         lack_of_spurious_actuation_spec "spurious${i}_MUST_BE_TRUE" "!vcyl_retracted && (total_hcyl_pos == $((i + 1)))" "wp[$i]"
     done
     
-    blank_line
+    #blank_line
     
-    usual_spec "additional0_MUST_BE_TRUE" "[](carrying_wp -> <>(wp_output && !suction_on))"
-    usual_spec "additional1_MUST_BE_TRUE" "[](suction_on -> (carrying_wp$(for ((i = 0; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)))"
-    usual_spec "additional2_MUST_BE_TRUE" "[](suction_on -> <> !suction_on)"
-    lack_of_spurious_actuation_spec "additional3_MUST_BE_TRUE" "vcyl_extend || vcyl_extended || suction_on" "wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)"
+    #usual_spec "additional0_MUST_BE_TRUE" "[](carrying_wp -> <>(wp_output && !suction_on))"
+    #usual_spec "additional1_MUST_BE_TRUE" "[](suction_on -> (carrying_wp$(for ((i = 0; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)))"
+    #usual_spec "additional2_MUST_BE_TRUE" "[](suction_on -> <> !suction_on)"
+    #lack_of_spurious_actuation_spec "additional3_MUST_BE_TRUE" "vcyl_extend || vcyl_extended || suction_on" "wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)"
     
     blank_line
     
@@ -189,10 +189,10 @@ for ((compl = from; compl <= to; compl++)); do
         lack_of_spurious_actuation_spec "spurious${i}_MUST_BE_FALSE" "total_hcyl_pos == $((i + 1))" "wp[$i]"
     done
     
-    blank_line
+    #blank_line
     
-    usual_spec "additional0_MUST_BE_FALSE" "[](carrying_wp -> suction_on)"
-    usual_spec "additional1_MUST_BE_FALSE" "[](suction_on -> (wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)))"
-    usual_spec "additional2_MUST_BE_FALSE" "[](suction_on -> carrying_wp)"
-    lack_of_spurious_actuation_spec "additional3_MUST_BE_FALSE" "vcyl_extend || vcyl_extended || suction_on" "wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " && wp[$i]"; done)"
+    #usual_spec "additional0_MUST_BE_FALSE" "[](carrying_wp -> suction_on)"
+    #usual_spec "additional1_MUST_BE_FALSE" "[](suction_on -> (wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " || wp[$i]"; done)))"
+    #usual_spec "additional2_MUST_BE_FALSE" "[](suction_on -> carrying_wp)"
+    #lack_of_spurious_actuation_spec "additional3_MUST_BE_FALSE" "vcyl_extend || vcyl_extended || suction_on" "wp[0]$(for ((i = 1; i < $wp_num; i++)); do echo -n " && wp[$i]"; done)"
 done

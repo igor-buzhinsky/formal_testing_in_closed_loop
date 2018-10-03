@@ -46,11 +46,6 @@ LTLSPEC X( (!(!vcyl_retracted & (total_hcyl_pos = 13)) U (wp[12])) | (G !(!vcyl_
 LTLSPEC X( (!(!vcyl_retracted & (total_hcyl_pos = 14)) U (wp[13])) | (G !(!vcyl_retracted & (total_hcyl_pos = 14))) )
 LTLSPEC X( (!(!vcyl_retracted & (total_hcyl_pos = 15)) U (wp[14])) | (G !(!vcyl_retracted & (total_hcyl_pos = 15))) )
 
-LTLSPEC X( G (carrying_wp -> F (wp_output & !suction_on)) )
-LTLSPEC X( G (suction_on -> (carrying_wp | wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) )
-LTLSPEC X( G (suction_on -> F  !suction_on) )
-LTLSPEC X( (!(vcyl_extend | vcyl_extended | suction_on) U (wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) | (G !(vcyl_extend | vcyl_extended | suction_on)) )
-
 LTLSPEC X( G (wp[0] -> F (vcyl_extended & suction_on & carrying_wp & F (wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & hcyl_retracted[2] & hcyl_retracted[3] & F (vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1] | hcyl_extended[2] | hcyl_extended[3]))))) )
 LTLSPEC X( G (wp[1] -> F (vcyl_extended & suction_on & carrying_wp & F (wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & hcyl_retracted[2] & hcyl_retracted[3] & F (vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1] | hcyl_extended[2] | hcyl_extended[3]))))) )
 LTLSPEC X( G (wp[2] -> F (vcyl_extended & suction_on & carrying_wp & F (wp_output & vcyl_extended & hcyl_retracted[0] & hcyl_retracted[1] & hcyl_retracted[2] & hcyl_retracted[3] & F (vcyl_retracted & (hcyl_extended[0] | hcyl_extended[1] | hcyl_extended[2] | hcyl_extended[3]))))) )
@@ -97,8 +92,3 @@ LTLSPEC X( (!(total_hcyl_pos = 11) U (wp[10])) | (G !(total_hcyl_pos = 11)) )
 LTLSPEC X( (!(total_hcyl_pos = 12) U (wp[11])) | (G !(total_hcyl_pos = 12)) )
 LTLSPEC X( (!(total_hcyl_pos = 13) U (wp[12])) | (G !(total_hcyl_pos = 13)) )
 LTLSPEC X( (!(total_hcyl_pos = 14) U (wp[13])) | (G !(total_hcyl_pos = 14)) )
-
-LTLSPEC X( G (carrying_wp -> suction_on) )
-LTLSPEC X( G (suction_on -> (wp[0] | wp[1] | wp[2] | wp[3] | wp[4] | wp[5] | wp[6] | wp[7] | wp[8] | wp[9] | wp[10] | wp[11] | wp[12] | wp[13] | wp[14])) )
-LTLSPEC X( G (suction_on -> carrying_wp) )
-LTLSPEC X( (!(vcyl_extend | vcyl_extended | suction_on) U (wp[0] & wp[1] & wp[2] & wp[3] & wp[4] & wp[5] & wp[6] & wp[7] & wp[8] & wp[9] & wp[10] & wp[11] & wp[12] & wp[13] & wp[14])) | (G !(vcyl_extend | vcyl_extended | suction_on)) )
